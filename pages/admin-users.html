@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Animu - Gerenciamento de Usuários</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../src/css/animu.css">
+  <link rel="stylesheet" href="../src/css/navbar.css">
+  <link rel="icon" href="../src/data/favicon/favicon.ico" type="image/x-icon">
+  <script>
+    // Verificação imediata antes de carregar o resto da página
+    (function () {
+      const session = JSON.parse(localStorage.getItem('userSession'));
+      if (!session || !session.isAdmin) {
+        alert('Acesso negado. Esta página é restrita a administradores.');
+        window.location.href = 'index.html';
+      }
+    })();
+  </script>
+</head>
+
+<body>
+  <!-- Header -->
+  <header class="relative py-8 mb-6 overflow-hidden">
+    <div class="container mx-auto px-4 relative">
+      <h1 class="text-4xl md:text-5xl font-bold text-center mb-2">
+        <span class="text-purple-600">Gerenciamento</span> de Usuários
+      </h1>
+      <p class="text-center opacity-75">Gerencie os usuários da plataforma de forma eficiente</p>
+  </header>
+
+  <!-- Container principal -->
+  <div class="container mx-auto px-4 max-w-7xl">
+    <!-- Cards de estatísticas -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <!-- Card Total de Usuários -->
+      <div class="rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 relative overflow-hidden">
+        <div class="relative flex items-center gap-4">
+          <div class="p-4 rounded-xl bg-purple-600/10">
+            <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm opacity-75">Total de Usuários</p>
+            <h3 class="text-3xl font-bold text-purple-600" id="total-usuarios">0</h3>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card Administradores -->
+      <div class="rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 relative overflow-hidden">
+        <div class="relative flex items-center gap-4">
+          <div class="p-4 rounded-xl bg-purple-600/10">
+            <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm opacity-75">Administradores</p>
+            <h3 class="text-3xl font-bold text-purple-600" id="total-admins">0</h3>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card Novos Usuários -->
+      <div class="rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 relative overflow-hidden">
+        <div class="relative flex items-center gap-4">
+          <div class="p-4 rounded-xl bg-purple-600/10">
+            <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm opacity-75">Novos (7 dias)</p>
+            <h3 class="text-3xl font-bold text-purple-600" id="novos-usuarios">0</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Barra de ferramentas com pesquisa e filtros -->
+    <div class="flex flex-col md:flex-row gap-4 mb-8">
+      <div class="flex-1 relative">
+        <svg class="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <input type="text" id="search-user" 
+               class="w-full pl-10 pr-4 py-3 rounded-xl border border-purple-600 focus:border-purple-700 focus:ring-2 focus:ring-purple-200 transition-all duration-200"
+               placeholder="Buscar usuário por nome ou email...">
+      </div>
+      <select id="filter-type"
+              class="py-3 px-4 rounded-xl border border-purple-600 focus:border-purple-700 focus:ring-2 focus:ring-purple-200 transition-all duration-200 min-w-[200px]">
+        <option value="all">Todos os usuários</option>
+        <option value="admin">Apenas administradores</option>
+        <option value="user">Apenas usuários</option>
+      </select>
+    </div>
+
+    <!-- Container da tabela -->
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Usuário</th>
+            <th>Email</th>
+            <th>Tipo</th>
+            <th>Data de Registro</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="users-table-body">
+          <!-- Lista de usuários será inserida aqui -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="../src/js/navbar.js"></script>
+  <script src="../src/js/animu.js"></script>
+  <script src="../src/js/search.js"></script>
+  <script src="../src/js/admin-users.js"></script>
+</body>
+
+</html>

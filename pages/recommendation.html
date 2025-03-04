@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recomendações - Animu</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../src/css/animu.css">
+  <link rel="stylesheet" href="../src/css/navbar.css">
+  <link rel="stylesheet" href="../src/css/animes.css">
+  <link rel="stylesheet" href="../src/css/recommendation.css">
+  <link rel="icon" href="../src/data/favicon/favicon.ico" type="image/x-icon">
+</head>
+
+<body>
+  <div class="parallax-container">
+    <section class="parallax-section"
+      style="--parallax-bg-image: url('https://img.freepik.com/fotos-gratis/paisagem-magica-de-fantasia_23-2151502913.jpg?ga=GA1.1.1952551659.1739965581&semt=ais_hybrid');">
+      <div class="container mx-auto px-4 py-12">
+        <!-- Cabeçalho Animado -->
+        <div class="parallax-content">
+          <header class="text-center mb-16 recommendations-header">
+            <div class="recommendation-progress">
+              <svg class="recommendation-circle" viewBox="0 0 36 36">
+                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path class="progress" stroke-dasharray="75, 100"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              </svg>
+              <div class="percentage">75%</div>
+            </div>
+            <h1 class="text-4xl font-bold mb-4">Suas Recomendações</h1>
+            <p class="text-xl text-white mb-8">
+              Descobrimos alguns tesouros baseados no seu perfil
+            </p>
+          </header>
+        </div>
+      </div>
+    </section>
+
+    <!-- Seção normal - Stats -->
+    <div class="container mx-auto px-4 py-12">
+      <!-- Cards de Estatísticas -->
+      <div class="stats-grid mb-12">
+        <div class="stat-rec-card">
+          <div class="stat-rec-icon">🎯</div>
+          <div class="stat-rec-value" id="match-accuracy">94%</div>
+          <div class="stat-rec-label">Precisão</div>
+        </div>
+        <div class="stat-rec-card">
+          <div class="stat-rec-icon">🔥</div>
+          <div class="stat-rec-value" id="watched-count">23</div>
+          <div class="stat-rec-label">Assistidos</div>
+        </div>
+        <div class="stat-rec-card">
+          <div class="stat-rec-icon">⭐</div>
+          <div class="stat-rec-value" id="avg-rating">4.8</div>
+          <div class="stat-rec-label">Média</div>
+        </div>
+      </div>
+
+      <!-- Filtros Interativos -->
+      <div class="filter-tabs mb-12">
+        <div class="filter-slider"></div>
+        <button class="filter-tab active" data-filter="all">
+          <span class="filter-icon">🌟</span>
+          <span class="filter-text">Todos</span>
+        </button>
+        <button class="filter-tab" data-filter="genres">
+          <span class="filter-icon">🎭</span>
+          <span class="filter-text">Gêneros</span>
+        </button>
+        <button class="filter-tab" data-filter="similar">
+          <span class="filter-icon">🔄</span>
+          <span class="filter-text">Similares</span>
+        </button>
+        <button class="filter-tab" data-filter="trending">
+          <span class="filter-icon">📈</span>
+          <span class="filter-text">Tendências</span>
+        </button>
+      </div>
+    </div>
+
+    <section class="parallax-section"
+      style="--parallax-bg-image: url('https://img.freepik.com/fotos-gratis/paisagem-magica-de-fantasia_23-2151502913.jpg?ga=GA1.1.1952551659.1739965581&semt=ais_hybrid');">
+      <div class="container mx-auto px-4 py-12">
+        <div class="parallax-content">
+          <!-- Container de Recomendações -->
+          <div class="recommendations-wrapper">
+            <div id="genres-recommendations" class="recommendation-section active mb-12">
+              <div class="section-header flex justify-between items-center mb-6">
+                <h2 class="section-title text-2xl font-bold">Baseado nos seus Gêneros</h2>
+                <div class="match-indicator bg-purple-100 dark:bg-purple-900 px-3 py-1 rounded-full text-white">
+                  95% Match
+                </div>
+              </div>
+              <div class="grid-recommendations"></div>
+            </div>
+
+            <div id="similar-recommendations" class="recommendation-section mb-12">
+              <div class="section-header flex justify-between items-center mb-6">
+                <h2 class="section-title text-2xl font-bold">Animes Similares</h2>
+                <div class="match-indicator bg-purple-100 dark:bg-purple-900 px-3 py-1 rounded-full text-white">
+                  87% Match
+                </div>
+              </div>
+              <div class="grid-recommendations"></div>
+            </div>
+
+            <div id="trending-recommendations" class="recommendation-section mb-12">
+              <div class="section-header flex justify-between items-center mb-6">
+                <h2 class="section-title text-2xl font-bold">Tendências Atuais</h2>
+                <div class="match-indicator bg-purple-100 dark:bg-purple-900 px-3 py-1 rounded-full text-white">
+                  Hot 🔥
+                </div>
+              </div>
+              <div class="grid-recommendations"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Insight Box -->
+    <div class="insight-box mt-12">
+      <div class="insight-header">
+        <span class="insight-icon">💡</span>
+        <h3 class="insight-title">Análise do seu Perfil</h3>
+      </div>
+      <div class="insight-content">
+        <div class="insight-stat">
+          <div class="genre-preference">
+            <span class="genre-label">Ação</span>
+            <div class="genre-bar" style="--percent: 85%"></div>
+          </div>
+          <div class="genre-preference">
+            <span class="genre-label">Aventura</span>
+            <div class="genre-bar" style="--percent: 70%"></div>
+          </div>
+          <div class="genre-preference">
+            <span class="genre-label">Fantasia</span>
+            <div class="genre-bar" style="--percent: 65%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="../src/js/navbar.js"></script>
+  <script src="../src/js/animu.js"></script>
+  <script src="../src/js/search.js"></script>
+  <script src="../src/js/recommendation.js"></script>
+</body>
+
+</html>

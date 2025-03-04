@@ -1,0 +1,969 @@
+/* Importações */
+@import "search.css";
+
+/* Container fixo do menu de navegação principal */
+.nav-menu-container {
+  position: flex;
+  top: 8px; 
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 51;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  margin-left: 4px;
+}
+
+.logo-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  transition: transform 0.3s ease;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.logo-icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain; 
+  background: var(--primary-gradient);
+  border-radius: 50%;
+}
+
+.logo-text {
+  font-size: 1.5rem;
+  font-weight: 800;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.5px;
+}
+
+/* Ajustes responsivos */
+@media (max-width: 480px) {
+  .logo-icon {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .logo-text {
+    font-size: 1.25rem;
+  }
+}
+
+.logo-container a {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.logo-container a:hover {
+  color: var(--text-color);
+}
+
+/* Navegação Principal */
+nav {
+  background-color: var(--background);
+  transform: translateY(0);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+}
+
+/* Otimiza espaço da barra de pesquisa */
+.flex-1.max-w-xl {
+  max-width: none; 
+  margin: 0 8px; 
+  flex-grow: 1;
+}
+
+/* Área do usuário mais compacta */
+.flex.items-center.space-x-4 {
+  gap: 8px;
+}
+
+nav .ml-10 a:hover::after,
+nav .ml-10 a.active::after {
+  width: 100%;
+  left: 0;
+}
+
+nav .ml-10 a.active {
+  color: var(--primary-color);
+}
+
+.nav-link {
+  position: relative;
+  padding: 8px 12px;
+  font-weight: 500;
+  color: var(--text-color);
+  transition: all 0.2s ease;
+  border-radius: 8px;
+  margin: 2px 0;
+  overflow: hidden;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.nav-link::after {
+  display: none;
+}
+
+.nav-link:hover {
+  background-color: var(--card-shadow);
+  color: var(--text-color);
+}
+
+.nav-link::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  background: var(--primary-color);
+  border-radius: inherit;
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.nav-link:active::before {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 0.1;
+}
+
+/* Estado ativo */
+.nav-link.active {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.nav-link.active svg {
+  fill: var(--primary-color);
+  opacity: 1;
+}
+
+/* Barra Lateral */
+.menu-toggle-btn {
+  padding: 4.9px;
+  background: transparent;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+  position: static; 
+  top: auto;
+  left: auto;
+  z-index: 51;
+}
+
+.menu-toggle-btn:hover {
+  transform: scale(1.1);
+  background: var(--card-shadow);
+  fill: var(--primary-color);
+}
+
+.menu-toggle-btn:hover svg {
+  fill: var(--primary-color);
+}
+
+.menu-toggle-btn svg {
+  fill: var(--text-color);
+}
+
+/* Menu lateral com largura fixa e animação */
+.side-menu {
+  position: fixed;
+  top: 56px;
+  left: 0;
+  width: 225px; 
+  height: calc(100vh - 56px);
+  background: var(--background);
+  box-shadow: 2px 0 8px var(--card-shadow);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 49;
+  overflow: hidden;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Mostra a barra de rolagem apenas quando o mouse estiver sobre o menu */
+.side-menu:hover {
+  overflow-y: auto;
+}
+
+/* Estilização da barra de rolagem */
+.side-menu::-webkit-scrollbar {
+  width: 6px;
+  background: transparent;
+}
+
+.side-menu::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 3px;
+  opacity: 0.8;
+}
+
+.side-menu::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-color);
+  opacity: 1;
+}
+
+/* Ajuste para Firefox */
+.side-menu {
+  scrollbar-width: none;
+}
+
+.side-menu:hover {
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-color) transparent;
+}
+
+/* Estado recolhido do menu - transição suavizada */
+.side-menu:not(.open) {
+  width: 70px; 
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.side-menu:not(.open) .nav-link span,
+.side-menu:not(.open) .admin-section-divider {
+  display: none;
+  opacity: 0;
+}
+
+.side-menu:not(.open) .nav-link {
+  padding: 10px; 
+  justify-content: flex-start;
+  width: 70px;
+}
+
+.side-menu:not(.open) .nav-link svg {
+  margin-left: 12px; 
+  width: 22px; 
+  height: 22px;
+  min-width: 22px; 
+}
+
+.side-menu .nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px; 
+  width: 100%;
+  font-size: 0.8125rem;
+  margin: 2px 0; 
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+/* Novo efeito de hover com gradiente */
+.side-menu .nav-link::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    45deg,
+    var(--primary-color-alpha) 0%,
+    rgba(138, 43, 226, 0.2) 100%
+  );
+  transform: translateX(-101%);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 0;
+}
+
+.side-menu .nav-link::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--primary-color);
+  transform: scaleY(0);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 0 4px 4px 0;
+}
+
+.side-menu .nav-link:hover::before {
+  transform: translateX(0);
+}
+
+.side-menu .nav-link:hover::after {
+  transform: scaleY(1);
+}
+
+.side-menu .nav-link > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Efeito dos ícones */
+.side-menu .nav-link svg {
+  fill: var(--text-color);
+  opacity: 0.7;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 22px; 
+  height: 22px; 
+  width: 22px;
+}
+
+.side-menu .nav-link:hover svg {
+  fill: var(--primary-color);
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* Efeito no texto */
+.side-menu .nav-link span {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.3s ease 0.1s;
+  opacity: 1;
+  white-space: nowrap;
+}
+
+.side-menu .nav-link:hover span {
+  color: var(--primary-color);
+}
+
+.side-menu:not(.open) .nav-link span {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+/* Estado ativo */
+.side-menu .nav-link.active {
+  color: var(--primary-color);
+}
+
+.side-menu .nav-link.active::after {
+  transform: scaleY(1);
+}
+
+.side-menu .nav-link.active svg {
+  fill: var(--primary-color);
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* Efeito de pressionar */
+.side-menu .nav-link:active {
+  transform: scale(0.98);
+}
+
+.side-menu .nav-link:hover {
+  color: var(--primary-color);
+}
+
+.side-menu .nav-link svg {
+  fill: var(--text-color);
+  opacity: 0.7;
+  transition: fill 0.3s ease, opacity 0.3s ease;
+  min-width: 20px; 
+  height: 20px; 
+  width: 20px;
+}
+
+.side-menu .nav-link:hover svg {
+  fill: var(--primary-color);
+  opacity: 1;
+}
+
+.side-menu .nav-link.active {
+  color: var(--primary-color);
+}
+
+.side-menu .nav-link.active::before {
+  transform: translateX(0);
+}
+
+.side-menu .nav-link.active svg {
+  fill: var(--primary-color);
+  opacity: 1;
+}
+
+/* Seção Admin */
+#admin-options {
+  position: relative;
+  margin-top: 16px;
+  padding-top: 16px;
+}
+
+#admin-options::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 16px;
+  right: 16px;
+  height: 1px;
+  background: var(--card-shadow);
+}
+
+#admin-options.hidden {
+  display: none;
+}
+
+/* Overlay do Menu */
+.menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent; 
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 48;
+  pointer-events: none; 
+}
+
+.menu-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+body.menu-open {
+  overflow: auto !important;
+}
+
+/* Estilos do Dropdown do Usuário */
+.user-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--background);
+  border: 2px solid var(--primary-color);
+  border-radius: 12px;
+  min-width: 200px;
+  box-shadow: 0 4px 20px rgba(138, 43, 226, 0.2);
+  z-index: 1000;
+  backdrop-filter: blur(8px);
+  transform-origin: top right;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  padding: 8px 0; 
+}
+
+.user-dropdown.hidden {
+  opacity: 0;
+  transform: scale(0.95);
+  pointer-events: none;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px;
+  border: none;
+  background: transparent;
+  color: var(--text-color);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
+}
+
+.dropdown-item:hover {
+  background: var(--primary-color-alpha);
+}
+
+.dropdown-item svg {
+  fill: currentColor;
+}
+
+#user-dropdown-btn {
+  background: transparent;
+  transition: transform 0.3s ease;
+}
+
+#user-dropdown-btn:hover {
+  transform: scale(1.05);
+}
+
+/* Adiciona estilos para o botão de autenticação */
+.auth-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--primary-color-alpha);
+  color: var(--primary-color);
+  transition: all 0.3s ease;
+}
+
+.auth-btn:hover {
+  transform: scale(1.05);
+  background: var(--primary-color);
+  color: white;
+}
+
+.auth-btn svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+
+/* Estilos atualizados do Dropdown do Usuário */
+.dropdown-divider {
+  height: 1px;
+  background: var(--card-shadow);
+  margin: 8px 0;
+}
+
+.dropdown-theme-section {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Ajuste do espaçamento no dropdown de temas */
+.theme-option {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--text-color);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
+}
+
+/* Remove todos os media queries relacionados ao side-menu */
+@media (max-width: 768px) {
+  .menu-overlay.show {
+    background: rgba(0, 0, 0, 0.5);
+    pointer-events: auto;
+    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                visibility 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  body.menu-open {
+    overflow: hidden;
+  }
+
+  .flex-shrink-0.ml-4 {
+    display: none; 
+  }
+
+  .nav-menu-container {
+    top: 6px;
+  }
+
+  .w-48 {
+    width: 24px;
+  }
+
+  .flex-1.max-w-xl {
+    margin: 0 4px;
+  }
+
+  .nav-menu-container {
+    top: 8px;
+  }
+
+  .nav-menu-container {
+    top: 6px;
+  }
+
+  .logo-container {
+    margin-left: 2px;
+  }
+
+  .logo-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .logo-text {
+    font-size: 1.25rem;
+  }
+
+  .flex-1.max-w-xl {
+    margin: 0 4px;
+    max-width: calc(100vw - 120px);
+  }
+
+  .user-dropdown {
+    right: 4px;
+    min-width: 180px;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav-link {
+    padding: 14px 16px;
+    margin: 2px 0;
+    font-size: 0.9375rem; 
+  }
+
+  .theme-toggle-container {
+    transform: scale(0.9);
+  }
+
+  #user-panel img {
+    width: 32px;
+    height: 32px;
+  }
+
+  .nav-menu-container {
+    top: 8px;
+  }
+
+  .nav-menu-container {
+    top: 4px;
+  }
+
+  .logo-icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .logo-text {
+    font-size: 1.125rem;
+  }
+
+  .flex-1.max-w-xl {
+    max-width: calc(100vw - 100px);
+  }
+
+  #user-panel img {
+    width: 32px;
+    height: 32px;
+  }
+
+  .auth-btn {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* Oculta barra lateral minimizada em telas pequenas */
+@media (max-width: 480px) {
+  .side-menu:not(.open) {
+    transform: translateX(-100%);
+    visibility: hidden;
+  }
+
+  /* Ajusta padding do conteúdo quando menu está fechado */
+  body.has-navbar:not(.menu-open) {
+    padding-left: 0 !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .nav-link {
+    padding: 12px 8px;
+  }
+
+  .nav-menu-container {
+    top: 3px;
+  }
+
+  .logo-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .logo-text {
+    font-size: 1rem;
+  }
+
+  .flex-1.max-w-xl {
+    max-width: calc(100vw - 90px);
+  }
+
+  #user-panel img {
+    width: 28px;
+    height: 28px;
+  }
+
+  .auth-btn {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  body.has-navbar.menu-open {
+    padding-left: 225px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .nav-menu-container {
+    top: 12px;
+  }
+
+  .logo-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .logo-text {
+    font-size: 1.75rem;
+  }
+
+  .flex-1.max-w-xl {
+    max-width: 800px;
+    margin: 0 32px;
+  }
+}
+
+@media (min-width: 1025px) {
+  body.has-navbar.menu-open {
+    padding-left: 225px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .flex-1.max-w-xl {
+    max-width: 800px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .flex-1.max-w-xl {
+    max-width: 1000px;
+    margin: 0 48px;
+  }
+}
+
+/* Ajustes para telas muito grandes */
+@media (min-width: 1600px) {
+  .side-menu {
+    width: min(220px, 12vw); 
+  }
+
+  body.has-navbar.menu-open {
+    padding-left: min(220px, 12vw);
+  }
+}
+
+/* Suporte para orientação paisagem em dispositivos móveis */
+@media (max-height: 480px) and (orientation: landscape) {
+  .nav-link {
+    padding: 8px 12px;
+    margin: 1px 0;
+  }
+
+  .nav-link svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* Adiciona indicador de loading */
+.nav-loading::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  height: 2px;
+  width: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--primary-color) 50%,
+    transparent 100%
+  );
+  animation: loadingBar 1s infinite;
+}
+
+@keyframes loadingBar {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+
+/* Otimizações de performance */
+.side-menu, 
+.side-menu-content,
+.nav-link {
+  will-change: transform, width;
+}
+
+/* Ajuste para padding do conteúdo principal */
+body.has-navbar {
+  padding-top: 55px; 
+  transition: padding-left 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Ajuste base para os links do menu lateral */
+.side-menu .nav-link {
+  display: flex;
+  align-items: center;
+  padding: 10px 0; 
+  width: 100%;
+  font-size: 0.8125rem; 
+  margin: 2px 0;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+/* Posicionamento fixo do ícone */
+.side-menu .nav-link svg {
+  min-width: 22px;
+  width: 22px;
+  height: 22px;
+  margin-left: 22px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+/* Ajuste do texto */
+.side-menu .nav-link span {
+  padding-left: 12px;
+  opacity: 1;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  white-space: nowrap;
+}
+
+/* Estado recolhido - mantém ícone na mesma posição */
+.side-menu:not(.open) {
+  width: 65px;
+}
+
+.side-menu:not(.open) .nav-link {
+  padding: 10px 0;
+  width: 65px;
+}
+
+.side-menu:not(.open) .nav-link svg {
+  margin-left: 22px; 
+}
+
+/* Adiciona estilos para o tema ativo */
+.theme-option.active {
+  background: var(--primary-color);
+  color: white;
+}
+
+.theme-option.active svg {
+  fill: white;
+}
+
+/* Botão para ocultar navegação */
+.toggle-nav-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 25px;
+  width: 40px;
+  height: 40px;
+  background: var(--primary-gradient);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.toggle-nav-btn svg {
+  fill: currentColor;
+  transition: all 0.3s ease;
+  width: 24px;
+  height: 24px;
+}
+
+.toggle-nav-btn:hover svg {
+  transform: scale(1.1);
+  transition: transform 0.2s ease;
+}
+
+/* Ajustes responsivos para o botão */
+@media (max-width: 768px) {
+  .toggle-nav-btn {
+    bottom: 16px;
+    width: 42px;
+    height: 42px;
+  }
+
+  .toggle-nav-btn svg {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .toggle-nav-btn {
+    bottom: 12px;
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* Estados ocultos */
+nav.nav-hidden {
+  transform: translateY(-100%);
+}
+
+.side-menu.nav-hidden {
+  transform: translateX(-100%);
+}
+
+/* Ajuste do padding quando navegação está oculta */
+body.has-navbar {
+  padding-top: 55px;
+  padding-left: 0;
+  transition: padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body.has-navbar.menu-open:not(.nav-hidden) {
+  padding-left: 225px;
+}
+
+/* Quando a navegação está oculta, remove todos os paddings */
+body.has-navbar.nav-hidden {
+  padding: 0 !important;
+}
+
+/* Ajusta a transição do conteúdo principal */
+main {
+  transition: margin 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Remove margens quando navegação está oculta */
+body.has-navbar.nav-hidden main {
+  margin-top: 0;
+  margin-left: 0;
+}
+
+/* Ajuste responsivo para o padding lateral */
+@media (max-width: 768px) {
+  body.has-navbar.menu-open:not(.nav-hidden) {
+    padding-left: 0;
+  }
+}
+
+/* Ajuste do padding quando navegação está oculta */
+body.has-navbar {
+  transition: padding-top 0.3s ease;
+}
+
+nav.nav-hidden + body.has-navbar {
+  padding-top: 0;
+}

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Animu - Sobre</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../src/css/animu.css">
+  <link rel="stylesheet" href="../src/css/navbar.css">
+  <link rel="stylesheet" href="../src/css/about.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="../src/data/favicon/favicon.ico" type="image/x-icon">
+</head>
+
+<body>
+  <div class="about-form card-hover" style="margin-top: 50px;">
+    <h1 class="form-title text-center text-3xl mb-8"><b>Bem-vindo ao Animu</b></h1>
+
+    <div class="space-y-8">
+      <section>
+        <h2 class="gradient-text text-2xl mb-6">Nossa Missão</h2>
+        <div class="flex flex-col md:flex-row gap-8 items-center">
+          <div class="flex-1">
+            <p class="text-lg leading-relaxed">
+              O Animu é uma plataforma dedicada aos fãs de anime, criada com o objetivo de fornecer
+              informações detalhadas e organizadas sobre as mais diversas séries de animação japonesa.
+            </p>
+            <p class="text-lg leading-relaxed mt-4">
+              Nossa missão é criar um ambiente acolhedor onde os fãs possam descobrir, explorar e
+              compartilhar sua paixão por animes.
+            </p>
+          </div>
+          <div class="flex-1 text-center">
+            <img src="../src/data/favicon/web-app-manifest-512x512.png" alt="Animu Logo" class="max-w-[200px] mx-auto">
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="gradient-text text-2xl mb-6">Recursos</h2>
+        <ul class="resource-list">
+          <li>Banco de dados extensivo de animes</li>
+          <li>Informações detalhadas sobre cada série</li>
+          <li>Sistema de classificação e avaliação</li>
+          <li>Interface intuitiva e responsiva</li>
+          <li>Suporte a temas claro e escuro</li>
+          <li>Atualizações regulares</li>
+        </ul>
+      </section>
+
+      <div class="grid md:grid-cols-2 gap-8">
+        <section>
+          <h2 class="gradient-text text-2xl mb-6">Tecnologias</h2>
+          <div class="tag-container">
+            <div class="tag">HTML5</div>
+            <div class="tag">CSS3</div>
+            <div class="tag">JavaScript</div>
+            <div class="tag">Tailwind CSS</div>
+            <div class="tag">Responsivo</div>
+            <div class="tag">API REST</div>
+            <div class="tag">Swiper</div>
+          </div>
+        </section>
+
+        <section>
+          <h2 class="gradient-text text-2xl mb-6">Equipe</h2>
+          <div class="team-info">
+            <p class="text-lg">
+              O Animu é desenvolvido por estudantes apaixonados por programação e anime,
+              focados em criar a melhor experiência possível para nossa comunidade.
+            </p>
+          </div>
+        </section>
+      </div>
+
+      <section>
+        <h2 class="gradient-text text-2xl mb-6">Entre em Contato</h2>
+        <div class="contact-section">
+          <a href="mailto:victorgabrielbarbosa88@gmail.com" class="contact-link">
+            <i class="fas fa-envelope"></i>
+            victorgabrielbarbosa88@gmail.com
+          </a>
+          <a href="mailto:guilhermeepifanio14@gmail.com" class="contact-link">
+            <i class="fas fa-envelope"></i>
+            guilhermeepifanio14@gmail.com
+          </a>
+          <a href="https://github.com/animu" target="_blank" class="contact-link">
+            <i class="fab fa-github"></i>
+            GitHub
+          </a>
+        </div>
+      </section>
+
+      <div class="version-info">
+        <span class="version-badge">Versão 1.0.0 Beta</span>
+        <span class="text-sm opacity-75">Última atualização: Janeiro 2024</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="../src/js/navbar.js"></script>
+  <script src="../src/js/search.js"></script>
+  <script src="../src/js/animu.js"></script>
+  <script>
+    // Observer para animar seções quando ficarem visíveis
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) entry.target.classList.add('visible');
+      });
+    }, {
+      threshold: 0.1
+    });
+
+    // Observar todas as seções
+    document.querySelectorAll('section').forEach(section => {
+      observer.observe(section);
+    });
+  </script>
+</body>
+
+</html>

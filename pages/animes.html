@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Anime</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <!-- Swiper CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+  <link rel="stylesheet" href="../src/css/animu.css">
+  <link rel="stylesheet" href="../src/css/animes.css">
+  <link rel="stylesheet" href="../src/css/navbar.css">
+  <link rel="icon" href="../src/data/favicon/favicon.ico" type="image/x-icon">
+  <!-- Swiper JS -->
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+</head>
+
+<body>
+  <!-- O conteúdo será inserido dinamicamente via JavaScript -->
+  <div class="anime-container" id="anime-content"></div>
+
+  <!-- Nova seção de animes relacionados com Swiper -->
+  <div id="related-animes-section" class="related-animes-container mx-auto px-4 mt-8" style="display: none;">
+    <h2 class="section-title">Animes Relacionados</h2>
+    <div class="swiper-container related-swiper">
+      <div class="swiper-wrapper" id="related-animes-wrapper">
+        <!-- Animes relacionados serão inseridos aqui dinamicamente -->
+      </div>
+      <!-- Adicionar navegação -->
+      <div class="swiper-button-next"></div>
+      <div class="swiper-button-prev"></div>
+      <!-- Adicionar paginação -->
+      <div class="swiper-pagination related-pagination"></div>
+    </div>
+  </div>
+
+  <!-- Seção de comentários (agora oculta por padrão) -->
+  <div id="comments-section" class="comments-section mx-auto px-4 mt-8 mb-12" style="display: none;">
+    <h2 class="text-2xl font-bold mb-6">Avaliações e Comentários</h2>
+
+    <!-- Formulário de comentário -->
+    <form id="comment-form" class="mb-8">
+      <div class="flex flex-col gap-4">
+        <!-- Sistema de avaliação por estrelas -->
+        <div class="rating-container mb-2">
+          <p class="mb-2 font-semibold flex flex-wrap items-center gap-2">
+            Sua avaliação:
+            <span class="rating-number-input">
+              <input type="number" id="rating-display" class="text-purple-600 w-16 text-center" min="0" max="10"
+                step="0.1" value="0.0">
+            </span>
+          </p>
+          <div class="rating-slider-container">
+            <input type="range" id="rating-slider" min="0" max="100" value="0" class="rating-slider" step="1">
+            <!-- Mudando step para 1 (representará 0.1 na nota final) -->
+            <div class="rating-emoji-container">
+              <span id="rating-emoji" class="rating-emoji">😶</span>
+            </div>
+          </div>
+          <div class="rating-labels">
+            <span>Péssimo</span>
+            <span>Ruim</span>
+            <span>Médio</span>
+            <span>Bom</span>
+            <span>Excelente</span>
+          </div>
+        </div>
+
+        <div class="relative">
+          <textarea id="comment-text" class="w-full p-3 border rounded-lg resize-none dark:bg-gray-800" rows="4"
+            placeholder="Digite seu comentário..." required></textarea>
+          <!-- O contador será inserido aqui via JavaScript -->
+        </div>
+
+        <button type="submit" class="btn">
+          Enviar avaliação
+        </button>
+      </div>
+    </form>
+
+    <!-- Lista de comentários -->
+    <div id="comments-list" class="space-y-6">
+      <!-- Os comentários serão inseridos aqui dinamicamente -->
+    </div>
+  </div>
+
+  <!-- Inclusão de scripts para funcionalidades do site -->
+  <script src="../src/js/navbar.js"></script>
+  <script src="../src/js/animu.js"></script>
+  <script src="../src/js/forum.js"></script>
+  <script src="../src/js/animes.js"></script>
+  <script src="../src/js/search.js"></script>
+</body>
+
+</html>

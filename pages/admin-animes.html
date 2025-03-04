@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"="width=device-width, initial-scale=1.0">
+  <title>Gerenciar Animes - Painel Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../src/css/animu.css">
+  <link rel="stylesheet" href="../src/css/admin.css">
+  <link rel="stylesheet" href="../src/css/navbar.css">
+  <link rel="icon" href="../src/data/favicon/favicon.ico" type="image/x-icon">
+</head>
+
+<body>
+  <!-- Header -->
+  <header class="relative py-8 mb-6 overflow-hidden">
+    <div class="container mx-auto px-4 relative">
+      <h1 class="text-4xl md:text-5xl font-bold text-center mb-2">
+        <span class="text-purple-600">Gerenciamento</span> de Animes
+      </h1>
+      <p class="text-center opacity-75">Gerencie o catálogo de animes da plataforma de forma eficiente</p>
+    </div>
+  </header>
+
+  <!-- Container principal -->
+  <div class="container mx-auto px-4 max-w-7xl">
+    <!-- Botões de ação -->
+    <div class="flex gap-4 mb-6 justify-center">
+      <button onclick="showAnimeForm()" class="btn btn-primary group">
+        <span class="flex items-center gap-2">
+          <svg class="w-5 h-5 transition-transform group-hover:rotate-90 duration-300" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Novo Anime
+        </span>
+      </button>
+      <button onclick="exportAnimes()" class="btn btn-secondary">
+        📤 Exportar Dados
+      </button>
+      <button onclick="document.getElementById('importFile').click()" class="btn btn-secondary">
+        📥 Importar Dados
+      </button>
+      <input type="file" id="importFile" accept=".json" class="hidden" onchange="importAnimes(event)">
+    </div>
+
+    <!-- Lista de animes -->
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Imagem</th>
+            <th>Título</th>
+            <th>Episódios</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="animesList">
+          <!-- Lista de animes será inserida aqui -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal do formulário -->
+  <div id="animeModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-100">
+    <div class="admin-form-container scrollbar-thin max-w-4xl w-full">
+      <div class="modal-header-fixed">
+        <div class="flex justify-between items-center">
+          <h2 id="modalTitle" class="text-2xl font-bold">Novo Anime</h2>
+          <button type="button" onclick="closeAnimeForm()" class="close-btn text-gray-500 hover:text-gray-700">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <!-- Barra de progresso do formulário -->
+        <div class="progress-bar mt-4">
+          <div class="progress-fill" id="formProgress"></div>
+        </div>
+      </div>
+
+      <div class="modal-content-scroll">
+        <form id="animeForm" class="space-y-4">
+          <!-- Guia rápido -->
+          <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg mb-4">
+            <h3 class="text-sm font-semibold mb-2">Dicas de preenchimento:</h3>
+            <ul class="text-sm space-y-1">
+              <li>• Cole a URL do MyAnimeList para preenchimento automático</li>
+              <li>• Arraste imagens diretamente para os campos de mídia</li>
+              <li>• Pressione Tab para navegar entre os campos</li>
+            </ul>
+          </div>
+
+          <!-- Campo de URL do MyAnimeList -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium mb-1">URL do MyAnimeList (opcional)</label>
+            <div class="flex gap-2">
+              <input type="text" id="malUrl" placeholder="https://myanimelist.net/anime/... ou ID"
+                class="flex-1 p-2 border rounded">
+              <button type="button" onclick="autoFillFromMal()"
+                class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
+                Preencher
+              </button>
+            </div>
+          </div>
+
+          <!-- Grid responsivo ajustado -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8">
+            <!-- Coluna esquerda -->
+            <div class="space-y-4 lg:space-y-6">
+              <!-- Título Principal -->
+              <div class="w-full">
+                <label class="block text-sm font-medium mb-1">
+                  Título Principal <span class="text-red-500">*</span>
+                </label>
+                <input type="text" id="primaryTitle" required
+                  class="w-full p-2 sm:p-3 border rounded text-sm sm:text-base">
+              </div>
+
+              <!-- Imagem de Capa - Altura ajustável -->
+              <div class="w-full">
+                <label class="block text-sm font-medium mb-1">
+                  Imagem de Capa <span class="text-red-500">*</span>
+                </label>
+                <div id="coverImageDropzone"
+                  class="drop-zone border-2 border-dashed rounded-lg p-4 text-center cursor-pointer relative flex items-center justify-center min-h-[180px] sm:min-h-[223px]">
+                  <div class="drop-zone-prompt">
+                    <svg class="w-16 h-16 mx-auto mb-4 text-purple-600" fill="none" stroke="currentColor"
+                      viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <p>Arraste uma imagem ou clique para selecionar</p>
+                    <p class="text-sm text-gray-500">PNG, JPG ou GIF (max. 2MB)</p>
+                  </div>
+                  <img id="coverImagePreview" class="hidden max-h-48 mx-auto">
+                  <button type="button" id="removeCoverImage" class="remove-media-btn hidden"
+                    title="Remover imagem">✕</button>
+                  <input type="url" id="coverImage" class="hidden">
+                  <input type="file" id="coverImageInput" class="hidden" accept="image/*">
+                </div>
+              </div>
+
+              <!-- Video de Trailer - Altura ajustável -->
+              <div class="w-full">
+                <label class="block text-sm font-medium mb-1">Trailer do Anime</label>
+                <div id="trailerDropzone"
+                  class="drop-zone border-2 border-dashed rounded-lg p-4 text-center cursor-pointer relative min-h-[180px] sm:min-h-[223px]">
+                  <div class="drop-zone-content">
+                    <div class="drop-zone-prompt">
+                      <svg class="w-16 h-16 mx-auto mb-4 text-purple-600" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      <p class="text-base mb-2">Arraste um vídeo ou clique para selecionar</p>
+                      <p class="text-sm text-gray-500 mb-4">MP4, WebM ou YouTube (max. 100MB)</p>
+                    </div>
+                    <div onclick="event.stopPropagation()">
+                      <input type="text" placeholder="URL do YouTube" class="p-2 w-full border rounded text-center"
+                        id="trailerUrlInput">
+                    </div>
+                  </div>
+                  <div id="trailerPreview" class="hidden max-w-full"></div>
+                  <button type="button" id="removeTrailer" class="remove-media-btn hidden"
+                    title="Remover vídeo">✕</button>
+                  <input type="url" id="trailerUrl" class="hidden">
+                  <input type="file" id="trailerInput" class="hidden" accept="video/*">
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium mb-1">Produtores</label>
+                <div class="flex gap-2 mb-2">
+                  <input type="text" id="producerInput" placeholder="Nome do produtor"
+                    class="flex-1 p-2 border rounded">
+                  <button type="button" onclick="addProducer()"
+                    class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
+                    +
+                  </button>
+                </div>
+                <div id="producersList" class="space-y-2">
+                  <!-- Lista de produtores será inserida aqui -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Coluna direita -->
+            <div class="space-y-4 lg:space-y-6">
+              <!-- Títulos Alternativos -->
+              <div>
+                <label class="block text-sm font-medium mb-1">Títulos Alternativos</label>
+                <div class="flex gap-2 mb-2">
+                  <input type="text" id="altTitle" placeholder="Título" class="flex-1 p-2 border rounded">
+                  <select id="altTitleType" class="p-2 border rounded">
+                    <option value="japonês">Japonês</option>
+                    <option value="inglês">Inglês</option>
+                    <option value="português">Português</option>
+                  </select>
+                  <button type="button" onclick="addAlternativeTitle()"
+                    class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
+                    +
+                  </button>
+                </div>
+                <div id="altTitlesList" class="space-y-2">
+                  <!-- Títulos alternativos serão inseridos aqui -->
+                </div>
+              </div>
+
+              <!-- Grid responsivo para campos menores -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="w-full">
+                  <label class="block text-sm font-medium mb-1">
+                    Episódios <span class="text-red-500">*</span>
+                  </label>
+                  <input type="number" id="episodes" min="1" required
+                    class="w-full p-2 sm:p-3 border rounded text-sm sm:text-base">
+                </div>
+
+                <div class="w-full">
+                  <label class="block text-sm font-medium mb-1">
+                    Duração (min) <span class="text-red-500">*</span>
+                  </label>
+                  <input type="number" id="episodeDuration" min="1" required
+                    class="w-full p-2 sm:p-3 border rounded text-sm sm:text-base">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium mb-1">
+                    Status
+                  </label>
+                  <select id="status" class="w-full p-2 border rounded">
+                    <option value="Em Exibição">Em Exibição</option>
+                    <option value="Finalizado">Finalizado</option>
+                    <option value="Anunciado">Anunciado</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium mb-1">
+                    Classificação
+                  </label>
+                  <select id="ageRating" class="w-full p-2 border rounded">
+                    <option value="Livre">Livre</option>
+                    <option value="10+">10+</option>
+                    <option value="12+">12+</option>
+                    <option value="14+">14+</option>
+                    <option value="16+">16+</option>
+                    <option value="18+">18+</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium mb-1">Temporada</label>
+                  <select id="seasonPeriod" class="w-full p-2 border rounded">
+                    <option value="inverno">Inverno</option>
+                    <option value="primavera">Primavera</option>
+                    <option value="verão">Verão</option>
+                    <option value="outono">Outono</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium mb-1">Data de Lançamento</label>
+                  <input type="date" id="releaseDate"
+                    class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    min="1960-01-01">
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium mb-1">
+                  Gêneros <span class="text-red-500">*</span>
+                </label>
+                <div class="flex gap-2 mb-2">
+                  <input type="text" id="genreInput" placeholder="Digite um gênero" class="flex-1 p-2 border rounded"
+                    list="genresSuggestions">
+                  <button type="button" onclick="addGenre()"
+                    class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
+                    +
+                  </button>
+                </div>
+                <div id="genresList" class="tag-container">
+                  <!-- Gêneros serão inseridos aqui -->
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium mb-1">
+                  Estúdio <span class="text-red-500">*</span>
+                </label>
+                <input type="text" id="studio" class="w-full p-2 border rounded" required list="studiosSuggestions">
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium mb-1">
+                  Fonte Original <span class="text-red-500">*</span>
+                </label>
+                <select id="source" class="w-full p-2 border rounded" required>
+                  <option value="">Selecione...</option>
+                  <option value="Manga">Mangá</option>
+                  <option value="Light Novel">Light Novel</option>
+                  <option value="Original">Original</option>
+                  <option value="Visual Novel">Visual Novel</option>
+                  <option value="Game">Game</option>
+                  <option value="Other">Outro</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium mb-1">Licenciadores</label>
+                <div class="flex gap-2 mb-2">
+                  <input type="text" id="licensorInput" placeholder="Nome do licenciador"
+                    class="flex-1 p-2 border rounded">
+                  <button type="button" onclick="addLicensor()"
+                    class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
+                    +
+                  </button>
+                </div>
+                <div id="licensorsList" class="space-y-2">
+                  <!-- Lista de licenciadores será inserida aqui -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Campo único para Staff -->
+          <div>
+            <label class="block text-sm font-medium mb-1">Staff</label>
+            <div class="flex gap-2 mb-2">
+              <input type="text" id="staffInput" placeholder="Nome do membro" class="flex-1 p-2 border rounded">
+              <select id="staffRole" class="p-2 border rounded min-w-[140px]">
+                <option value="director">Diretor</option>
+                <option value="writer">Roteirista</option>
+                <option value="composer">Compositor</option>
+                <option value="animator">Animador</option>
+                <option value="designer">Designer</option>
+                <option value="producer">Produtor</option>
+                <option value="other">Outro</option>
+              </select>
+              <button type="button" onclick="addStaffMember()" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
+                +
+              </button>
+            </div>
+            <div id="staffList" class="mt-2 flex flex-wrap gap-2">
+              <!-- Lista de membros da staff será inserida aqui -->
+            </div>
+          </div>
+
+          <!-- Sinopse - Full width -->
+          <div class="w-full mt-6">
+            <label class="block text-sm font-medium mb-1">
+              Sinopse <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
+              <textarea id="synopsis" rows="4" required
+                class="w-full p-2 sm:p-3 border rounded text-sm sm:text-base"></textarea>
+              <button type="button" onclick="translateSynopsis()"
+                class="absolute top-2 right-2 p-1 bg-purple-600 text-white rounded hover:bg-purple-700"
+                title="Traduzir para português">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd"
+                    d="M7 2a1 1 0 011 1v1h3a1 1 0 110 2H9.578a18.87 18.87 0 01-1.724 4.78c.29.354.596.696.914 1.026a1 1 0 11-1.44 1.389 21.034 21.034 0 01-.554-.6 19.098 19.098 0 01-3.107 3.567 1 1 0 01-1.334-1.49 17.087 17.087 0 003.13-3.733 18.992 18.992 0 01-1.487-2.494 1 1 0 111.79-.89c.234.47.489.928.764 1.372.417-.934.752-1.913.997-2.927H3a1 1 0 110-2h3V3a1 1 0 011-1zm6 6a1 1 0 01.894.553l2.991 5.982a.869.869 0 01.02.037l.99 1.98a1 1 0 11-1.79.895L15.383 16h-4.764l-.724 1.447a1 1 0 11-1.788-.894l.99-1.98.019-.038 2.99-5.982A1 1 0 0113 8zm-1.382 6h2.764L13 11.236 11.618 14z"
+                    clip-rule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Botões responsivos -->
+          <div class="flex flex-col sm:flex-row justify-end gap-2 sm:gap-4 mt-6">
+            <button type="button" onclick="clearAnimeForm()"
+              class="w-full sm:w-auto btn btn-secondary order-3 sm:order-1">
+              Limpar
+            </button>
+            <button type="button" onclick="closeAnimeForm()" class="w-full sm:w-auto btn btn-cancel order-2">
+              Cancelar
+            </button>
+            <button type="submit" class="w-full sm:w-auto btn btn-primary order-1 sm:order-3">
+              Salvar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Template para sugestões de gêneros -->
+  <datalist id="genresSuggestions">
+    <option value="Ação">
+    <option value="Aventura">
+    <option value="Comédia">
+    <option value="Drama">
+    <option value="Fantasia">
+    <option value="Ficção Científica">
+    <option value="Romance">
+    <option value="Slice of Life">
+    <option value="Esportes">
+    <option value="Sobrenatural">
+  </datalist>
+
+  <!-- Template para sugestões de estúdios -->
+  <datalist id="studiosSuggestions">
+    <option value="Toei Animation">
+    <option value="Studio Ghibli">
+    <option value="Madhouse">
+    <option value="Kyoto Animation">
+    <option value="A-1 Pictures">
+    <option value="MAPPA">
+    <option value="ufotable">
+    <option value="Bones">
+  </datalist>
+
+  <!-- Scripts -->
+  <script src="../src/js/navbar.js"></script>
+  <script src="../src/js/animu.js"></script>
+  <script src="../src/js/search.js"></script>
+  <script src="../src/js/category.js"></script>
+  <script src="../src/js/admin-animes.js"></script>
+</body>
+
+</html>

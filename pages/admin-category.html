@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerenciar Categorias - Animu</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../src/css/animu.css">
+  <link rel="stylesheet" href="../src/css/admin.css">
+  <link rel="stylesheet" href="../src/css/navbar.css">
+  <link rel="icon" href="../src/data/favicon/favicon.ico" type="image/x-icon">
+</head>
+
+<body>
+  <!-- Header -->
+  <header class="relative py-8 mb-6 overflow-hidden">
+    <div class="container mx-auto px-4 relative">
+      <h1 class="text-4xl md:text-5xl font-bold text-center mb-2">
+        <span class="text-purple-600">Gerenciamento</span> de Categorias
+      </h1>
+      <p class="text-center opacity-75">Organize e gerencie as categorias do catálogo de animes</p>
+    </div>
+  </header>
+
+  <!-- Container principal -->
+  <div class="container mx-auto px-4 max-w-7xl">
+    <!-- Cards de estatísticas -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <!-- Card Total de Categorias -->
+      <div class="rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 relative overflow-hidden">
+        <div class="relative flex items-center gap-4">
+          <div class="p-4 rounded-xl bg-purple-600/10">
+            <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm opacity-75">Total de Categorias</p>
+            <h3 class="text-3xl font-bold text-purple-600" id="total-categories">0</h3>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card Categorias Principais -->
+      <div class="rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 relative overflow-hidden">
+        <div class="relative flex items-center gap-4">
+          <div class="p-4 rounded-xl bg-purple-600/10">
+            <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M5 8h14M5 12h14M5 16h14"/>
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm opacity-75">Categorias Principais</p>
+            <h3 class="text-3xl font-bold text-purple-600" id="main-categories">0</h3>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card Subcategorias -->
+      <div class="rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 relative overflow-hidden">
+        <div class="relative flex items-center gap-4">
+          <div class="p-4 rounded-xl bg-purple-600/10">
+            <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M8 7V3m8 4V3M3 21h18M3 10h18M3 7h18M3 14h18"/>
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm opacity-75">Subcategorias</p>
+            <h3 class="text-3xl font-bold text-purple-600" id="sub-categories">0</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botão Nova Categoria e Lista -->
+    <div class="flex justify-center items-center mb-8">
+      <button id="btn-show-form" class="btn btn-primary">
+        <span class="flex items-center gap-2">
+          <svg class="w-5 h-5 transition-transform group-hover:rotate-90 duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          Nova Categoria
+        </span>
+      </button>
+    </div>
+
+    <!-- Lista de categorias existentes -->
+    <div class="rounded-xl shadow-lg">
+      <div id="categories-list">
+        <!-- Preenchido via JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal do formulário -->
+  <div id="category-modal" class="modal hidden">
+    <div class="admin-form-container" style="max-width: 800px; max-height: 80vh; width: 95%;">
+      <div class="modal-header-fixed">
+        <div class="flex justify-between items-center">
+          <h2 id="modalTitle" class="text-2xl font-bold">Adicionar Nova Categoria</h2>
+          <button type="button" onclick="categoryManager.closeModal()" class="close-btn text-gray-500 hover:text-gray-700">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <!-- Barra de progresso do formulário -->
+        <div class="progress-bar mt-4">
+          <div class="progress-fill" id="formProgress"></div>
+        </div>
+      </div>
+
+      <div class="modal-content-scroll">
+        <div id="category-form-container">
+          <!-- O formulário será inserido aqui via JavaScript -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="../src/js/navbar.js"></script>
+  <script src="../src/js/animu.js"></script>
+  <script src="../src/js/search.js"></script>
+  <script src="../src/js/admin.js"></script>
+  <script src="../src/js/admin-category.js"></script>
+</body>
+
+</html>

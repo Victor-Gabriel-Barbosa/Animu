@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Animu</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <!-- Swiper CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+  <link rel="stylesheet" href="../src/css/animu.css">
+  <link rel="stylesheet" href="../src/css/index.css">
+  <link rel="stylesheet" href="../src/css/animes.css">
+  <link rel="stylesheet" href="../src/css/news.css">
+  <link rel="stylesheet" href="../src/css/navbar.css">
+  <link rel="icon" href="../src/data/favicon/favicon.ico" type="image/x-icon">
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+  <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+  <!-- Swiper JS -->
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+</head>
+
+<body>
+  <div class="parallax-container">
+    <section class="parallax-section">
+      <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <div class="parallax-content">
+          <header class="index-header">
+            <h1 class="index-title anime-gradient">Animu</h1>
+            <p class="index-description text-white">
+              Descubra universos infinitos, explore narrativas épicas e mergulhe nas histórias mais fascinantes do mundo
+              dos
+              animes.
+            </p>
+          </header>
+        </div>
+      </div>
+    </section>
+
+    <div class="container mx-auto px-4 max-w-6xl">
+      <div class="section-wrapper">
+        <div class="index-sections">
+          <!-- Card com últimos reviews -->
+          <div class="index-card">
+            <div class="index-card-header gradient-purple"></div>
+            <h2 class="index-card-title">Últimos Reviews</h2>
+            <ul id="latest-reviews" class="index-card-list">
+              <!-- Reviews serão inseridos dinamicamente -->
+            </ul>
+          </div>
+
+          <!-- Card com categorias populares -->
+          <div class="index-card">
+            <div class="index-card-header gradient-green"></div>
+            <h2 class="index-card-title">Categorias Populares</h2>
+            <ul id="popular-categories" class="index-card-list">
+              <!-- Links serão inseridos dinamicamente via JavaScript -->
+            </ul>
+          </div>
+
+          <!-- Card com novidades -->
+          <div class="index-card">
+            <div class="index-card-header gradient-pink"></div>
+            <h2 class="index-card-title">Novidades</h2>
+            <ul class="index-card-list">
+              <li class="index-card-item">
+                <a href="animes.html?status=Anunciado" class="index-card-link">
+                  <span class="index-card-link-title">Próximos Lançamentos</span>
+                  <p class="index-card-link-subtitle">Animes que vão estrear</p>
+                </a>
+              </li>
+              <li class="index-card-item">
+                <a href="" id="current-season-link" class="index-card-link">
+                  <span class="index-card-link-title">Melhores da Temporada</span>
+                  <p class="index-card-link-subtitle" id="current-season-text">Top animes do momento</p>
+                </a>
+              </li>
+              <li class="index-card-item">
+                <a href="recommendation.html" class="index-card-link">
+                  <span class="index-card-link-title">Recomendações</span>
+                  <p class="index-card-link-subtitle">Seleção especial</p>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="parallax-section">
+      <div class="container mx-auto px-4 max-w-6xl">
+        <div class="parallax-content">
+          <!-- Animes em Destaque -->
+          <h2 class="section-title">Animes em Destaque</h2>
+          <div class="swiper-container featured-swiper">
+            <div class="swiper-wrapper">
+              <!-- Os cards serão inseridos dinamicamente aqui -->
+            </div>
+            <!-- Adicionar navegação -->
+            <div class="swiper-button-next"></div>
+            <div class="swiper-button-prev"></div>
+            <!-- Adicionar paginação -->
+            <div class="swiper-pagination featured-pagination"></div>
+          </div>
+
+          <!-- Divisor entre as seções -->
+          <div class="section-divider"></div>
+
+          <!-- Animes da Temporada -->
+          <h2 class="section-title">Animes da Temporada</h2>
+          <div class="swiper-container seasonal-swiper">
+            <div class="swiper-wrapper">
+              <!-- Os cards serão inseridos dinamicamente aqui -->
+            </div>
+            <!-- Adicionar navegação -->
+            <div class="swiper-button-next"></div>
+            <div class="swiper-button-prev"></div>
+            <!-- Adicionar paginação -->
+            <div class="swiper-pagination seasonal-pagination"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="container mx-auto px-4 max-w-6xl">
+      <section class="section-wrapper">
+        <div class="forum-container">
+          <h2 class="section-title">Fórum da Comunidade</h2>
+          <div class="flex justify-center items-center mb-8">
+            <button id="new-topic-btn" class="btn">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                  d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                  clip-rule="evenodd" />
+              </svg>
+              Nova Discussão
+            </button>
+          </div>
+
+          <!-- Lista de discussões -->
+          <div id="forum-topics" class="space-y-6">
+            <!-- Tópicos serão inseridos aqui via JavaScript -->
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <section class="parallax-section">
+      <div class="container mx-auto px-4 max-w-6xl">
+        <div class="parallax-content">
+          <h2 class="section-title">Últimas Notícias</h2>
+          <div class="flex justify-center items-center mb-4">
+            <a href="news.html" class="btn">
+              Ver todas
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                  clip-rule="evenodd" />
+              </svg>
+            </a>
+          </div>
+
+          <div class="news-grid">
+            <!-- Cards de notícias serão inseridos dinamicamente via JavaScript -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Rodapé -->
+    <footer class="text-center py-8 bg-opacity-90" style="background: var(--background);">
+      <p class="font-light">&copy; 2024 Animu. Todos os direitos reservados.</p>
+    </footer>
+  </div> <!-- Fechamento do parallax-container -->
+
+  <!-- Modal para nova discussão -->
+  <div id="new-topic-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="new-topic-modal relative">
+      <!-- Header do modal -->
+      <div class="modal-header flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="modal-icon-wrapper">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z">
+              </path>
+            </svg>
+          </div>
+          <h3 class="modal-title text-2xl">Iniciar Nova Discussão</h3>
+        </div>
+        <button id="close-modal-btn" class="modal-close hover:rotate-90 transition-transform">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+            </path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Formulário -->
+      <form id="new-topic-form" class="mt-6">
+        <div class="form-grid">
+          <!-- Categoria -->
+          <div class="form-group col-span-2 md:col-span-1">
+            <label class="form-label">Categoria</label>
+            <div class="select-wrapper">
+              <select id="topic-category" class="form-select" required>
+                <!-- Preenchido via JavaScript -->
+              </select>
+            </div>
+          </div>
+
+          <!-- Tags -->
+          <div class="form-group col-span-2 md:col-span-1">
+            <label class="form-label">Tags</label>
+            <div class="input-wrapper">
+              <input type="text" id="topic-tags" class="form-input" placeholder="Ex: anime, discussão, opinião">
+              <span class="input-icon">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
+                  </path>
+                </svg>
+              </span>
+            </div>
+          </div>
+
+          <!-- Título com contador -->
+          <div class="form-group col-span-2">
+            <label class="form-label">Título</label>
+            <div class="input-wrapper">
+              <input type="text" id="topic-title" class="form-input" placeholder="Digite um título interessante"
+                maxlength="100" oninput="updateCharCount(this, 'title-char-count')" required>
+              <span class="input-icon">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                  </path>
+                </svg>
+              </span>
+            </div>
+            <small id="title-char-count" class="text-right block mt-1">0/100</small>
+          </div>
+
+          <!-- Conteúdo com contador -->
+          <div class="form-group col-span-2">
+            <label class="form-label">Conteúdo</label>
+            <div class="input-wrapper">
+              <div id="topic-content" class="h-64"></div>
+            </div>
+            <small id="content-char-count" class="text-right block mt-1">0/2000</small>
+          </div>
+        </div>
+
+        <!-- Botões -->
+        <div class="modal-footer">
+          <button type="button" id="cancel-topic-btn" class="btn btn-cancel">
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 6v6m0 0v6m0-6h6m-6 0H6">
+              </path>
+            </svg>
+            Publicar Discussão
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="../src/js/navbar.js"></script>
+  <script src="../src/js/animu.js"></script>
+  <script src="../src/js/forum.js"></script>
+  <script src="../src/js/search.js"></script>
+</body>
+
+</html>
