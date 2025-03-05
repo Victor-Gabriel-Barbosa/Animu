@@ -320,7 +320,7 @@ function renderTopicCard(topic, userId) {
     { icon: '💬', name: 'Geral' };
 
   return `
-    <div class="card p-6 mb-4 transform transition-all cursor-pointer overflow-hidden" 
+    <div class="card p-6 mb-4 transform transition-all overflow-hidden" 
          id="topic-${topic.id}"
          onclick="incrementTopicViews(${topic.id})">
       <div class="topic-content overflow-hidden">
