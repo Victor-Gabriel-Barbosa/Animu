@@ -53,7 +53,7 @@ const FORUM_CONFIG = {
 // Função para carregar a lista de palavrões
 async function loadBadWords() {
   try {
-    const response = await fetch('../src/data/badwords.json');
+    const response = await fetch('src/data/badwords.json');
     const data = await response.json();
     FORUM_CONFIG.moderationRules.forbiddenWords = data.palavroes;
   } catch (error) {
