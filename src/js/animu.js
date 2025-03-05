@@ -215,7 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// Função para obter o avatar do usuário
+// Obtém o avatar do usuário
 function getUserAvatar(username) {
   const users = JSON.parse(localStorage.getItem('animuUsers') || '[]');
   const user = users.find(u => u.username === username);
@@ -274,7 +274,7 @@ function getFeaturedAnimes(limit = 16) {
   }
 }
 
-// Função para contar favoritos de um anime
+// Conta quantidade de favoritos de um anime
 function countAnimeFavorites(animeTitle) {
   try {
     const users = JSON.parse(localStorage.getItem('animuUsers')) || [];
@@ -313,17 +313,13 @@ function toggleFavorite(animeTitle) {
   if (userIndex === -1) return;
 
   // Inicializa o array de favoritos se não existir
-  if (!users[userIndex].favoriteAnimes) {
-    users[userIndex].favoriteAnimes = [];
-  }
+  if (!users[userIndex].favoriteAnimes) users[userIndex].favoriteAnimes = [];
 
   const isFavorited = users[userIndex].favoriteAnimes.includes(animeTitle);
 
   if (isFavorited) {
     // Remove dos favoritos
-    users[userIndex].favoriteAnimes = users[userIndex].favoriteAnimes.filter(
-      title => title !== animeTitle
-    );
+    users[userIndex].favoriteAnimes = users[userIndex].favoriteAnimes.filter(title => title !== animeTitle);
   } else users[userIndex].favoriteAnimes.push(animeTitle); // Adiciona aos favoritos
 
   // Atualiza o localStorage
@@ -439,7 +435,7 @@ function renderFeaturedAnimes() {
   });
 }
 
-// Nova função para gerenciar favoritos a partir do card
+// Gerencia favoritos a partir do card dos animes
 function toggleFavoriteFromCard(animeTitle) {
   const sessionData = JSON.parse(localStorage.getItem('userSession'));
   if (!sessionData) {
@@ -461,7 +457,7 @@ function toggleFavoriteFromCard(animeTitle) {
   });
 }
 
-// Função para carregar os últimos reviews
+// Carrega os últimos reviews
 function loadLatestReviews() {
   const reviewsList = document.getElementById('latest-reviews');
   if (!reviewsList) return;
@@ -487,7 +483,7 @@ function loadLatestReviews() {
   // Renderiza os reviews
   reviewsList.innerHTML = latestReviews.map(review => `
     <li class="inicio-card-item">
-      <a href="animes.html?anime=${encodeURIComponent(review.animeTitle)}" class="inicio-card-link">
+      <a href="animes.html?anime=${encodeURIComponent(review.animeTitle)}" class="inicio-card-link hover:text-purple-600 transition-colors">
         <span class="inicio-card-link-title">${review.animeTitle}</span>
         <p class="inicio-card-link-subtitle">
           ${review.comment.text.length > 50

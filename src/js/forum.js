@@ -234,14 +234,14 @@ function renderTopics() {
   });
 }
 
-// Função para obter o avatar do usuário
+// Obtém o avatar do usuário
 function getUserAvatar(username) {
   const users = JSON.parse(localStorage.getItem('animuUsers') || '[]');
   const user = users.find(u => u.username === username);
   return user ? user.avatar : `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=8B5CF6&color=ffffff&size=100`;
 }
 
-// Atualiza a função renderReplies para incluir avatares
+// Carrega as respostas dos tópicos
 function renderReplies(replies, topicId, userId) {
   return replies.map(reply => `
     <div class="mb-3 overflow-hidden" id="reply-${reply.id}">
@@ -502,7 +502,7 @@ function renderReplies(replies, topicId, userId) {
   `).join('');
 }
 
-// Funções auxiliares
+// Formata a data no padrão do Brasil
 function formatDate(dateStr) {
   const date = new Date(dateStr);
   return date.toLocaleDateString('pt-BR');
@@ -703,7 +703,7 @@ function deleteTopic(topicId) {
   }
 }
 
-// Função para edição de resposta
+// Edita uma resposta
 function editReply(replyId) {
   const replyElement = document.getElementById(`reply-${replyId}`);
   if (!replyElement) return;
@@ -717,7 +717,7 @@ function editReply(replyId) {
   editButton.disabled = true;
 }
 
-// Salvar a edição de uma resposta
+// Salva a edição de uma resposta
 function saveReplyEdit(event, topicId, replyId) {
   event.preventDefault();
 
@@ -776,7 +776,7 @@ function deleteReply(topicId, replyId) {
   }
 }
 
-// Funções para gerenciamento de tópicos
+// Adiciona um novo tópico
 function addTopic(event) {
   event.preventDefault();
 
@@ -852,7 +852,7 @@ function addTopic(event) {
   }
 }
 
-// Função para preencher as opções de categorias
+// Preenche as opções de categorias
 function populateCategories() {
   const categorySelect = document.getElementById('topic-category');
   if (!categorySelect) return;
@@ -865,15 +865,12 @@ function populateCategories() {
   `;
 }
 
-/**
- * Funções de persistência de dados
- * Gerenciam o salvamento e carregamento do estado do fórum
- */
+// Salva os dados do fórum no localStorage
 function saveForumData() {
   localStorage.setItem('forumTopics', JSON.stringify(forumTopics));
 }
 
-// Modifica a função loadForumData para garantir que todos os tópicos tenham a propriedade views
+// Carrega os dados do fórum do localStorage
 function loadForumData() {
   try {
     const savedTopics = localStorage.getItem('forumTopics');
@@ -996,7 +993,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Adiciona variável global para o editor
 let quillEditor;
 
-// Atualiza a função de inicialização do editor
+// Inicialização do editor
 function initQuillEditor() {
   const toolbarOptions = [
     ['bold', 'italic', 'underline', 'strike'],
