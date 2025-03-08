@@ -14,71 +14,39 @@ document.addEventListener('DOMContentLoaded', function () {
   const totalAdmins = document.getElementById('total-admins');
   const novosUsuarios = document.getElementById('novos-usuarios');
 
-  // Carrega os usuários do Firestore
-  async function loadUsers() {
+  // Gerenciamento de dados dos usuários no localStorage
+  function loadUsers() {
     try {
-      const snapshot = await db.collection('users').get();
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+      return JSON.parse(localStorage.getItem('animuUsers')) || [];
     } catch (e) {
       console.error('Erro ao carregar usuários:', e);
       return [];
     }
   }
 
-  // Atualiza um usuário no Firestore
-  async function updateUser(userId, data) {
+  // Salva os usuários no localStorage e atualiza a interface	
+  function saveUsers(users) {
     try {
-      await db.collection('users').doc(userId).update(data);
+      localStorage.setItem('animuUsers', JSON.stringify(users));
       updateTable();
       updateStats();
     } catch (e) {
-      console.error('Erro ao atualizar usuário:', e);
-    }
-  }
-
-  // Remove um usuário do Firestore e do Firebase Auth
-  async function deleteUser(userId) {
-    try {
-      // Exclui do Firestore
-      await db.collection('users').doc(userId).delete();
-      
-      // A exclusão do Firebase Auth requer funções Cloud Functions
-      // ou Admin SDK, então aqui só exibimos a mensagem de sucesso
-      console.log(`Usuário ${userId} excluído do Firestore.`);
-      
-      updateTable();
-      updateStats();
-    } catch (e) {
-      console.error('Erro ao excluir usuário:', e);
+      console.error('Erro ao salvar usuários:', e);
     }
   }
 
   // Converte data para formato brasileiro (dd/mm/aaaa)
-  function formatDate(timestamp) {
-    if (!timestamp) return 'N/A';
-    
-    const date = timestamp instanceof Date 
-      ? timestamp 
-      : timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-      
-    return date.toLocaleDateString('pt-BR');
+  function formatDate(dateString) {
+    return new Date(dateString).toLocaleDateString('pt-BR');
   }
 
   // Atualiza contadores de usuários totais, admins e novos (últimos 7 dias)
-  async function updateStats() {
-    const users = await loadUsers();
+  function updateStats() {
+    const users = loadUsers();
     const admins = users.filter(user => user.isAdmin);
-    
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    
-    const newUsers = users.filter(user => {
-      const createdDate = user.createdAt?.toDate?.() || new Date(user.createdAt);
-      return createdDate > sevenDaysAgo;
-    });
+    const newUsers = users.filter(user => new Date(user.createdAt) > sevenDaysAgo);
 
     totalUsuarios.textContent = users.length;
     totalAdmins.textContent = admins.length;
@@ -125,8 +93,8 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // Filtra e exibe usuários com base na busca e tipo selecionado
-  async function updateTable(filterValue = '', userType = 'all') {
-    const users = await loadUsers();
+  function updateTable(filterValue = '', userType = 'all') {
+    const users = loadUsers();
     tableBody.innerHTML = '';
 
     users
@@ -144,21 +112,20 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // Funções globais para ações na interface
-  window.toggleAdminStatus = async function (userId) {
-    try {
-      const userDoc = await db.collection('users').doc(userId).get();
-      if (userDoc.exists) {
-        const user = userDoc.data();
-        await updateUser(userId, { isAdmin: !user.isAdmin });
-      }
-    } catch (error) {
-      console.error('Erro ao alterar status de admin:', error);
+  window.toggleAdminStatus = function (userId) {
+    const users = loadUsers();
+    const user = users.find(u => u.id === userId);
+    if (user) {
+      user.isAdmin = !user.isAdmin;
+      saveUsers(users);
     }
   };
 
-  window.deleteUser = async function (userId) {
+  window.deleteUser = function (userId) {
     if (!confirm('Tem certeza que deseja excluir este usuário?')) return;
-    await deleteUser(userId);
+    const users = loadUsers();
+    const updatedUsers = users.filter(u => u.id !== userId);
+    saveUsers(updatedUsers);
   };
 
   // Event listeners para filtros e busca
