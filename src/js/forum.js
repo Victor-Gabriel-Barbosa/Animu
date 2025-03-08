@@ -46,11 +46,75 @@ const FORUM_CONFIG = {
   maxReplyLength: 500, // Limite para respostas
   maxTopicsPerUser: 5, // Limite de tópicos por usuário
   moderationRules: {
-    forbiddenWords: [] // Será preenchido ao carregar
+    usePerspectiveAPI: true, // Nova configuração para usar a API
+    fallbackToLocalModeration: true, // Se a API falhar, usar moderação local
+    forbiddenWords: [] // Mantido para compatibilidade
   }
 };
 
-// Função para carregar a lista de palavrões
+/**
+ * Classe responsável pela integração com o Google Perspective API
+ * Analisa o texto quanto a toxicidade, insultos, etc.
+ */
+class ContentModerator {
+  static async analyzeText(text) {
+    try {
+      if (!CONFIG.perspectiveAPI.apiKey || CONFIG.perspectiveAPI.apiKey === 'SUA_CHAVE_API_AQUI') {
+        console.warn('Chave da API Perspective não configurada. Usando moderação local.');
+        return { success: false, error: 'API_KEY_NOT_CONFIGURED' };
+      }
+
+      const response = await fetch(`${CONFIG.perspectiveAPI.endpoint}?key=${CONFIG.perspectiveAPI.apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          comment: { text: text },
+          languages: ['pt'],
+          requestedAttributes: {
+            TOXICITY: {},
+            SEVERE_TOXICITY: {},
+            IDENTITY_ATTACK: {},
+            INSULT: {},
+            PROFANITY: {}
+          }
+        })
+      });
+
+      if (!response.ok) {
+        console.error('Falha ao analisar texto com Perspective API:', await response.text());
+        return { success: false, error: 'API_REQUEST_FAILED' };
+      }
+
+      const data = await response.json();
+      const scores = {
+        TOXICITY: data.attributeScores?.TOXICITY?.summaryScore?.value || 0,
+        SEVERE_TOXICITY: data.attributeScores?.SEVERE_TOXICITY?.summaryScore?.value || 0,
+        IDENTITY_ATTACK: data.attributeScores?.IDENTITY_ATTACK?.summaryScore?.value || 0,
+        INSULT: data.attributeScores?.INSULT?.summaryScore?.value || 0,
+        PROFANITY: data.attributeScores?.PROFANITY?.summaryScore?.value || 0
+      };
+
+      return { success: true, scores };
+    } catch (error) {
+      console.error('Erro ao analisar texto com Perspective API:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  static shouldFlagContent(scores) {
+    if (!scores) return false;
+    
+    return Object.keys(CONFIG.perspectiveAPI.threshold).some(attribute => {
+      const score = scores[attribute];
+      const threshold = CONFIG.perspectiveAPI.threshold[attribute];
+      return score >= threshold;
+    });
+  }
+}
+
+// Função para carregar a lista de palavrões (mantida para compatibilidade)
 async function loadBadWords() {
   try {
     const response = await fetch('src/data/badwords.json');
@@ -66,15 +130,22 @@ async function loadBadWords() {
  * Inclui funções para censura, formatação Markdown e emojis
  */
 class TextFormatter {
-  static format(text) {
-    text = this.censorText(text);
-    text = this.formatMentions(text);
-    text = this.formatMarkdown(text);
-    text = this.formatEmojis(text);
-    return text;
+  static async format(text) {
+    // Primeiro formatamos menções, markdown e emojis
+    let formattedText = this.formatMentions(text);
+    formattedText = this.formatMarkdown(formattedText);
+    formattedText = this.formatEmojis(formattedText);
+    
+    // Se estiver usando a API, não precisamos censurar aqui
+    // a validação completa é feita na clase ForumModerator
+    if (!FORUM_CONFIG.moderationRules.usePerspectiveAPI) {
+      formattedText = this.censorText(formattedText);
+    }
+    
+    return formattedText;
   }
 
-  // Censura palavras proibidas com '•'
+  // Censura palavras proibidas com '•' (mantida para compatibilidade)
   static censorText(text) {
     let censoredText = text;
     FORUM_CONFIG.moderationRules.forbiddenWords.forEach(word => {
@@ -118,7 +189,7 @@ class TextFormatter {
  * Valida conteúdo, tags e permissões dos usuários
  */
 class ForumModerator {
-  static validateContent(content, type = 'conteúdo') {
+  static async validateContent(content, type = 'conteúdo') {
     const plainContent = content.replace(/<[^>]*>/g, '').trim();
 
     if (!plainContent) throw new Error(`O ${type} não pode estar vazio.`);
@@ -132,24 +203,48 @@ class ForumModerator {
 
     if (maxLengths[type] && plainContent.length > maxLengths[type]) throw new Error(`O ${type} excede o limite máximo de ${maxLengths[type]} caracteres.`);
 
+    // Usando Perspective API para checar conteúdo impróprio
+    if (FORUM_CONFIG.moderationRules.usePerspectiveAPI) {
+      const analysis = await ContentModerator.analyzeText(plainContent);
+      
+      if (analysis.success) {
+        if (ContentModerator.shouldFlagContent(analysis.scores)) {
+          throw new Error(`O ${type} contém conteúdo impróprio ou ofensivo. Por favor, revise seu texto.`);
+        }
+      } else if (FORUM_CONFIG.moderationRules.fallbackToLocalModeration) {
+        // Usar moderação local como fallback se a API falhar
+        const hasForbiddenWords = FORUM_CONFIG.moderationRules.forbiddenWords.some(word => {
+          const regex = new RegExp(`\\b${word}\\b`, 'i');
+          return regex.test(plainContent);
+        });
+
+        if (hasForbiddenWords) {
+          throw new Error(`O ${type} contém palavras inapropriadas.`);
+        }
+      }
+    }
+
     return true;
   }
 
   // Valida as tags do tópico
-  static validateTags(tags) {
+  static async validateTags(tags) {
     if (!Array.isArray(tags)) return [];
 
-    return tags.map(tag => {
+    const validatedTags = [];
+    
+    for (const tag of tags) {
       try {
-        this.validateContent(tag, 'tag');
-        // Primeiro censura as palavras impróprias, depois limpa caracteres especiais
-        const censoredTag = TextFormatter.censorText(tag);
-        return censoredTag.replace(/[^a-zA-Z0-9\*]/g, '');
+        await this.validateContent(tag, 'tag');
+        // Limpa caracteres especiais
+        const cleanedTag = tag.replace(/[^a-zA-Z0-9\*]/g, '');
+        validatedTags.push(cleanedTag);
       } catch (error) {
         console.warn(`Tag "${tag}" inválida: ${error.message}`);
-        return null;
       }
-    }).filter(Boolean); // Remove tags nulas
+    }
+    
+    return validatedTags;
   }
 
   // Verifica se o usuário está logado para postar
@@ -234,14 +329,14 @@ function renderTopics() {
   });
 }
 
-// Obtém o avatar do usuário
+// Função para obter o avatar do usuário
 function getUserAvatar(username) {
   const users = JSON.parse(localStorage.getItem('animuUsers') || '[]');
   const user = users.find(u => u.username === username);
   return user ? user.avatar : `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=8B5CF6&color=ffffff&size=100`;
 }
 
-// Carrega as respostas dos tópicos
+// Atualiza a função renderReplies para incluir avatares
 function renderReplies(replies, topicId, userId) {
   return replies.map(reply => `
     <div class="mb-3 overflow-hidden" id="reply-${reply.id}">
@@ -320,7 +415,7 @@ function renderTopicCard(topic, userId) {
     { icon: '💬', name: 'Geral' };
 
   return `
-    <div class="card p-6 mb-4 transform transition-all overflow-hidden" 
+    <div class="card p-6 mb-4 transform transition-all cursor-pointer overflow-hidden" 
          id="topic-${topic.id}"
          onclick="incrementTopicViews(${topic.id})">
       <div class="topic-content overflow-hidden">
@@ -502,7 +597,7 @@ function renderReplies(replies, topicId, userId) {
   `).join('');
 }
 
-// Formata a data no padrão do Brasil
+// Funções auxiliares
 function formatDate(dateStr) {
   const date = new Date(dateStr);
   return date.toLocaleDateString('pt-BR');
@@ -570,7 +665,7 @@ function likeReply(topicId, replyId) {
 }
 
 // Adiciona uma resposta para um tópico
-function addReply(event, topicId) {
+async function addReply(event, topicId) {
   event.preventDefault();
 
   if (!isUserLoggedIn()) {
@@ -588,14 +683,22 @@ function addReply(event, topicId) {
   }
 
   try {
-    ForumModerator.validateContent(content, 'resposta');
+    // Mostra indicador de carregamento
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="animate-spin mr-2">⏳</span> Analisando...';
+
+    await ForumModerator.validateContent(content, 'resposta');
 
     const topic = forumTopics.find(t => t.id === topicId);
     if (topic) {
+      const formattedContent = await TextFormatter.format(content);
+      
       topic.replies.push({
         id: Date.now(), // Adiciona ID único
         author: getLoggedUsername(),
-        content: TextFormatter.format(content),
+        content: formattedContent,
         date: new Date().toISOString().split('T')[0],
         likes: 0,
         likedBy: []
@@ -606,6 +709,11 @@ function addReply(event, topicId) {
     }
   } catch (error) {
     alert(error.message);
+  } finally {
+    // Restaura o botão ao estado original
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalBtnText;
   }
 }
 
@@ -703,7 +811,7 @@ function deleteTopic(topicId) {
   }
 }
 
-// Edita uma resposta
+// Função para edição de resposta
 function editReply(replyId) {
   const replyElement = document.getElementById(`reply-${replyId}`);
   if (!replyElement) return;
@@ -717,7 +825,7 @@ function editReply(replyId) {
   editButton.disabled = true;
 }
 
-// Salva a edição de uma resposta
+// Salvar a edição de uma resposta
 function saveReplyEdit(event, topicId, replyId) {
   event.preventDefault();
 
@@ -776,8 +884,8 @@ function deleteReply(topicId, replyId) {
   }
 }
 
-// Adiciona um novo tópico
-function addTopic(event) {
+// Funções para gerenciamento de tópicos
+async function addTopic(event) {
   event.preventDefault();
 
   if (!isUserLoggedIn()) {
@@ -819,18 +927,27 @@ function addTopic(event) {
   }
 
   try {
-    ForumModerator.validateContent(title, 'título');
-    ForumModerator.validateContent(content, 'conteúdo');
+    // Mostra indicador de carregamento
+    const submitBtn = newTopicForm.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="animate-spin mr-2">⏳</span> Analisando...';
+
+    await ForumModerator.validateContent(title, 'título');
+    await ForumModerator.validateContent(plainContent, 'conteúdo');
 
     // Valida e filtra tags impróprias
-    const validatedTags = ForumModerator.validateTags(rawTags);
+    const validatedTags = await ForumModerator.validateTags(rawTags);
 
-    if (rawTags.length !== validatedTags.length) alert('Algumas tags foram removidas por conterem palavras impróprias.');
+    if (rawTags.length !== validatedTags.length) alert('Algumas tags foram removidas por conterem conteúdo impróprio.');
+
+    const formattedTitle = await TextFormatter.format(title);
+    const formattedContent = await TextFormatter.format(content);
 
     const newTopic = {
       id: Date.now(),
-      title: TextFormatter.format(title),
-      content: TextFormatter.format(content),
+      title: formattedTitle,
+      content: formattedContent,
       category,
       tags: validatedTags,
       author: getLoggedUsername(),
@@ -849,10 +966,15 @@ function addTopic(event) {
 
   } catch (error) {
     alert(error.message);
+  } finally {
+    // Restaura o botão ao estado original
+    const submitBtn = newTopicForm.querySelector('button[type="submit"]');
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalBtnText;
   }
 }
 
-// Preenche as opções de categorias
+// Função para preencher as opções de categorias
 function populateCategories() {
   const categorySelect = document.getElementById('topic-category');
   if (!categorySelect) return;
@@ -865,12 +987,15 @@ function populateCategories() {
   `;
 }
 
-// Salva os dados do fórum no localStorage
+/**
+ * Funções de persistência de dados
+ * Gerenciam o salvamento e carregamento do estado do fórum
+ */
 function saveForumData() {
   localStorage.setItem('forumTopics', JSON.stringify(forumTopics));
 }
 
-// Carrega os dados do fórum do localStorage
+// Modifica a função loadForumData para garantir que todos os tópicos tenham a propriedade views
 function loadForumData() {
   try {
     const savedTopics = localStorage.getItem('forumTopics');
@@ -976,10 +1101,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Garante que forumTopics começa como array vazio
   forumTopics = [];
 
-  // Carrega a lista de palavrões primeiro
+  // Carrega a lista de palavrões (mantido para compatibilidade)
   await loadBadWords();
 
-  // Carrega ps dados salvos
+  // Carrega os dados salvos
   loadForumData();
 
   // Inicialização do Quill
@@ -993,7 +1118,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Adiciona variável global para o editor
 let quillEditor;
 
-// Inicialização do editor
+// Atualiza a função de inicialização do editor
 function initQuillEditor() {
   const toolbarOptions = [
     ['bold', 'italic', 'underline', 'strike'],
