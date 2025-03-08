@@ -1,20 +1,16 @@
 document.addEventListener('DOMContentLoaded', async function () {
   class AuthManager {
     constructor() {
-      this.users = this.loadUsers();
       this.loginAttempts = {};
       this.maxAttempts = 3;
       this.lockoutDuration = 15 * 60 * 1000; // 15 minutos em milissegundos
     }
 
     // Função para hash de senha usando SHA-256
+    // Não é mais necessária, pois Firebase Auth gerencia isso
     async hashPassword(password) {
-      const encoder = new TextEncoder();
-      const data = encoder.encode(password);
-      const hash = await crypto.subtle.digest('SHA-256', data);
-      return Array.from(new Uint8Array(hash))
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join('');
+      // Mantida para compatibilidade com código existente
+      return password;
     }
 
     // Valida força da senha
@@ -60,18 +56,8 @@ document.addEventListener('DOMContentLoaded', async function () {
       } else delete this.loginAttempts[username];
     }
 
-    // Carrega usuários do localStorage
-    loadUsers() {
-      return JSON.parse(localStorage.getItem('animuUsers') || '[]');
-    }
-
-    // Salva usuários no localStorage
-    saveUsers() {
-      localStorage.setItem('animuUsers', JSON.stringify(this.users));
-    }
-
     // Valida registro de usuário
-    validateRegistration(username, email, password, confirmPassword) {
+    async validateRegistration(username, email, password, confirmPassword) {
       // Validações básicas
       if (username.length < 3) throw new Error('Nome de usuário deve ter pelo menos 3 caracteres.');
 
@@ -83,45 +69,52 @@ document.addEventListener('DOMContentLoaded', async function () {
       if (password !== confirmPassword) throw new Error('As senhas não coincidem.');
 
       // Verificar usuário ou e-mail existente
-      const userExists = this.users.some(user => user.username === username || user.email === email);
+      const usernameSnapshot = await db.collection('users').where('username', '==', username).get();
+      const emailSnapshot = await db.collection('users').where('email', '==', email).get();
 
-      if (userExists) throw new Error('Usuário ou e-mail já cadastrado!');
+      if (!usernameSnapshot.empty || !emailSnapshot.empty) {
+        throw new Error('Usuário ou e-mail já cadastrado!');
+      }
     }
 
     // Registro de usuário
     async registerUser(username, email, password, confirmPassword) {
       try {
         // Valida registro
-        this.validateRegistration(username, email, password, confirmPassword);
+        await this.validateRegistration(username, email, password, confirmPassword);
 
         // Valida força da senha
         const passwordValidation = this.validatePasswordStrength(password);
         if (!passwordValidation.isValid) throw new Error('Senha fraca. Requisitos:\n' + passwordValidation.errors.join('\n'));
 
-        // Hash da senha
-        const hashedPassword = await this.hashPassword(password);
+        // Cria usuário no Firebase Auth
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        const user = userCredential.user;
 
         // Gera o avatar
         const avatar = this.generateAvatar(username);
 
-        // Cria novo usuário
+        // Cria o documento do usuário no Firestore
         const newUser = {
-          id: Date.now().toString(),
+          id: user.uid,
           username,
           email,
-          password: hashedPassword,
-          avatar: avatar, // Armazena o avatar no objeto do usuário
-          isAdmin: true,
-          createdAt: new Date().toISOString()
+          avatar: avatar,
+          isAdmin: false,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
         };
 
-        // Adiciona usuário
-        this.users.push(newUser);
-        this.saveUsers();
+        await db.collection('users').doc(user.uid).set(newUser);
+
+        // Atualiza o perfil do usuário no Firebase Auth
+        await user.updateProfile({
+          displayName: username,
+          photoURL: avatar
+        });
 
         // Cria sessão do usuário automaticamente
         const sessionData = {
-          userId: newUser.id,
+          userId: user.uid,
           username: newUser.username,
           isAdmin: newUser.isAdmin,
           avatar: newUser.avatar,
@@ -133,6 +126,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         return true;
       } catch (error) {
+        console.error('Erro ao registrar:', error);
         this.showError(error.message);
         return false;
       }
@@ -171,47 +165,67 @@ document.addEventListener('DOMContentLoaded', async function () {
       return diffDays <= 30; // Expira após 30 dias
     }
 
-    // Novo método para encontrar usuário por username ou email
-    findUser(identifier) {
-      return this.users.find(u =>
-        u.username.toLowerCase() === identifier.toLowerCase() ||
-        u.email.toLowerCase() === identifier.toLowerCase()
-      );
+    // Novo método para encontrar usuário por username
+    async findUser(identifier) {
+      // Verifica se é email
+      const isEmail = identifier.includes('@');
+      
+      let querySnapshot;
+      if (isEmail) {
+        querySnapshot = await db.collection('users').where('email', '==', identifier).get();
+      } else {
+        querySnapshot = await db.collection('users').where('username', '==', identifier).get();
+      }
+      
+      return querySnapshot.empty ? null : querySnapshot.docs[0].data();
     }
 
-    // Método de login atualizado
+    // Método de login atualizado para Firebase
     async loginUser(identifier, password, remember = false) {
       try {
         this.checkLoginAttempts(identifier);
-
-        const hashedPassword = await this.hashPassword(password);
-        const user = this.findUser(identifier);
-
-        if (!user) throw new Error('Usuário não encontrado.');
-
-        if (user.password !== hashedPassword) {
-          this.recordLoginAttempt(identifier, false);
-          throw new Error('Senha incorreta.');
+        
+        // Verifica se o identificador é um email
+        const isEmail = identifier.includes('@');
+        let email = identifier;
+        
+        // Se não for email, busca o usuário por username
+        if (!isEmail) {
+          const user = await this.findUser(identifier);
+          if (!user) {
+            this.recordLoginAttempt(identifier, false);
+            throw new Error('Usuário não encontrado.');
+          }
+          email = user.email;
         }
-
+        
+        // Login via Firebase Auth
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        
+        // Recupera dados do usuário do Firestore
+        const userDoc = await db.collection('users').doc(userCredential.user.uid).get();
+        if (!userDoc.exists) throw new Error('Dados do usuário não encontrados.');
+        
+        const userData = userDoc.data();
         this.recordLoginAttempt(identifier, true);
-
+        
         const sessionData = {
-          userId: user.id,
-          username: user.username,
-          isAdmin: user.isAdmin,
-          avatar: user.avatar,
+          userId: userCredential.user.uid,
+          username: userData.username,
+          isAdmin: userData.isAdmin,
+          avatar: userData.avatar,
           loginTime: new Date().toISOString()
         };
-
+        
         localStorage.setItem('userSession', JSON.stringify(sessionData));
-
-        if (remember) this.saveCredentials(user.username, password);
+        
+        if (remember) this.saveCredentials(userData.username, password);
         else this.clearSavedCredentials();
-
+        
         return true;
       } catch (error) {
         console.error('Erro no login:', error);
+        this.recordLoginAttempt(identifier, false);
         throw error;
       }
     }
@@ -282,13 +296,19 @@ document.addEventListener('DOMContentLoaded', async function () {
       return `#${f(0)}${f(8)}${f(4)}`;
     }
 
-    // Logout
-    logout() {
-      // Remove sessão
-      localStorage.removeItem('userSession');
-      this.clearSavedCredentials();
-      // Recarrega a janela
-      window.location.reload();
+    // Logout atualizado para Firebase
+    async logout() {
+      try {
+        // Firebase logout
+        await auth.signOut();
+        // Remove sessão
+        localStorage.removeItem('userSession');
+        this.clearSavedCredentials();
+        // Recarrega a janela
+        window.location.reload();
+      } catch (error) {
+        console.error("Erro ao fazer logout:", error);
+      }
     }
 
     // Método atualizado para mostrar erros com feedback visual
@@ -347,23 +367,54 @@ document.addEventListener('DOMContentLoaded', async function () {
       existingErrors.forEach(error => error.remove());
     }
 
-    // Migra senhas antigas para hash
-    async migrateOldPasswords() {
-      let needsSave = false;
-      for (let user of this.users) {
-        // Verifica se a senha não está em formato hash (64 caracteres hex)
-        if (user.password && user.password.length !== 64) {
-          user.password = await this.hashPassword(user.password);
-          needsSave = true;
+    // Método para migrar contas antigas para Firebase
+    async migrateOldAccounts() {
+      try {
+        const oldUsers = JSON.parse(localStorage.getItem('animuUsers')) || [];
+        
+        if (oldUsers.length === 0) return;
+        
+        console.log(`Migrando ${oldUsers.length} contas antigas para Firebase...`);
+        
+        for (const oldUser of oldUsers) {
+          try {
+            // Verifica se já existe no Firestore
+            const userExists = await db.collection('users')
+              .where('email', '==', oldUser.email).get();
+            
+            if (!userExists.empty) continue;
+            
+            // Para migração segura, crie um novo usuário no Firebase Auth
+            // utilizando a função de criação de usuários (precisa ser feito no Cloud Functions)
+            // Aqui vamos apenas simular adicionando ao Firestore
+            
+            await db.collection('users').doc(oldUser.id).set({
+              id: oldUser.id,
+              username: oldUser.username,
+              email: oldUser.email,
+              avatar: oldUser.avatar || this.generateAvatar(oldUser.username),
+              isAdmin: oldUser.isAdmin || false,
+              createdAt: firebase.firestore.Timestamp.fromDate(new Date(oldUser.createdAt))
+            });
+            
+            console.log(`Usuário ${oldUser.username} migrado com sucesso.`);
+          } catch (error) {
+            console.error(`Erro ao migrar usuário ${oldUser.username}:`, error);
+          }
         }
+        
+        console.log('Migração concluída.');
+      } catch (error) {
+        console.error('Erro na migração:', error);
       }
-      if (needsSave) this.saveUsers();
     }
   }
 
   // Inicializa AuthManager
   const authManager = new AuthManager();
-  await authManager.migrateOldPasswords(); // Migra senhas antigas
+  
+  // Migra contas antigas para Firebase se houver
+  await authManager.migrateOldAccounts();
 
   // Armazena a página anterior quando o usuário acessa as páginas de login/registro
   if (window.location.pathname.includes('signin.html') || window.location.pathname.includes('signup.html')) {
@@ -375,10 +426,28 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
   }
 
-  // Aguarda o DOM estar completamente carregado antes de atualizar o painel
-  document.addEventListener('DOMContentLoaded', () => { authManager.updateUserPanel(); });
+  // Verifica estado de autenticação do Firebase
+  auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      const userDoc = await db.collection('users').doc(user.uid).get();
+      if (userDoc.exists) {
+        const userData = userDoc.data();
+        const sessionData = {
+          userId: user.uid,
+          username: userData.username,
+          isAdmin: userData.isAdmin,
+          avatar: userData.avatar,
+          loginTime: new Date().toISOString()
+        };
+        
+        localStorage.setItem('userSession', JSON.stringify(sessionData));
+      }
+    }
+    
+    authManager.updateUserPanel();
+  });
 
-  // Registro de usuário
+  // Evento para registro de usuário
   const registerForm = document.getElementById('register-form');
   if (registerForm) {
     registerForm.addEventListener('submit', async function (event) {
@@ -463,7 +532,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     });
   }
 
-  // Adiciona botão/link de logout (se existir)
+  // Adiciona botão/link de logout
   const logoutLink = document.getElementById('logout-link');
   if (logoutLink) {
     logoutLink.addEventListener('click', function (event) {
