@@ -18,9 +18,7 @@ const db = firebase.firestore();
 // Função para verificar a conexão com o Firebase
 async function verificarConexaoFirebase() {
   try {
-    await db.collection('test-connection').doc('test').set({
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    await db.collection('test-connection').doc('test').set({timestamp: firebase.firestore.FieldValue.serverTimestamp()});
     console.log('Conectado com sucesso ao Firebase');
     return true;
   } catch (error) {

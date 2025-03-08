@@ -497,42 +497,24 @@ function loadLatestReviews() {
 
 // Pega a descrição de uma categoria
 function getCategoryDescription(category) {
-  const categoryInfo = {
-    'Shounen': {
-      desc: 'Ação e aventura para jovens',
-      icon: '⚔️'
-    },
-    'Slice of Life': {
-      desc: 'Histórias do cotidiano',
-      icon: '🌸'
-    },
-    'Mecha': {
-      desc: 'Robôs e tecnologia',
-      icon: '🤖'
-    },
-    'Romance': {
-      desc: 'Histórias de amor',
-      icon: '💕'
-    },
-    'Action': {
-      desc: 'Lutas e confrontos',
-      icon: '👊'
-    },
-    'Comedy': {
-      desc: 'Diversão e humor',
-      icon: '😆'
-    },
-    'Drama': {
-      desc: 'Histórias emocionantes',
-      icon: '🎭'
-    },
-    'Fantasy': {
-      desc: 'Mundos mágicos',
-      icon: '✨'
-    }
-  };
-
-  return categoryInfo[category] || {
+  // Busca as categorias salvas no localStorage
+  const savedCategories = JSON.parse(localStorage.getItem('animuCategories')) || [];
+  
+  // Procura por correspondência no array de categorias salvas (ignorando case)
+  const foundCategory = savedCategories.find(cat => 
+    cat.name.toLowerCase() === category.toLowerCase()
+  );
+  
+  // Se encontrou a categoria, retorna os dados salvos
+  if (foundCategory) {
+    return {
+      desc: foundCategory.description,
+      icon: foundCategory.icon
+    };
+  }
+  
+  // Fallback para categorias que não estão cadastradas
+  return {
     desc: 'Explore mais desta categoria',
     icon: '📺'
   };
@@ -599,9 +581,7 @@ function renderIndexNews() {
   const newsData = JSON.parse(localStorage.getItem('news') || '[]');
 
   // Ordena as notícias por data, mais recentes primeiro
-  const sortedNews = [...newsData].sort((a, b) =>
-    new Date(b.date) - new Date(a.date)
-  );
+  const sortedNews = [...newsData].sort((a, b) => new Date(b.date) - new Date(a.date));
 
   // Mostra apenas as 4 notícias mais recentes
   const recentNews = sortedNews.slice(0, 4);

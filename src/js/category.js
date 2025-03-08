@@ -134,7 +134,7 @@ class CategoryDisplay {
 
   // Redireciona para página de animes filtrada por categoria
   filterByCategory(category) {
-    window.location.href = `animes.html?anime=all&category=${encodeURIComponent(category)}`;
+    window.location.href = `animes.html?category=${encodeURIComponent(category)}`;
   }
 }
 
