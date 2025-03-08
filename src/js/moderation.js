@@ -16,7 +16,7 @@ const MODERATION_CONFIG = {
     usePerspectiveAPI: true, 
     fallbackToLocalModeration: true, // Se a API falhar, usa moderação local
     forbiddenWords: [],
-    partialCensoring: true, // Nova opção para habilitar censura parcial
+    partialCensoring: true, // Habilita censura parcial
     censorCharacter: '•'    // Caractere usado para censura
   }
 };
@@ -59,7 +59,7 @@ class ContentModerator {
 
       const data = await response.json();
       
-      // Extrair scores gerais
+      // Extrai scores gerais
       const scores = {
         TOXICITY: data.attributeScores?.TOXICITY?.summaryScore?.value || 0,
         SEVERE_TOXICITY: data.attributeScores?.SEVERE_TOXICITY?.summaryScore?.value || 0,
@@ -68,10 +68,10 @@ class ContentModerator {
         PROFANITY: data.attributeScores?.PROFANITY?.summaryScore?.value || 0
       };
       
-      // Extrair spans problemáticos
+      // Extrai spans problemáticos
       const spans = [];
       
-      // Para cada atributo, verificamos os spans anotados
+      // Para cada atributo, verifica os spans anotados
       Object.keys(CONFIG.perspectiveAPI.threshold).forEach(attribute => {
         if (!data.attributeScores?.[attribute]?.spanScores) return;
         
@@ -79,7 +79,7 @@ class ContentModerator {
           const spanScore = span.score?.value || 0;
           const threshold = CONFIG.perspectiveAPI.threshold[attribute];
           
-          // Se o score do span é maior que o threshold, marcamos para censura
+          // Se o score do span é maior que o threshold, marca para censura
           if (spanScore >= threshold) {
             spans.push({
               begin: span.begin,
@@ -108,11 +108,11 @@ class ContentModerator {
     });
   }
   
-  // Novo método para censurar apenas partes específicas do texto
+  // Censura apenas partes específicas do texto
   static censorTextPartially(text, spans) {
     if (!spans || spans.length === 0) return text;
     
-    // Ordenamos os spans de trás para frente para não afetar os índices
+    // Ordena os spans de trás para frente para não afetar os índices
     const sortedSpans = [...spans].sort((a, b) => b.begin - a.begin);
     
     let censoredText = text;
@@ -134,13 +134,13 @@ class ContentModerator {
  */
 class TextFormatter {
   static async format(text) {
-    // Primeiro formatamos menções, markdown e emojis
+    // Primeiro formata menções, markdown e emojis
     let formattedText = this.formatMentions(text);
     formattedText = this.formatMarkdown(formattedText);
     formattedText = this.formatEmojis(formattedText);
     
-    // Se estiver usando a API, não precisamos censurar aqui
-    // a validação completa é feita na clase ContentModerator
+    // Se estiver usando a API, não precisa censurar aqui
+    // a validação completa é feita na classe ContentModerator
     if (!MODERATION_CONFIG.moderation.usePerspectiveAPI) formattedText = this.censorText(formattedText);
     
     return formattedText;
@@ -206,17 +206,14 @@ class ContentValidator {
         const hasProblemContent = ContentModerator.shouldFlagContent(analysis.scores);
         
         if (hasProblemContent) {
-          // Se a censura parcial está habilitada, censuramos apenas as partes problemáticas
+          // Se a censura parcial está habilitada, censura apenas as partes problemáticas
           if (MODERATION_CONFIG.moderation.partialCensoring && analysis.spans && analysis.spans.length > 0) {
             const censoredText = ContentModerator.censorTextPartially(plainContent, analysis.spans);
             return { isValid: true, censoredText, wasCensored: true };
-          } else {
-            // Caso contrário, rejeitamos o conteúdo
-            throw new Error(`O ${type} contém conteúdo impróprio ou ofensivo. Por favor, revise seu texto.`);
-          }
+          } else throw new Error(`O ${type} contém conteúdo impróprio ou ofensivo. Por favor, revise seu texto.`); // Caso contrário, rejeita o conteúdo
         }
       } else if (MODERATION_CONFIG.moderation.fallbackToLocalModeration) {
-        // Usar moderação local como fallback se a API falhar
+        // Usa moderação local como fallback se a API falhar
         const hasForbiddenWords = MODERATION_CONFIG.moderation.forbiddenWords.some(word => {
           const regex = new RegExp(`\\b${word}\\b`, 'i');
           return regex.test(plainContent);
@@ -226,9 +223,7 @@ class ContentValidator {
           if (MODERATION_CONFIG.moderation.partialCensoring) {
             const censoredText = TextFormatter.censorText(plainContent);
             return { isValid: true, censoredText, wasCensored: true };
-          } else {
-            throw new Error(`O ${type} contém palavras inapropriadas.`);
-          }
+          } else throw new Error(`O ${type} contém palavras inapropriadas.`);
         }
       }
     }

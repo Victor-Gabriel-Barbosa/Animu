@@ -280,6 +280,9 @@ tbody tr:nth-child(5) { animation-delay: 0.5s; }
   position: relative;
   overflow: hidden;
   padding: 6rem 0;
+  border-top: 2px solid var(--primary-color);
+  border-bottom: 2px solid var(--primary-color);
+  
 }
 
 .parallax-section::before {
@@ -308,34 +311,10 @@ tbody tr:nth-child(5) { animation-delay: 0.5s; }
   padding: 1rem;
   border-radius: 1.5rem;
   box-shadow: 
-    0 8px 32px var(--primary-color-alpha),
+    0 12px 40px var(--primary-color),
     0 0 0 1px var(--primary-color-alpha) inset;
   border: 1px solid var(--primary-color);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.parallax-content::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.1),
-    rgba(var(--primary-color-rgb), 0.2)
-  );
-  mask: linear-gradient(#fff 0 0) content-box,
-        linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-}
-
-.parallax-content:hover {
-  box-shadow: 
-    0 12px 40px var(--primary-color),
-    0 0 0 1px var(--primary-color-alpha) inset;
 }
 
 .parallax-content .section-divider {
@@ -347,14 +326,6 @@ tbody tr:nth-child(5) { animation-delay: 0.5s; }
 .parallax-content .section-divider::before {
   background: transparent;
   color: rgba(255, 255, 255, 0.8);
-}
-
-/* Seção normal sem parallax */
-.normal-section {
-  background: var(--background);
-  position: relative;
-  z-index: 1;
-  padding: 4rem 0;
 }
 
 .parallax-background {

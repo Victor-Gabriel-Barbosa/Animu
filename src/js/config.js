@@ -1,6 +1,4 @@
-/**
- * Configurações globais da aplicação
- */
+// Configurações globais da aplicação
 const CONFIG = {
   // Configurações da Google Perspective API
   perspectiveAPI: {

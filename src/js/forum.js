@@ -507,7 +507,7 @@ async function addReply(event, topicId) {
 
     const topic = forumTopics.find(t => t.id === topicId);
     if (topic) {
-      // Usamos o texto censurado se houve censura, ou formatamos o original
+      // Usa o texto censurado se houve censura, ou formata o original
       let formattedContent;
       if (validationResult.wasCensored) formattedContent = await TextFormatter.format(validationResult.censoredText);
       else formattedContent = await TextFormatter.format(content);
@@ -582,14 +582,14 @@ function saveTopicEdit(event, topicId) {
   }
 
   try {
-    // Validamos o título e o conteúdo com suporte a censura parcial
+    // Valida o título e o conteúdo com suporte a censura parcial
     Promise.all([
       ForumModerator.validateContent(newTitle, 'título'),
       ForumModerator.validateContent(plainContent, 'conteúdo')
     ]).then(([titleValidation, contentValidation]) => {
       let notifyCensorship = false;
       
-      // Aplicamos a censura ao título se necessário
+      // Aplica a censura ao título se necessário
       if (titleValidation.wasCensored) {
         topic.title = TextFormatter.format(titleValidation.censoredText);
         notifyCensorship = true;
@@ -655,7 +655,7 @@ function deleteTopic(topicId) {
   }
 }
 
-// Função para edição de resposta
+// Edita uma resposta
 function editReply(replyId) {
   const replyElement = document.getElementById(`reply-${replyId}`);
   if (!replyElement) return;
@@ -669,7 +669,7 @@ function editReply(replyId) {
   editButton.disabled = true;
 }
 
-// Salvar a edição de uma resposta
+// Salva a edição de uma resposta
 function saveReplyEdit(event, topicId, replyId) {
   event.preventDefault();
 
@@ -800,9 +800,7 @@ async function addTopic(event) {
     if (titleValidation.wasCensored) {
       formattedTitle = await TextFormatter.format(titleValidation.censoredText);
       notifyCensorship = true;
-    } else {
-      formattedTitle = await TextFormatter.format(title);
-    }
+    } else formattedTitle = await TextFormatter.format(title);
     
     // Formata o conteúdo, possivelmente censurado
     let formattedContent;
@@ -830,7 +828,7 @@ async function addTopic(event) {
     saveForumData();
     renderTopics();
     
-    // Use a função closeModal para fechar o modal e limpar o formulário
+    // Fecha o modal e limpa o formulário
     closeModal();
 
   } catch (error) {
