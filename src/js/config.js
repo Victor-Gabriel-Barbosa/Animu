@@ -4,7 +4,7 @@
 const CONFIG = {
   // Configurações da Google Perspective API
   perspectiveAPI: {
-    apiKey: 'SUA_CHAVE_API_AQUI', // Substitua pela sua chave da API
+    apiKey: 'AIzaSyAwCIcLXouCkm9stRAWIZkY0_bp5_sx-O8', 
     endpoint: 'https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze',
     threshold: {
       TOXICITY: 0.7,

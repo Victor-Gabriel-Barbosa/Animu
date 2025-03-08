@@ -460,7 +460,7 @@ function hasUserAlreadyCommented(animeTitle, username) {
 const MAX_COMMENT_LENGTH = 500; // Limite de 500 caracteres para comentários
 
 // Salva comentário com validação e moderação
-function saveComment(animeTitle, comment, rating) {
+async function saveComment(animeTitle, comment, rating) {
   try {
     const currentUser = JSON.parse(localStorage.getItem('userSession'));
     if (!currentUser) {
@@ -483,9 +483,9 @@ function saveComment(animeTitle, comment, rating) {
       return null;
     }
 
-    // Valida o conteúdo usando o ForumModerator
+    // Valida o conteúdo usando o ContentValidator
     try {
-      ForumModerator.validateContent(comment, 'comentário');
+      await ContentValidator.validateContent(comment, 'comentário');
     } catch (error) {
       alert(error.message);
       return null;
@@ -496,9 +496,12 @@ function saveComment(animeTitle, comment, rating) {
 
     const sliderRating = document.getElementById('rating-slider').value / 10;
 
+    // Formata o texto usando await para obter o resultado formatado
+    const formattedText = await TextFormatter.format(comment);
+
     const newComment = {
       id: Date.now(),
-      text: TextFormatter.format(comment), // Usa o TextFormatter para formatar o texto
+      text: formattedText,
       rating: sliderRating,
       username: currentUser.username,
       timestamp: new Date().toISOString()
@@ -667,7 +670,7 @@ function isUserAdmin() {
 }
 
 // Sistema de edição de comentários com validação
-function editComment(animeTitle, commentId, newText, newRating) {
+async function editComment(animeTitle, commentId, newText, newRating) {
   try {
     const comments = JSON.parse(localStorage.getItem('animeComments')) || {};
     if (!comments[animeTitle]) return false;
@@ -679,15 +682,18 @@ function editComment(animeTitle, commentId, newText, newRating) {
     const currentUser = JSON.parse(localStorage.getItem('userSession'))?.username;
     if (currentUser !== comment.username) return false;
 
-    // Valida o conteúdo usando o ForumModerator
+    // Valida o conteúdo usando o ContentValidator
     try {
-      ForumModerator.validateContent(newText, 'comentário');
+      await ContentValidator.validateContent(newText, 'comentário');
     } catch (error) {
       alert(error.message);
       return false;
     }
 
-    comment.text = TextFormatter.format(newText); // Usa o TextFormatter para formatar o texto
+    // Formata o texto usando await para obter o resultado formatado
+    const formattedText = await TextFormatter.format(newText);
+    
+    comment.text = formattedText;
     comment.rating = newRating;
     comment.edited = true;
     comment.editedAt = new Date().toISOString();
@@ -803,14 +809,32 @@ function toggleEditMode(commentId) {
     const counter = form.querySelector(`#edit-comment-count-${commentId}`);
     counter.textContent = `${textarea.value.length}/${MAX_COMMENT_LENGTH}`;
 
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const newText = form.querySelector('textarea').value.trim();
       const newRating = parseFloat(form.querySelector('#edit-rating-slider').value) / 10;
 
       if (newText) {
         const animeTitle = new URLSearchParams(window.location.search).get('anime');
-        if (editComment(decodeURIComponent(animeTitle), commentId, newText, newRating))  updateCommentsList(decodeURIComponent(animeTitle));
+        
+        // Adiciona estado de carregamento ao botão
+        const submitButton = e.target.querySelector('button[type="submit"]');
+        const originalText = submitButton.textContent;
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<span class="animate-spin mr-2">⏳</span> Salvando...';
+        
+        try {
+          // Como editComment agora é async, precisamos usar await aqui
+          const result = await editComment(decodeURIComponent(animeTitle), commentId, newText, newRating);
+          if (result) updateCommentsList(decodeURIComponent(animeTitle));
+        } catch (error) {
+          console.error('Erro ao editar comentário:', error);
+          alert('Ocorreu um erro ao editar seu comentário. Por favor, tente novamente.');
+        } finally {
+          // Restaura o botão original (mesmo que não seja mais visível)
+          submitButton.disabled = false;
+          submitButton.textContent = originalText;
+        }
       }
     });
   }
@@ -1329,7 +1353,7 @@ window.addEventListener('DOMContentLoaded', () => {
     // Adiciona handler para o formulário de comentários
     const commentForm = document.getElementById('comment-form');
     if (commentForm) {
-      commentForm.addEventListener('submit', (e) => {
+      commentForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
         // Verifica se usuário está logado
@@ -1353,11 +1377,27 @@ window.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
-        saveComment(decodeURIComponent(animeTitle), commentText);
-        document.getElementById('comment-text').value = '';
-        document.getElementById('rating-slider').value = '0';
-        updateRatingEmoji(0); // Reseta o emoji
-        updateCommentsList(decodeURIComponent(animeTitle));
+        // Desabilita o botão de enviar durante a submissão
+        const submitButton = commentForm.querySelector('button[type="submit"]');
+        const originalText = submitButton.innerHTML;
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<span class="animate-spin mr-2">⏳</span> Enviando...';
+
+        try {
+          // Como saveComment agora é async, precisamos usar await aqui
+          await saveComment(decodeURIComponent(animeTitle), commentText, ratingValue);
+          document.getElementById('comment-text').value = '';
+          document.getElementById('rating-slider').value = '0';
+          updateRatingEmoji(0); // Reseta o emoji
+          updateCommentsList(decodeURIComponent(animeTitle));
+        } catch (error) {
+          console.error('Erro ao enviar comentário:', error);
+          alert('Ocorreu um erro ao enviar seu comentário. Por favor, tente novamente.');
+        } finally {
+          // Reabilita o botão com o texto original
+          submitButton.disabled = false;
+          submitButton.innerHTML = originalText;
+        }
       });
     }
 

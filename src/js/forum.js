@@ -43,213 +43,22 @@ const FORUM_CONFIG = {
   ],
   maxTitleLength: 100,
   maxContentLength: 2000,
-  maxReplyLength: 500, // Limite para respostas
-  maxTopicsPerUser: 5, // Limite de tópicos por usuário
-  moderationRules: {
-    usePerspectiveAPI: true, // Nova configuração para usar a API
-    fallbackToLocalModeration: true, // Se a API falhar, usar moderação local
-    forbiddenWords: [] // Mantido para compatibilidade
-  }
+  maxReplyLength: 500,
+  maxTopicsPerUser: 5
 };
 
-/**
- * Classe responsável pela integração com o Google Perspective API
- * Analisa o texto quanto a toxicidade, insultos, etc.
- */
-class ContentModerator {
-  static async analyzeText(text) {
-    try {
-      if (!CONFIG.perspectiveAPI.apiKey || CONFIG.perspectiveAPI.apiKey === 'SUA_CHAVE_API_AQUI') {
-        console.warn('Chave da API Perspective não configurada. Usando moderação local.');
-        return { success: false, error: 'API_KEY_NOT_CONFIGURED' };
-      }
-
-      const response = await fetch(`${CONFIG.perspectiveAPI.endpoint}?key=${CONFIG.perspectiveAPI.apiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          comment: { text: text },
-          languages: ['pt'],
-          requestedAttributes: {
-            TOXICITY: {},
-            SEVERE_TOXICITY: {},
-            IDENTITY_ATTACK: {},
-            INSULT: {},
-            PROFANITY: {}
-          }
-        })
-      });
-
-      if (!response.ok) {
-        console.error('Falha ao analisar texto com Perspective API:', await response.text());
-        return { success: false, error: 'API_REQUEST_FAILED' };
-      }
-
-      const data = await response.json();
-      const scores = {
-        TOXICITY: data.attributeScores?.TOXICITY?.summaryScore?.value || 0,
-        SEVERE_TOXICITY: data.attributeScores?.SEVERE_TOXICITY?.summaryScore?.value || 0,
-        IDENTITY_ATTACK: data.attributeScores?.IDENTITY_ATTACK?.summaryScore?.value || 0,
-        INSULT: data.attributeScores?.INSULT?.summaryScore?.value || 0,
-        PROFANITY: data.attributeScores?.PROFANITY?.summaryScore?.value || 0
-      };
-
-      return { success: true, scores };
-    } catch (error) {
-      console.error('Erro ao analisar texto com Perspective API:', error);
-      return { success: false, error: error.message };
-    }
-  }
-
-  static shouldFlagContent(scores) {
-    if (!scores) return false;
-    
-    return Object.keys(CONFIG.perspectiveAPI.threshold).some(attribute => {
-      const score = scores[attribute];
-      const threshold = CONFIG.perspectiveAPI.threshold[attribute];
-      return score >= threshold;
-    });
-  }
-}
-
-// Função para carregar a lista de palavrões (mantida para compatibilidade)
-async function loadBadWords() {
-  try {
-    const response = await fetch('src/data/badwords.json');
-    const data = await response.json();
-    FORUM_CONFIG.moderationRules.forbiddenWords = data.palavroes;
-  } catch (error) {
-    console.error('Erro ao carregar lista de palavrões:', error);
-  }
-}
-
-/**
- * Classe responsável por formatar e sanitizar o texto dos posts
- * Inclui funções para censura, formatação Markdown e emojis
- */
-class TextFormatter {
-  static async format(text) {
-    // Primeiro formatamos menções, markdown e emojis
-    let formattedText = this.formatMentions(text);
-    formattedText = this.formatMarkdown(formattedText);
-    formattedText = this.formatEmojis(formattedText);
-    
-    // Se estiver usando a API, não precisamos censurar aqui
-    // a validação completa é feita na clase ForumModerator
-    if (!FORUM_CONFIG.moderationRules.usePerspectiveAPI) {
-      formattedText = this.censorText(formattedText);
-    }
-    
-    return formattedText;
-  }
-
-  // Censura palavras proibidas com '•' (mantida para compatibilidade)
-  static censorText(text) {
-    let censoredText = text;
-    FORUM_CONFIG.moderationRules.forbiddenWords.forEach(word => {
-      const regex = new RegExp(word, 'gi');
-      censoredText = censoredText.replace(regex, match => '•'.repeat(match.length));
-    });
-    return censoredText;
-  }
-
-  // Formata links do texto para abrir em uma nova aba
-  static formatMentions(text) {
-    return text.replace(/@(\w+)/g, '<a href="#user-$1" class="mention">@$1</a>');
-  }
-
-  // Formata Markdown em tags HTML para renderizar na interface
-  static formatMarkdown(text) {
-    text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); // Negrito
-    text = text.replace(/\*(.*?)\*/g, '<em>$1</em>'); // Itálico
-    text = text.replace(/`(.*?)`/g, '<code>$1</code>'); // Código
-    return text;
-  }
-
-  // Substitui códigos de emoji por emojis reais
-  static formatEmojis(text) {
-    const emojiMap = {
-      ':)': '😊',
-      ':(': '😢',
-      ':D': '😀',
-      '<3': '❤️',
-      '>:(': '😡',
-      ':O': '😲',
-      ':P': '😛'
-    };
-
-    return text.replace(/:\)|:\(|:D|<3/g, match => emojiMap[match]);
-  }
-}
-
-/**
- * Classe que gerencia a moderação do fórum
- * Valida conteúdo, tags e permissões dos usuários
- */
+// Define a classe ForumModerator que agora usa ContentValidator
 class ForumModerator {
   static async validateContent(content, type = 'conteúdo') {
-    const plainContent = content.replace(/<[^>]*>/g, '').trim();
-
-    if (!plainContent) throw new Error(`O ${type} não pode estar vazio.`);
-
-    const maxLengths = {
-      título: FORUM_CONFIG.maxTitleLength,
-      conteúdo: FORUM_CONFIG.maxContentLength,
-      resposta: FORUM_CONFIG.maxReplyLength,
-      tag: 30
-    };
-
-    if (maxLengths[type] && plainContent.length > maxLengths[type]) throw new Error(`O ${type} excede o limite máximo de ${maxLengths[type]} caracteres.`);
-
-    // Usando Perspective API para checar conteúdo impróprio
-    if (FORUM_CONFIG.moderationRules.usePerspectiveAPI) {
-      const analysis = await ContentModerator.analyzeText(plainContent);
-      
-      if (analysis.success) {
-        if (ContentModerator.shouldFlagContent(analysis.scores)) {
-          throw new Error(`O ${type} contém conteúdo impróprio ou ofensivo. Por favor, revise seu texto.`);
-        }
-      } else if (FORUM_CONFIG.moderationRules.fallbackToLocalModeration) {
-        // Usar moderação local como fallback se a API falhar
-        const hasForbiddenWords = FORUM_CONFIG.moderationRules.forbiddenWords.some(word => {
-          const regex = new RegExp(`\\b${word}\\b`, 'i');
-          return regex.test(plainContent);
-        });
-
-        if (hasForbiddenWords) {
-          throw new Error(`O ${type} contém palavras inapropriadas.`);
-        }
-      }
-    }
-
-    return true;
+    return ContentValidator.validateContent(content, type);
   }
 
-  // Valida as tags do tópico
   static async validateTags(tags) {
-    if (!Array.isArray(tags)) return [];
-
-    const validatedTags = [];
-    
-    for (const tag of tags) {
-      try {
-        await this.validateContent(tag, 'tag');
-        // Limpa caracteres especiais
-        const cleanedTag = tag.replace(/[^a-zA-Z0-9\*]/g, '');
-        validatedTags.push(cleanedTag);
-      } catch (error) {
-        console.warn(`Tag "${tag}" inválida: ${error.message}`);
-      }
-    }
-    
-    return validatedTags;
+    return ContentValidator.validateTags(tags);
   }
 
-  // Verifica se o usuário está logado para postar
   static canUserPost() {
-    return !!JSON.parse(localStorage.getItem('userSession'));
+    return ContentValidator.canUserPost();
   }
 }
 
@@ -257,6 +66,8 @@ class ForumModerator {
 function closeModal() {
   newTopicModal.classList.add('hidden');
   newTopicForm.reset();
+  // Limpa o editor Quill se estiver disponível
+  if (quillEditor) quillEditor.root.innerHTML = '';
 }
 
 // Event Listeners
@@ -415,7 +226,7 @@ function renderTopicCard(topic, userId) {
     { icon: '💬', name: 'Geral' };
 
   return `
-    <div class="card p-6 mb-4 transform transition-all cursor-pointer overflow-hidden" 
+    <div class="card p-6 mb-4 transform transition-all overflow-hidden" 
          id="topic-${topic.id}"
          onclick="incrementTopicViews(${topic.id})">
       <div class="topic-content overflow-hidden">
@@ -682,10 +493,12 @@ async function addReply(event, topicId) {
     return;
   }
 
+  // Armazena o botão e seu texto original
+  const submitBtn = event.target.querySelector('button[type="submit"]');
+  const originalBtnText = submitBtn.innerHTML;
+  
   try {
     // Mostra indicador de carregamento
-    const submitBtn = event.target.querySelector('button[type="submit"]');
-    const originalBtnText = submitBtn.innerHTML;
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span class="animate-spin mr-2">⏳</span> Analisando...';
 
@@ -703,15 +516,20 @@ async function addReply(event, topicId) {
         likes: 0,
         likedBy: []
       });
-      renderTopics();
+      
+      // Restaura o botão antes de renderizar os tópicos
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalBtnText;
+      
       saveForumData();
       input.value = '';
+      
+      // Renderiza os tópicos após restaurar o botão
+      renderTopics();
     }
   } catch (error) {
     alert(error.message);
-  } finally {
-    // Restaura o botão ao estado original
-    const submitBtn = event.target.querySelector('button[type="submit"]');
+    // Garante que o botão seja restaurado em caso de erro
     submitBtn.disabled = false;
     submitBtn.innerHTML = originalBtnText;
   }
@@ -756,9 +574,7 @@ function saveTopicEdit(event, topicId) {
 
   try {
     ForumModerator.validateContent(newTitle, 'título');
-    if (plainContent.length > FORUM_CONFIG.maxContentLength) {
-      throw new Error(`O conteúdo excede o limite de ${FORUM_CONFIG.maxContentLength} caracteres.`);
-    }
+    if (plainContent.length > FORUM_CONFIG.maxContentLength) throw new Error(`O conteúdo excede o limite de ${FORUM_CONFIG.maxContentLength} caracteres.`);
 
     topic.title = TextFormatter.format(newTitle);
     topic.content = newContent;
@@ -926,10 +742,12 @@ async function addTopic(event) {
     return;
   }
 
+  // Obtém o botão de envio e seu texto original ANTES do bloco try
+  const submitBtn = newTopicForm.querySelector('button[type="submit"]');
+  const originalBtnText = submitBtn.innerHTML;
+
   try {
     // Mostra indicador de carregamento
-    const submitBtn = newTopicForm.querySelector('button[type="submit"]');
-    const originalBtnText = submitBtn.innerHTML;
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span class="animate-spin mr-2">⏳</span> Analisando...';
 
@@ -961,14 +779,14 @@ async function addTopic(event) {
     forumTopics.unshift(newTopic);
     saveForumData();
     renderTopics();
-    newTopicModal.classList.add('hidden');
-    event.target.reset();
+    
+    // Use a função closeModal para fechar o modal e limpar o formulário
+    closeModal();
 
   } catch (error) {
     alert(error.message);
   } finally {
-    // Restaura o botão ao estado original
-    const submitBtn = newTopicForm.querySelector('button[type="submit"]');
+    // Restaura o botão ao estado original sempre
     submitBtn.disabled = false;
     submitBtn.innerHTML = originalBtnText;
   }
