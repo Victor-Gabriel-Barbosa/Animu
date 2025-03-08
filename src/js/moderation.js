@@ -15,7 +15,9 @@ const MODERATION_CONFIG = {
   moderation: {
     usePerspectiveAPI: true, 
     fallbackToLocalModeration: true, // Se a API falhar, usa moderação local
-    forbiddenWords: [] 
+    forbiddenWords: [],
+    partialCensoring: true, // Nova opção para habilitar censura parcial
+    censorCharacter: '•'    // Caractere usado para censura
   }
 };
 
@@ -40,12 +42,13 @@ class ContentModerator {
           comment: { text: text },
           languages: ['pt'],
           requestedAttributes: {
-            TOXICITY: {},
-            SEVERE_TOXICITY: {},
-            IDENTITY_ATTACK: {},
-            INSULT: {},
-            PROFANITY: {}
-          }
+            TOXICITY: { spanAnnotations: true },
+            SEVERE_TOXICITY: { spanAnnotations: true },
+            IDENTITY_ATTACK: { spanAnnotations: true },
+            INSULT: { spanAnnotations: true },
+            PROFANITY: { spanAnnotations: true }
+          },
+          spanAnnotations: true
         })
       });
 
@@ -55,6 +58,8 @@ class ContentModerator {
       }
 
       const data = await response.json();
+      
+      // Extrair scores gerais
       const scores = {
         TOXICITY: data.attributeScores?.TOXICITY?.summaryScore?.value || 0,
         SEVERE_TOXICITY: data.attributeScores?.SEVERE_TOXICITY?.summaryScore?.value || 0,
@@ -62,8 +67,31 @@ class ContentModerator {
         INSULT: data.attributeScores?.INSULT?.summaryScore?.value || 0,
         PROFANITY: data.attributeScores?.PROFANITY?.summaryScore?.value || 0
       };
-
-      return { success: true, scores };
+      
+      // Extrair spans problemáticos
+      const spans = [];
+      
+      // Para cada atributo, verificamos os spans anotados
+      Object.keys(CONFIG.perspectiveAPI.threshold).forEach(attribute => {
+        if (!data.attributeScores?.[attribute]?.spanScores) return;
+        
+        data.attributeScores[attribute].spanScores.forEach(span => {
+          const spanScore = span.score?.value || 0;
+          const threshold = CONFIG.perspectiveAPI.threshold[attribute];
+          
+          // Se o score do span é maior que o threshold, marcamos para censura
+          if (spanScore >= threshold) {
+            spans.push({
+              begin: span.begin,
+              end: span.end,
+              score: spanScore,
+              attribute
+            });
+          }
+        });
+      });
+      
+      return { success: true, scores, spans };
     } catch (error) {
       console.error('Erro ao analisar texto com Perspective API:', error);
       return { success: false, error: error.message };
@@ -78,6 +106,25 @@ class ContentModerator {
       const threshold = CONFIG.perspectiveAPI.threshold[attribute];
       return score >= threshold;
     });
+  }
+  
+  // Novo método para censurar apenas partes específicas do texto
+  static censorTextPartially(text, spans) {
+    if (!spans || spans.length === 0) return text;
+    
+    // Ordenamos os spans de trás para frente para não afetar os índices
+    const sortedSpans = [...spans].sort((a, b) => b.begin - a.begin);
+    
+    let censoredText = text;
+    const censorChar = MODERATION_CONFIG.moderation.censorCharacter;
+    
+    for (const span of sortedSpans) {
+      const { begin, end } = span;
+      const replacement = censorChar.repeat(end - begin);
+      censoredText = censoredText.substring(0, begin) + replacement + censoredText.substring(end);
+    }
+    
+    return censoredText;
   }
 }
 
@@ -156,7 +203,18 @@ class ContentValidator {
       const analysis = await ContentModerator.analyzeText(plainContent);
       
       if (analysis.success) {
-        if (ContentModerator.shouldFlagContent(analysis.scores)) throw new Error(`O ${type} contém conteúdo impróprio ou ofensivo. Por favor, revise seu texto.`);
+        const hasProblemContent = ContentModerator.shouldFlagContent(analysis.scores);
+        
+        if (hasProblemContent) {
+          // Se a censura parcial está habilitada, censuramos apenas as partes problemáticas
+          if (MODERATION_CONFIG.moderation.partialCensoring && analysis.spans && analysis.spans.length > 0) {
+            const censoredText = ContentModerator.censorTextPartially(plainContent, analysis.spans);
+            return { isValid: true, censoredText, wasCensored: true };
+          } else {
+            // Caso contrário, rejeitamos o conteúdo
+            throw new Error(`O ${type} contém conteúdo impróprio ou ofensivo. Por favor, revise seu texto.`);
+          }
+        }
       } else if (MODERATION_CONFIG.moderation.fallbackToLocalModeration) {
         // Usar moderação local como fallback se a API falhar
         const hasForbiddenWords = MODERATION_CONFIG.moderation.forbiddenWords.some(word => {
@@ -164,11 +222,18 @@ class ContentValidator {
           return regex.test(plainContent);
         });
 
-        if (hasForbiddenWords) throw new Error(`O ${type} contém palavras inapropriadas.`);
+        if (hasForbiddenWords) {
+          if (MODERATION_CONFIG.moderation.partialCensoring) {
+            const censoredText = TextFormatter.censorText(plainContent);
+            return { isValid: true, censoredText, wasCensored: true };
+          } else {
+            throw new Error(`O ${type} contém palavras inapropriadas.`);
+          }
+        }
       }
     }
 
-    return true;
+    return { isValid: true, censoredText: plainContent, wasCensored: false };
   }
 
   // Valida as tags do conteúdo
@@ -179,9 +244,10 @@ class ContentValidator {
     
     for (const tag of tags) {
       try {
-        await this.validateContent(tag, 'tag');
+        const result = await this.validateContent(tag, 'tag');
         // Limpa caracteres especiais
-        const cleanedTag = tag.replace(/[^a-zA-Z0-9\*]/g, '');
+        const cleanedTag = result.censoredText ? result.censoredText.replace(/[^a-zA-Z0-9\*]/g, '') : 
+                                               tag.replace(/[^a-zA-Z0-9\*]/g, '');
         validatedTags.push(cleanedTag);
       } catch (error) {
         console.warn(`Tag "${tag}" inválida: ${error.message}`);

@@ -483,13 +483,11 @@ async function saveComment(animeTitle, comment, rating) {
       return null;
     }
 
-    // Valida o conteúdo usando o ContentValidator
-    try {
-      await ContentValidator.validateContent(comment, 'comentário');
-    } catch (error) {
-      alert(error.message);
-      return null;
-    }
+    // Valida o conteúdo usando o ContentValidator com suporte a censura parcial
+    const validationResult = await ContentValidator.validateContent(comment, 'comentário');
+    
+    // Determina qual texto usar (censurado ou original)
+    const textToUse = validationResult.wasCensored ? validationResult.censoredText : comment;
 
     const comments = JSON.parse(localStorage.getItem('animeComments')) || {};
     if (!comments[animeTitle]) comments[animeTitle] = [];
@@ -497,7 +495,7 @@ async function saveComment(animeTitle, comment, rating) {
     const sliderRating = document.getElementById('rating-slider').value / 10;
 
     // Formata o texto usando await para obter o resultado formatado
-    const formattedText = await TextFormatter.format(comment);
+    const formattedText = await TextFormatter.format(textToUse);
 
     const newComment = {
       id: Date.now(),
@@ -522,6 +520,7 @@ async function saveComment(animeTitle, comment, rating) {
     return newComment;
   } catch (e) {
     console.error('Erro ao salvar comentário:', e);
+    alert(e.message || 'Ocorreu um erro ao enviar o comentário');
     return null;
   }
 }
@@ -682,16 +681,14 @@ async function editComment(animeTitle, commentId, newText, newRating) {
     const currentUser = JSON.parse(localStorage.getItem('userSession'))?.username;
     if (currentUser !== comment.username) return false;
 
-    // Valida o conteúdo usando o ContentValidator
-    try {
-      await ContentValidator.validateContent(newText, 'comentário');
-    } catch (error) {
-      alert(error.message);
-      return false;
-    }
-
+    // Valida o conteúdo usando o ContentValidator com suporte a censura parcial
+    const validationResult = await ContentValidator.validateContent(newText, 'comentário');
+    
+    // Determina qual texto usar (censurado ou original)
+    const textToUse = validationResult.wasCensored ? validationResult.censoredText : newText;
+    
     // Formata o texto usando await para obter o resultado formatado
-    const formattedText = await TextFormatter.format(newText);
+    const formattedText = await TextFormatter.format(textToUse);
     
     comment.text = formattedText;
     comment.rating = newRating;
@@ -709,6 +706,7 @@ async function editComment(animeTitle, commentId, newText, newRating) {
     return true;
   } catch (e) {
     console.error('Erro ao editar comentário:', e);
+    alert(e.message || 'Ocorreu um erro ao editar o comentário');
     return false;
   }
 }
@@ -824,7 +822,6 @@ function toggleEditMode(commentId) {
         submitButton.innerHTML = '<span class="animate-spin mr-2">⏳</span> Salvando...';
         
         try {
-          // Como editComment agora é async, precisamos usar await aqui
           const result = await editComment(decodeURIComponent(animeTitle), commentId, newText, newRating);
           if (result) updateCommentsList(decodeURIComponent(animeTitle));
         } catch (error) {
@@ -1104,19 +1101,14 @@ function toggleFavorite(animeTitle) {
   if (userIndex === -1) return;
 
   // Inicializa o array de favoritos se não existir
-  if (!users[userIndex].favoriteAnimes) {
-    users[userIndex].favoriteAnimes = [];
-  }
+  if (!users[userIndex].favoriteAnimes) users[userIndex].favoriteAnimes = [];
 
   const isFavorited = users[userIndex].favoriteAnimes.includes(animeTitle);
 
-  if (isFavorited) {
-    // Remove dos favoritos
-    users[userIndex].favoriteAnimes = users[userIndex].favoriteAnimes.filter(
-      title => title !== animeTitle
-    );
-  } else users[userIndex].favoriteAnimes.push(animeTitle); // Adiciona aos favoritos
-
+  // Remove do favoritos se já estiver favoritado ou adiciona se não estiver
+  if (isFavorited) users[userIndex].favoriteAnimes = users[userIndex].favoriteAnimes.filter(title => title !== animeTitle);
+  else users[userIndex].favoriteAnimes.push(animeTitle);
+  
   // Atualiza o localStorage
   localStorage.setItem('animuUsers', JSON.stringify(users));
 
@@ -1384,15 +1376,17 @@ window.addEventListener('DOMContentLoaded', () => {
         submitButton.innerHTML = '<span class="animate-spin mr-2">⏳</span> Enviando...';
 
         try {
-          // Como saveComment agora é async, precisamos usar await aqui
-          await saveComment(decodeURIComponent(animeTitle), commentText, ratingValue);
-          document.getElementById('comment-text').value = '';
-          document.getElementById('rating-slider').value = '0';
-          updateRatingEmoji(0); // Reseta o emoji
-          updateCommentsList(decodeURIComponent(animeTitle));
+          const animeTitle = new URLSearchParams(window.location.search).get('anime');
+          const result = await saveComment(decodeURIComponent(animeTitle), commentText, ratingValue);
+          
+          if (result) {
+            document.getElementById('comment-text').value = '';
+            document.getElementById('rating-slider').value = '0';
+            updateRatingEmoji(0); // Reseta o emoji
+            updateCommentsList(decodeURIComponent(animeTitle));
+          }
         } catch (error) {
           console.error('Erro ao enviar comentário:', error);
-          alert('Ocorreu um erro ao enviar seu comentário. Por favor, tente novamente.');
         } finally {
           // Reabilita o botão com o texto original
           submitButton.disabled = false;

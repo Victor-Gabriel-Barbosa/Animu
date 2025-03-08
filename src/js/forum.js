@@ -502,11 +502,15 @@ async function addReply(event, topicId) {
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span class="animate-spin mr-2">⏳</span> Analisando...';
 
-    await ForumModerator.validateContent(content, 'resposta');
+    // Agora validateContent retorna um objeto com o texto censurado se necessário
+    const validationResult = await ForumModerator.validateContent(content, 'resposta');
 
     const topic = forumTopics.find(t => t.id === topicId);
     if (topic) {
-      const formattedContent = await TextFormatter.format(content);
+      // Usamos o texto censurado se houve censura, ou formatamos o original
+      let formattedContent;
+      if (validationResult.wasCensored) formattedContent = await TextFormatter.format(validationResult.censoredText);
+      else formattedContent = await TextFormatter.format(content);
       
       topic.replies.push({
         id: Date.now(), // Adiciona ID único
@@ -572,15 +576,39 @@ function saveTopicEdit(event, topicId) {
   const newContent = editQuill.root.innerHTML;
   const plainContent = editQuill.getText().trim();
 
-  try {
-    ForumModerator.validateContent(newTitle, 'título');
-    if (plainContent.length > FORUM_CONFIG.maxContentLength) throw new Error(`O conteúdo excede o limite de ${FORUM_CONFIG.maxContentLength} caracteres.`);
+  if (plainContent.length > FORUM_CONFIG.maxContentLength) {
+    alert(`O conteúdo excede o limite de ${FORUM_CONFIG.maxContentLength} caracteres.`);
+    return;
+  }
 
-    topic.title = TextFormatter.format(newTitle);
-    topic.content = newContent;
-    topic.editedAt = new Date().toISOString();
-    renderTopics();
-    saveForumData();
+  try {
+    // Validamos o título e o conteúdo com suporte a censura parcial
+    Promise.all([
+      ForumModerator.validateContent(newTitle, 'título'),
+      ForumModerator.validateContent(plainContent, 'conteúdo')
+    ]).then(([titleValidation, contentValidation]) => {
+      let notifyCensorship = false;
+      
+      // Aplicamos a censura ao título se necessário
+      if (titleValidation.wasCensored) {
+        topic.title = TextFormatter.format(titleValidation.censoredText);
+        notifyCensorship = true;
+      } else topic.title = TextFormatter.format(newTitle);
+      
+      // Aplica a censura ao conteúdo se necessário
+      if (contentValidation.wasCensored) {
+        // Atualiza o texto do editor com o conteúdo censurado
+        editQuill.setText(contentValidation.censoredText);
+        topic.content = editQuill.root.innerHTML;
+        notifyCensorship = true;
+      } else topic.content = newContent;
+      
+      topic.editedAt = new Date().toISOString();
+      renderTopics();
+      saveForumData();
+    }).catch(error => {
+      alert(error.message);
+    });
   } catch (error) {
     alert(error.message);
   }
@@ -660,12 +688,17 @@ function saveReplyEdit(event, topicId, replyId) {
   }
 
   try {
-    ForumModerator.validateContent(newContent, 'resposta');
-
-    reply.content = TextFormatter.format(newContent);
-    reply.editedAt = new Date().toISOString();
-    renderTopics();
-    saveForumData();
+    ForumModerator.validateContent(newContent, 'resposta')
+      .then(validationResult => {
+        // Usa o texto censurado se houve censura
+        if (validationResult.wasCensored) reply.content = TextFormatter.format(validationResult.censoredText);
+        else reply.content = TextFormatter.format(newContent);
+        
+        reply.editedAt = new Date().toISOString();
+        renderTopics();
+        saveForumData();
+      })
+      .catch(error => alert(error.message));
   } catch (error) {
     alert(error.message);
   }
@@ -751,16 +784,33 @@ async function addTopic(event) {
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span class="animate-spin mr-2">⏳</span> Analisando...';
 
-    await ForumModerator.validateContent(title, 'título');
-    await ForumModerator.validateContent(plainContent, 'conteúdo');
+    // Validamos título e conteúdo, agora com suporte a censura parcial
+    const titleValidation = await ForumModerator.validateContent(title, 'título');
+    const contentValidation = await ForumModerator.validateContent(plainContent, 'conteúdo');
+    
+    let notifyCensorship = false;
 
     // Valida e filtra tags impróprias
     const validatedTags = await ForumModerator.validateTags(rawTags);
 
     if (rawTags.length !== validatedTags.length) alert('Algumas tags foram removidas por conterem conteúdo impróprio.');
 
-    const formattedTitle = await TextFormatter.format(title);
-    const formattedContent = await TextFormatter.format(content);
+    // Formatamos o título, possivelmente censurado
+    let formattedTitle;
+    if (titleValidation.wasCensored) {
+      formattedTitle = await TextFormatter.format(titleValidation.censoredText);
+      notifyCensorship = true;
+    } else {
+      formattedTitle = await TextFormatter.format(title);
+    }
+    
+    // Formata o conteúdo, possivelmente censurado
+    let formattedContent;
+    if (contentValidation.wasCensored) {
+      quillEditor.setText(contentValidation.censoredText);
+      formattedContent = quillEditor.root.innerHTML;
+      notifyCensorship = true;
+    } else formattedContent = content;
 
     const newTopic = {
       id: Date.now(),
