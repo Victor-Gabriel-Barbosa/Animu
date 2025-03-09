@@ -3,7 +3,7 @@ class Navbar {
   constructor() {
     // Template HTML principal da navbar com menu lateral e painel de usuário
     this.navHTML = `
-      <button id="toggle-navigation" class="toggle-nav-btn" title="Ocultar Navegação">
+      <button id="toggle-navigation" class="toggle-nav-btn" title="Ocultar Navegação (ALT + H)">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
           <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
         </svg>
@@ -14,7 +14,7 @@ class Navbar {
             <!-- Espaço reservado para o menu e logo -->
             <div class="nav-menu-container">
               <!-- Menu Toggle Button -->
-              <button id="menu-toggle" class="menu-toggle-btn" title="Alternar Menu de Navegação">
+              <button id="menu-toggle" class="menu-toggle-btn" title="Expandir Menu (ALT + M)">
                 <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24">
                   <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
                 </svg>
@@ -22,7 +22,7 @@ class Navbar {
               
               <!-- Logo -->
               <div class="logo-container">
-                <a href="index.html" class="logo-link" title="Ir para página inicial">
+                <a href="index.html" class="logo-link" title="Página Inicial do Animu">
                   <img src="src/data/favicon/favicon.svg" class="logo-icon" alt="Logo Animu">
                   <span class="logo-text">Animu</span>
                 </a>
@@ -411,6 +411,9 @@ class Navbar {
 
       // Alt + M toggle menu lateral
       if (e.key === 'm' && e.altKey) document.getElementById('menu-toggle').click();
+      
+      // Alt + H toggle visibilidade da navegação
+      if (e.key === 'h' && e.altKey) document.getElementById('toggle-navigation').click();
     });
 
     // Navegação por Tab nos menus
@@ -470,7 +473,18 @@ class Navbar {
 
   closeAllMenus() {
     // Fecha menu lateral
-    document.getElementById('side-menu').classList.remove('open');
+    const sideMenu = document.getElementById('side-menu');
+    const menuOverlay = document.getElementById('menu-overlay');
+    
+    sideMenu.classList.remove('open');
+    menuOverlay.classList.remove('show');
+    document.body.classList.remove('menu-open');
+    
+    // Atualiza estado no localStorage
+    localStorage.setItem('sideMenuState', 'closed');
+    
+    // Remove listener de clique caso esteja ativo
+    document.removeEventListener('click', this.handleOutsideClick);
 
     // Fecha dropdowns
     document.querySelectorAll('.user-dropdown, .theme-menu').forEach(menu => menu.classList.add('hidden'));
