@@ -280,9 +280,8 @@ tbody tr:nth-child(5) { animation-delay: 0.5s; }
   position: relative;
   overflow: hidden;
   padding: 6rem 0;
-  border-top: 2px solid var(--primary-color);
-  border-bottom: 2px solid var(--primary-color);
-  
+  border: 2px solid var(--primary-color);
+  border-radius: 20px;
 }
 
 .parallax-section::before {
