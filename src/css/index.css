@@ -114,33 +114,6 @@
   padding-top: 2rem;
 }
 
-.section-divider {
-  position: relative;
-  height: 2px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    var(--primary-color),
-    transparent
-  );
-  opacity: 0.3;
-  margin: 2rem auto;
-  width: 90%;
-  max-width: 1200px;
-}
-
-.section-divider::before {
-  content: '✦';
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  background: var(--background);
-  padding: 0 1rem;
-  color: var(--primary-color);
-  font-size: 1.2rem;
-}
-
 .section-wrapper {
   padding: 1.5rem 0;
   position: relative;

@@ -317,17 +317,6 @@ tbody tr:nth-child(5) { animation-delay: 0.5s; }
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.parallax-content .section-divider {
-  margin: 4rem auto;
-  opacity: 0.2;
-  width: 100%;
-}
-
-.parallax-content .section-divider::before {
-  background: transparent;
-  color: rgba(255, 255, 255, 0.8);
-}
-
 .parallax-background {
   position: absolute;
   top: 0;
