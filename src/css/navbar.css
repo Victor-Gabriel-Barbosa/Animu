@@ -188,7 +188,6 @@ nav .ml-10 a.active {
   width: 225px; 
   height: calc(100vh - 56px);
   background: var(--background);
-  box-shadow: 2px 0 8px var(--card-shadow);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 49;
   overflow: hidden;

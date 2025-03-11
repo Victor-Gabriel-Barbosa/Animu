@@ -1288,11 +1288,11 @@
 
 .stat-item {
   display: flex;
-  align-items: center;
   gap: 0.5rem;
 }
 
 .stat-icon {
+  margin-top: 0.2rem;;
   width: 1.5rem;
   height: 1.5rem;
   color: var(--primary-color);

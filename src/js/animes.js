@@ -40,7 +40,6 @@ function getYouTubeEmbedUrl(url) {
   return videoId ? `https://www.youtube.com/embed/${videoId}` : '';
 }
 
-// Adicione esta constante no topo do arquivo junto com as outras
 const STAFF_LIMIT = 6; // Limite inicial de membros da staff mostrados
 
 // Renderiza detalhes completos do anime na página
@@ -77,7 +76,7 @@ function renderAnimeDetails(anime) {
 
   const embedUrl = getYouTubeEmbedUrl(anime.trailerUrl);
 
-  // Formatar a data de lançamento
+  // Formata a data de lançamento
   const releaseDate = anime.releaseDate ? new Date(anime.releaseDate).toLocaleDateString('pt-BR', {
     day: 'numeric',
     month: 'long',
