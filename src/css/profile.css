@@ -459,3 +459,198 @@
 #friend-search-results::-webkit-scrollbar-thumb:hover {
   background-color: rgba(139, 92, 246, 0.4);
 }
+
+/* Estilos das estatísticas do usuário */
+.stats-container {
+  transition: all 0.3s ease;
+}
+
+.stat-card {
+  position: relative;
+  border-radius: 0.75rem;
+  padding: 0.75rem 0.5rem;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 5.5rem;
+  width: 100%;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+.stat-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  padding: 0 0.25rem;
+}
+
+.stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: white;
+  transition: all 0.3s ease;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  max-width: 100%;
+}
+
+.stat-card:hover .stat-value {
+  transform: scale(1.1);
+}
+
+/* Efeito de brilho ao passar o mouse */
+.stat-card::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to bottom right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(30deg);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.stat-card:hover::after {
+  opacity: 1;
+}
+
+/* Responsividade para estatísticas */
+@media (max-width: 640px) {
+  .stat-card {
+    padding: 0.75rem 0.5rem;
+    min-height: 4.5rem;
+  }
+  
+  .stat-title {
+    font-size: 0.75rem;
+  }
+  
+  .stat-value {
+    font-size: 1.25rem;
+  }
+  
+  /* Garante que os indicadores de tendência não causem transbordamento */
+  .trend-up {
+    position: relative;
+    font-size: 0.6rem;
+    top: -0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .stat-card {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 0.625rem 1rem;
+    min-height: 3.5rem;
+  }
+  
+  .stat-title {
+    margin-bottom: 0;
+    text-align: left;
+    max-width: 50%;
+  }
+  
+  .stat-value {
+    text-align: right;
+    margin-left: 0.5rem;
+    max-width: 45%;
+  }
+  
+  /* Ajustes específicos para evitar quebra de texto */
+  .stats-container > div {
+    margin-bottom: 0.5rem; /* Espaçamento entre cartões quando empilhados */
+  }
+}
+
+@media (max-width: 360px) {
+  .stats-container {
+    margin-top: 1rem;
+  }
+  
+  .stat-card {
+    padding: 0.75rem 0.75rem;
+  }
+  
+  .stat-title {
+    font-size: 0.7rem;
+  }
+}
+
+/* Garante que o texto não transborde nos indicadores de tendência */
+.high-value, .medium-value, .low-value {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.trend-up {
+  display: inline-block;
+  margin-left: 2px;
+  line-height: 1;
+}
+
+@media (max-width: 640px) {
+  .stat-card {
+    padding: 0.5rem;
+  }
+  
+  .stat-title {
+    font-size: 0.75rem;
+  }
+  
+  .stat-value {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .stats-container {
+    grid-template-columns: repeat(1, 1fr);
+  }
+  
+  .stat-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem;
+  }
+  
+  .stat-value {
+    margin-left: 0.5rem;
+  }
+}

@@ -152,11 +152,149 @@ function loadStatistics(user) {
   const forumLikes = userTopics.reduce((sum, topic) => sum + (topic.likes || 0), 0) +
     userReplies.reduce((sum, reply) => sum + (reply.likes || 0), 0);
 
-  document.getElementById('stats-animes').textContent = user.watchedAnimes?.length || 0;
-  document.getElementById('stats-reviews').textContent = userComments.length + userTopics.length;
-  document.getElementById('stats-likes').textContent = userComments.reduce((sum, comment) => sum + (comment.likes?.length || 0), 0) + forumLikes;
-  document.getElementById('stats-favorites').textContent = user.favoriteAnimes?.length || 0;
+  // Valores finais para as estatísticas
+  const animeCount = user.watchedAnimes?.length || 0;
+  const reviewCount = userComments.length + userTopics.length;
+  const likeCount = userComments.reduce((sum, comment) => sum + (comment.likes?.length || 0), 0) + forumLikes;
+  const favoriteCount = user.favoriteAnimes?.length || 0;
+
+  // Anima os contadores para uma experiência mais envolvente
+  animateCounter('stats-animes', animeCount);
+  animateCounter('stats-reviews', reviewCount);
+  animateCounter('stats-likes', likeCount);
+  animateCounter('stats-favorites', favoriteCount);
+  
+  // Adiciona classes para indicar tendências (opcional)
+  applyTrendIndicator('stats-animes', animeCount);
+  applyTrendIndicator('stats-reviews', reviewCount);
+  applyTrendIndicator('stats-likes', likeCount);
+  applyTrendIndicator('stats-favorites', favoriteCount);
 }
+
+/**
+ * Anima a contagem de um valor de 0 até o valor final
+ * @param {string} elementId - ID do elemento HTML
+ * @param {number} finalValue - Valor final a ser exibido
+ */
+function animateCounter(elementId, finalValue) {
+  const element = document.getElementById(elementId);
+  if (!element) return;
+  
+  const duration = 1000; // duração da animação em ms
+  const stepTime = 20; // tempo entre cada etapa da animação
+  const initialValue = 0;
+  const increment = finalValue / (duration / stepTime);
+  
+  let currentValue = initialValue;
+  const counterAnimation = setInterval(() => {
+    currentValue += increment;
+    if (currentValue >= finalValue) {
+      clearInterval(counterAnimation);
+      element.textContent = finalValue;
+    } else {
+      element.textContent = Math.floor(currentValue);
+    }
+  }, stepTime);
+}
+
+/**
+ * Aplica indicadores visuais baseados no valor da estatística
+ * @param {string} elementId - ID do elemento HTML
+ * @param {number} value - Valor da estatística
+ */
+function applyTrendIndicator(elementId, value) {
+  const element = document.getElementById(elementId);
+  if (!element) return;
+  
+  // Adiciona classes com base nos valores
+  if (value > 50) {
+    element.classList.add('high-value');
+  } else if (value > 20) {
+    element.classList.add('medium-value');
+  } else {
+    element.classList.add('low-value');
+  }
+  
+  // Adiciona indicador de tendência apenas em telas maiores
+  if (value > 30 && window.innerWidth > 480) {
+    const trendIndicator = document.createElement('span');
+    trendIndicator.className = 'trend-up ml-1 text-xs';
+    trendIndicator.innerHTML = '↑';
+    element.appendChild(trendIndicator);
+  }
+}
+
+// Ajusta o layout das estatísticas baseado no tamanho da tela
+function adjustStatisticsLayout() {
+  const statsContainer = document.querySelector('.stats-container');
+  if (!statsContainer) return;
+
+  // Em telas pequenas, remove a classe grid e adiciona flexbox vertical
+  if (window.innerWidth <= 480) {
+    statsContainer.classList.remove('grid');
+    statsContainer.classList.add('flex', 'flex-col');
+  } else {
+    statsContainer.classList.add('grid');
+    statsContainer.classList.remove('flex', 'flex-col');
+  }
+}
+
+// Verifica se o elemento está visível na tela para iniciar animações
+function checkIfElementsInView() {
+  const statsContainer = document.querySelector('.stats-container');
+  if (!statsContainer) return;
+  
+  const rect = statsContainer.getBoundingClientRect();
+  const isInView = (
+    rect.top >= 0 &&
+    rect.left >= 0 &&
+    rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+    rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+  );
+  
+  if (isInView) {
+    statsContainer.classList.add('animate-in');
+  }
+}
+
+// Adiciona o verificador de visibilidade ao evento de rolagem
+document.addEventListener('DOMContentLoaded', function() {
+  // Adiciona evento de rolagem para verificar visibilidade dos elementos
+  window.addEventListener('scroll', checkIfElementsInView);
+  // Verifica imediatamente após o carregamento
+  checkIfElementsInView();
+  // Verifica o layout imediatamente após o carregamento
+  adjustStatisticsLayout();
+  
+  // Recalcula quando a janela for redimensionada
+  window.addEventListener('resize', function() {
+    adjustStatisticsLayout();
+    
+    // Remover e reaplicar indicadores de tendência quando a tela mudar de tamanho
+    const statsElements = ['stats-animes', 'stats-reviews', 'stats-likes', 'stats-favorites'];
+    statsElements.forEach(id => {
+      const element = document.getElementById(id);
+      if (element) {
+        // Guarda o valor atual
+        const value = parseInt(element.textContent.replace(/[^\d]/g, ''), 10);
+        
+        // Remove possíveis spans de indicador
+        const trendIndicator = element.querySelector('.trend-up');
+        if (trendIndicator) {
+          trendIndicator.remove();
+        }
+        
+        // Reaplica o indicador adequado para o tamanho atual
+        if (value > 30 && window.innerWidth > 480) {
+          const newIndicator = document.createElement('span');
+          newIndicator.className = 'trend-up ml-1 text-xs';
+          newIndicator.innerHTML = '↑';
+          element.appendChild(newIndicator);
+        }
+      }
+    });
+  });
+});
 
 // Gerencia sistema de conquistas baseado nas atividades do usuário
 function loadAchievements(user) {
