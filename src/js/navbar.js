@@ -441,10 +441,30 @@ class Navbar {
     this.handleSwipe = () => {
       const swipeDistance = touchEndX - touchStartX;
       const sideMenu = document.getElementById('side-menu');
+      const menuOverlay = document.getElementById('menu-overlay');
 
       if (Math.abs(swipeDistance) > 50) { // Mínimo de 50px
-        if (swipeDistance > 0) sideMenu.classList.add('open'); // Swipe direita
-        else sideMenu.classList.remove('open'); // Swipe esquerda
+        if (swipeDistance > 0) {
+          // Swipe direita - Abre o menu
+          sideMenu.classList.add('open');
+          menuOverlay.classList.add('show');
+          document.body.classList.add('menu-open');
+          // Salva o estado do menu
+          localStorage.setItem('sideMenuState', 'open');
+          // Adiciona listener para dispositivos móveis
+          if (window.innerWidth <= 768) {
+            document.addEventListener('click', this.handleOutsideClick);
+          }
+        } else {
+          // Swipe esquerda - Fecha o menu
+          sideMenu.classList.remove('open');
+          menuOverlay.classList.remove('show');
+          document.body.classList.remove('menu-open');
+          // Atualiza estado no localStorage
+          localStorage.setItem('sideMenuState', 'closed');
+          // Remove listener
+          document.removeEventListener('click', this.handleOutsideClick);
+        }
       }
     }
   }
