@@ -418,9 +418,7 @@ function setupFilters() {
   // Ajusta o slider na redimensão da janela
   window.addEventListener('resize', () => {
     const activeButton = document.querySelector('.filter-tab.active');
-    if (activeButton && slider) {
-      updateFilterSlider(activeButton, slider);
-    }
+    if (activeButton && slider) updateFilterSlider(activeButton, slider);
   });
 }
 
@@ -452,9 +450,7 @@ document.addEventListener('themeChanged', function () {
 function setupAutoRefresh() {
   setInterval(() => {
     const user = getCurrentUser();
-    if (user) {
-      loadTrendingRecommendations(); // Atualiza apenas as tendências
-    }
+    if (user) loadTrendingRecommendations(); // Atualiza apenas as tendências
   }, 300000); // Atualiza a cada 5 minutos
 }
 
@@ -471,6 +467,39 @@ function updateStats(user) {
   const watchedCount = user.watchedAnimes?.length || 0;
   const animes = JSON.parse(localStorage.getItem('animeData')) || [];
   const comments = JSON.parse(localStorage.getItem('animeComments')) || {};
+  
+  // Calcula porcentagem de perfil completo
+  const profileCompletionPercentage = calculateProfileCompletion(user);
+  
+  // Atualiza o elemento visual da porcentagem e o círculo de progresso
+  const percentageElement = document.querySelector('.percentage');
+  const progressCircle = document.querySelector('.recommendation-circle path.progress');
+  const recommendationCircle = document.querySelector('.recommendation-circle');
+  
+  if (percentageElement) percentageElement.textContent = `${profileCompletionPercentage}%`;
+  
+  if (progressCircle) {
+    // Remove qualquer animação existente
+    progressCircle.style.animation = 'none';
+    
+    // Força um reflow para garantir que a remoção da animação seja aplicada
+    void progressCircle.offsetWidth;
+    
+    // Define o valor de stroke-dasharray diretamente no elemento
+    progressCircle.setAttribute('stroke-dasharray', `${profileCompletionPercentage}, 100`);
+    
+    // Define a variável CSS para animação futura
+    document.documentElement.style.setProperty('--percent-value', profileCompletionPercentage);
+    
+    // Remove classes anteriores
+    recommendationCircle.classList.remove('progress-low', 'progress-medium', 'progress-high', 'progress-complete');
+    
+    // Aplica a classe correspondente ao nível atual
+    if (profileCompletionPercentage < 30) recommendationCircle.classList.add('progress-low');
+    else if (profileCompletionPercentage < 60) recommendationCircle.classList.add('progress-medium');
+    else if (profileCompletionPercentage < 85) recommendationCircle.classList.add('progress-high');
+    else recommendationCircle.classList.add('progress-complete');
+  }
 
   // Calcula precisão média das recomendações
   let totalMatchScore = 0;
@@ -520,6 +549,72 @@ function updateStats(user) {
 
     genrePreferences.innerHTML = `<div class="insight-stat">${genreHTML}</div>`;
   }
+}
+
+// Calcula a porcentagem de conclusão do perfil do usuário
+function calculateProfileCompletion(user) {
+  let totalPoints = 0;
+  let earnedPoints = 0;
+  
+  // Verifica componentes do perfil
+  if (user.username) { earnedPoints += 10; totalPoints += 10; }
+  if (user.avatar) { earnedPoints += 10; totalPoints += 10; }
+  if (user.bio) { earnedPoints += 5; totalPoints += 5; }
+  
+  // Engajamento com a plataforma
+  const watchedCount = user.watchedAnimes?.length || 0;
+  totalPoints += 25;
+  earnedPoints += Math.min(25, watchedCount);
+  
+  const favoritesCount = user.favoriteAnimes?.length || 0;
+  totalPoints += 15;
+  earnedPoints += Math.min(15, favoritesCount * 3);
+  
+  const commentsCount = countUserComments(user.username);
+  totalPoints += 15;
+  earnedPoints += Math.min(15, commentsCount * 1.5);
+  
+  // Gêneros favoritos
+  if (user.favoriteGenres && user.favoriteGenres.length > 0) earnedPoints += 10;
+  totalPoints += 10;
+  
+  // Atividade recente
+  const recentActivity = hasRecentActivity(user.username);
+  if (recentActivity) earnedPoints += 10;
+  totalPoints += 10;
+  
+  const completionPercentage = Math.round((earnedPoints / totalPoints) * 100);
+  return completionPercentage;
+}
+
+// Conta o número de comentários feitos pelo usuário
+function countUserComments(username) {
+  const comments = JSON.parse(localStorage.getItem('animeComments')) || {};
+  let count = 0;
+  
+  Object.values(comments).forEach(animeComments => {
+    count += animeComments.filter(comment => comment.username === username).length;
+  });
+  
+  return count;
+}
+
+// Verifica se o usuário tem atividade recente (últimos 7 dias)
+function hasRecentActivity(username) {
+  const comments = JSON.parse(localStorage.getItem('animeComments')) || {};
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  
+  for (const animeComments of Object.values(comments)) {
+    for (const comment of animeComments) {
+      if (comment.username === username) {
+        const commentDate = new Date(comment.timestamp);
+        if (commentDate > sevenDaysAgo) return true;
+      }
+    }
+  }
+  
+  return false;
 }
 
 // Atualiza informações do usuário na interface
