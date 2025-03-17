@@ -89,7 +89,6 @@ class NewsManager {
 
     // Mostra e inicializar nova view
     const view = this.views[viewName];
-    view.element.style.display = 'block';
     view.init(params);
     this.activeView = viewName;
 
