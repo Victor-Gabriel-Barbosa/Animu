@@ -12,14 +12,12 @@ class NewsManager {
 
     // Identifica contexto da página atual
     this.currentPage = this.getCurrentPage();
-    this.gridView = document.getElementById('news-grid-view');
-    this.detailView = document.getElementById('news-detail-view');
-
+    
     // Referências aos elementos principais da página
     this.parallaxSection = document.querySelector('.parallax-section');
     this.newsGridContainer = document.querySelector('.news-grid')?.parentElement;
     this.paginationContainer = document.querySelector('.pagination-container');
-
+    
     // Inicializa grid com base no contexto da página
     const newsGrid = document.querySelector('.news-grid');
     if (newsGrid) {
@@ -28,13 +26,10 @@ class NewsManager {
         : this.currentPage === 'index' && this.renderNewsGrid(newsGrid, 4);
     }
 
-    // Inicializa visualização detalhada na página de notícias
-    this.currentPage === 'news' && this.init();
-
-    // Novo sistema de views
+    // Novo sistema de views - Corrigindo as referências para views
     this.views = {
       grid: {
-        element: document.getElementById('news-grid-view'),
+        element: this.newsGridContainer, // Referência corrigida
         title: 'Notícias | Animu',
         init: () => this.initializeFilters()
       },
@@ -70,24 +65,38 @@ class NewsManager {
 
   switchToView(viewName, params = null, updateHistory = true) {
     if (!this.views[viewName]) return;
-
-    // Esconde a view atual
-    if (this.activeView) this.views[this.activeView].element.style.display = 'none';
+    
+    // Verificar se os elementos estão disponíveis
+    if (viewName === 'detail' && !this.views.detail.element) {
+      console.error("Elemento de visualização detalhada não encontrado");
+      return;
+    }
+    
+    // Esconde a view atual se o activeView for válido
+    if (this.activeView && this.views[this.activeView].element) {
+      this.views[this.activeView].element.style.display = 'none';
+    }
 
     // Gerenciamento de visibilidade dos elementos da página
     if (viewName === 'detail') {
-      // Oculta elementos da visualização em grid quando mostra detalhes da notícia
+      // Exibe a visualização detalhada
+      if (this.views.detail.element) this.views.detail.element.style.display = 'block';
+      
+      // Oculta elementos da visualização em grid
       if (this.parallaxSection) this.parallaxSection.style.display = 'none';
       if (this.newsGridContainer) this.newsGridContainer.style.display = 'none';
       if (this.paginationContainer) this.paginationContainer.style.display = 'none';
     } else {
+      // Oculta a visualização detalhada
+      if (this.views.detail.element) this.views.detail.element.style.display = 'none';
+      
       // Mostra elementos da visualização em grid
       if (this.parallaxSection) this.parallaxSection.style.display = 'block';
       if (this.newsGridContainer) this.newsGridContainer.style.display = 'block';
       if (this.paginationContainer) this.paginationContainer.style.display = 'flex';
     }
 
-    // Mostra e inicializar nova view
+    // Mostra e inicializa nova view
     const view = this.views[viewName];
     view.init(params);
     this.activeView = viewName;
@@ -145,7 +154,7 @@ class NewsManager {
   createNewsCard(news) {
     const newsLink = this.currentPage === 'index'
       ? `news.html?id=${news.id}`  // Link direto para página de notícias quando na index
-      : `javascript:void(0)`; // Link JavaScript quando na página de notícias
+      : `#`;  // Usando # em vez de javascript:void(0) para evitar comportamentos inesperados
 
     const onClickHandler = this.currentPage === 'index'
       ? ''  // Sem handler quando na index
@@ -224,7 +233,6 @@ class NewsManager {
   setupEventListeners() {
     this.searchInput.addEventListener('input', () => {
       this.updateNews();
-      // Removido o scroll automático aqui
     });
     
     // Manter apenas o scroll ao pressionar Enter
@@ -238,19 +246,17 @@ class NewsManager {
     
     this.categoryFilter.addEventListener('change', () => {
       this.updateNews();
-      // Removido o scroll automático aqui
     });
     
     this.sortSelect.addEventListener('change', () => {
       this.updateNews();
-      // Removido o scroll automático aqui
     });
     
     this.prevButton.addEventListener('click', () => this.changePage('prev'));
     this.nextButton.addEventListener('click', () => this.changePage('next'));
   }
 
-  // Novo método para fazer scroll para os resultados
+  // Faz scroll para os resultados
   scrollToResults() {
     const newsGrid = this.newsGrid;
     if (newsGrid) {
