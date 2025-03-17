@@ -30,7 +30,7 @@
               </svg>
               <div class="percentage">75%</div>
             </div>
-            <h1 class="text-4xl font-bold mb-4">Suas Recomendações</h1>
+            <h1 class="text-4xl font-bold mb-4">Suas Sugestões</h1>
             <p class="text-xl text-white mb-8">
               Descobrimos alguns tesouros baseados no seu perfil
             </p>
@@ -39,7 +39,7 @@
       </div>
     </section>
 
-    <!-- Seção normal - Stats -->
+    <!-- Seção de Stats -->
     <div class="container mx-auto px-4 py-12">
       <!-- Cards de Estatísticas -->
       <div class="stats-grid mb-12">
@@ -59,33 +59,33 @@
           <div class="stat-rec-label">Média</div>
         </div>
       </div>
-
-      <!-- Filtros Interativos -->
-      <div class="filter-tabs mb-12">
-        <div class="filter-slider"></div>
-        <button class="filter-tab active" data-filter="all">
-          <span class="filter-icon">🌟</span>
-          <span class="filter-text">Todos</span>
-        </button>
-        <button class="filter-tab" data-filter="genres">
-          <span class="filter-icon">🎭</span>
-          <span class="filter-text">Gêneros</span>
-        </button>
-        <button class="filter-tab" data-filter="similar">
-          <span class="filter-icon">🔄</span>
-          <span class="filter-text">Similares</span>
-        </button>
-        <button class="filter-tab" data-filter="trending">
-          <span class="filter-icon">📈</span>
-          <span class="filter-text">Tendências</span>
-        </button>
-      </div>
     </div>
 
     <section class="parallax-section"
       style="--parallax-bg-image: url('https://img.freepik.com/fotos-gratis/paisagem-magica-de-fantasia_23-2151502913.jpg?ga=GA1.1.1952551659.1739965581&semt=ais_hybrid');">
       <div class="container mx-auto px-4 py-12">
         <div class="parallax-content">
+          <!-- Filtros Interativos -->
+          <div class="filter-tabs mx-10 mb-12 text-purple-600">
+            <div class="filter-slider"></div>
+            <button class="filter-tab active" data-filter="all">
+              <span class="filter-icon">🌟</span>
+              <span class="filter-text">Todos</span>
+            </button>
+            <button class="filter-tab" data-filter="genres">
+              <span class="filter-icon">🎭</span>
+              <span class="filter-text">Gêneros</span>
+            </button>
+            <button class="filter-tab" data-filter="similar">
+              <span class="filter-icon">🔄</span>
+              <span class="filter-text">Similares</span>
+            </button>
+            <button class="filter-tab" data-filter="trending">
+              <span class="filter-icon">📈</span>
+              <span class="filter-text">Tendências</span>
+            </button>
+          </div>
+
           <!-- Container de Recomendações -->
           <div class="recommendations-wrapper">
             <div id="genres-recommendations" class="recommendation-section active mb-12">
@@ -121,7 +121,7 @@
         </div>
       </div>
     </section>
-    
+
     <!-- Insight Box -->
     <div class="insight-box mt-12">
       <div class="insight-header">

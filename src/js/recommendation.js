@@ -357,6 +357,13 @@ function renderRecommendations(recommendations, containerId) {
 function setupFilters() {
   const filterButtons = document.querySelectorAll('.filter-tab');
   const sections = document.querySelectorAll('.recommendation-section');
+  const slider = document.querySelector('.filter-slider');
+  
+  // Inicializa o slider para o botão ativo (primeiro botão)
+  if (slider && filterButtons.length > 0) {
+    const activeButton = document.querySelector('.filter-tab.active');
+    updateFilterSlider(activeButton, slider);
+  }
 
   filterButtons.forEach(button => {
     button.addEventListener('click', () => {
@@ -364,33 +371,71 @@ function setupFilters() {
       filterButtons.forEach(btn => btn.classList.remove('active'));
       button.classList.add('active');
 
+      // Atualiza o slider
+      if (slider) updateFilterSlider(button, slider);
+
       const filter = button.dataset.filter;
 
-      // Atualiza visibilidade das seções
+      // Adiciona classe de saída para animação
       sections.forEach(section => {
-        if (filter === 'all') {
-          section.style.display = 'block';
-          section.classList.add('active');
-        } else {
-          if (section.id.includes(filter)) {
-            section.style.display = 'block';
-            section.classList.add('active');
-          } else {
-            section.style.display = 'none';
-            section.classList.remove('active');
-          }
+        if (section.classList.contains('active')) {
+          section.classList.add('exiting');
+          setTimeout(() => {
+            section.classList.remove('exiting');
+          }, 300);
         }
       });
 
-      // Recarrega as recomendações da seção ativa
-      const user = getCurrentUser();
-      if (user) {
-        if (filter === 'all' || filter === 'genres') loadGenreBasedRecommendations(user);
-        if (filter === 'all' || filter === 'similar') loadSimilarAnimeRecommendations(user);
-        if (filter === 'all' || filter === 'trending') loadTrendingRecommendations();
-      }
+      // Timeout para permitir a animação de saída
+      setTimeout(() => {
+        // Atualiza visibilidade das seções
+        sections.forEach(section => {
+          if (filter === 'all') {
+            section.style.display = 'block';
+            section.classList.add('active');
+          } else {
+            if (section.id.includes(filter)) {
+              section.style.display = 'block';
+              section.classList.add('active');
+            } else {
+              section.style.display = 'none';
+              section.classList.remove('active');
+            }
+          }
+        });
+
+        // Recarrega as recomendações da seção ativa
+        const user = getCurrentUser();
+        if (user) {
+          if (filter === 'all' || filter === 'genres') loadGenreBasedRecommendations(user);
+          if (filter === 'all' || filter === 'similar') loadSimilarAnimeRecommendations(user);
+          if (filter === 'all' || filter === 'trending') loadTrendingRecommendations();
+        }
+      }, 300);
     });
   });
+
+  // Ajusta o slider na redimensão da janela
+  window.addEventListener('resize', () => {
+    const activeButton = document.querySelector('.filter-tab.active');
+    if (activeButton && slider) {
+      updateFilterSlider(activeButton, slider);
+    }
+  });
+}
+
+// Atualiza a posição e tamanho do slider para o botão ativo
+function updateFilterSlider(activeButton, slider) {
+  // Verifica se estamos em uma tela menor (responsivo)
+  if (window.innerWidth <= 768) return;
+  
+  // Obtém posição e dimensões do botão ativo
+  const rect = activeButton.getBoundingClientRect();
+  const parentRect = activeButton.parentElement.getBoundingClientRect();
+  
+  // Calcula posição relativa dentro do container pai
+  slider.style.width = `${rect.width}px`;
+  slider.style.left = `${rect.left - parentRect.left}px`;
 }
 
 // Atualiza recomendações quando o tema é alterado
