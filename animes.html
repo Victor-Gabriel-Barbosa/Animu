@@ -2,9 +2,12 @@
 <html lang="pt-BR">
 
 <head>
+  <!-- Meta tags e configurações básicas -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Anime</title>
+
+  <!-- Importa fontes e estilos -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
@@ -16,15 +19,16 @@
 </head>
 
 <body>
-  <!-- O conteúdo será inserido dinamicamente via JavaScript -->
-  <div class="anime-container" id="anime-content"></div>
+  <div class="anime-container" id="anime-content">
+    <!-- O conteúdo será inserido dinamicamente via JavaScript -->
+  </div>
 
-  <!-- Nova seção de animes relacionados com Swiper -->
+  <!-- Seção de animes relacionados com Swiper -->
   <div id="related-animes-section" class="related-animes-container mx-auto px-4 mt-8" style="display: none;">
     <h2 class="section-title">Animes Relacionados</h2>
     <div class="swiper-container related-swiper">
       <div class="swiper-wrapper" id="related-animes-wrapper">
-        <!-- Animes relacionados serão inseridos aqui dinamicamente -->
+        <!-- Container para cards de animes relacionados -->
       </div>
       <div class="swiper-button-next"></div>
       <div class="swiper-button-prev"></div>
@@ -32,14 +36,14 @@
     </div>
   </div>
 
-  <!-- Seção de comentários (agora oculta por padrão) -->
+  <!-- Seção de comentários e avaliações - oculta inicialmente -->
   <div id="comments-section" class="comments-section mx-auto px-4 mt-8 mb-12" style="display: none;">
     <h2 class="text-2xl font-bold mb-6">Avaliações e Comentários</h2>
 
-    <!-- Formulário de comentário -->
+    <!-- Formulário para envio de avaliações -->
     <form id="comment-form" class="mb-8">
       <div class="flex flex-col gap-4">
-        <!-- Sistema de avaliação por estrelas -->
+        <!-- Sistema de avaliação numérica (0-10) -->
         <div class="rating-container mb-2">
           <p class="mb-2 font-semibold flex flex-wrap items-center gap-2">
             Sua avaliação:
@@ -50,7 +54,7 @@
           </p>
           <div class="rating-slider-container">
             <input type="range" id="rating-slider" min="0" max="100" value="0" class="rating-slider" step="1">
-            <!-- Mudando step para 1 (representará 0.1 na nota final) -->
+            <!-- Cada unidade do slider representa 0.1 na nota final -->
             <div class="rating-emoji-container">
               <span id="rating-emoji" class="rating-emoji">😶</span>
             </div>
@@ -82,7 +86,7 @@
     </div>
   </div>
 
-  <!-- Scripts -->
+  <!-- Importa scripts -->
   <script src="src/js/navbar.js"></script>
   <script src="src/js/perspective-config.js"></script>
   <script src="src/js/moderation.js"></script>

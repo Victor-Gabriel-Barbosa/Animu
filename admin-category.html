@@ -2,9 +2,12 @@
 <html lang="pt-BR">
 
 <head>
+  <!-- Meta tags e configurações básicas -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gerenciar Categorias - Animu</title>
+
+  <!-- Importa fontes e estilos -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="src/css/animu.css">
@@ -12,7 +15,7 @@
   <link rel="stylesheet" href="src/css/navbar.css">
   <link rel="icon" href="src/data/favicon/favicon.ico" type="image/x-icon">
   <script>
-    // Verificação imediata antes de carregar o resto da página
+    // Verifica permissões de administrador
     (function () {
       const session = JSON.parse(localStorage.getItem('userSession'));
       if (!session || !session.isAdmin) {
@@ -24,7 +27,7 @@
 </head>
 
 <body>
-  <!-- Header -->
+  <!-- Cabeçalho com título principal da página -->
   <header class="relative py-8 mb-6 overflow-hidden">
     <div class="container mx-auto px-4 relative">
       <h1 class="text-4xl md:text-5xl font-bold text-center mb-2">
@@ -34,11 +37,11 @@
     </div>
   </header>
 
-  <!-- Container principal -->
+  <!-- Container principal - estrutura todo o conteúdo da página -->
   <div class="container mx-auto px-4 max-w-7xl">
-    <!-- Cards de estatísticas -->
+    <!-- Dashboard com estatísticas de categorias -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-      <!-- Card Total de Categorias -->
+      <!-- Card: Contagem total de categorias -->
       <div class="rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 relative overflow-hidden">
         <div class="relative flex items-center gap-4">
           <div class="p-4 rounded-xl bg-purple-600/10">
@@ -54,7 +57,7 @@
         </div>
       </div>
 
-      <!-- Card Categorias Principais -->
+      <!-- Card: Contagem de categorias principais -->
       <div class="rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 relative overflow-hidden">
         <div class="relative flex items-center gap-4">
           <div class="p-4 rounded-xl bg-purple-600/10">
@@ -70,11 +73,11 @@
         </div>
       </div>
 
-      <!-- Card Subcategorias -->
+      <!-- Card: Contagem de subcategorias -->
       <div class="rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 relative overflow-hidden">
         <div class="relative flex items-center gap-4">
           <div class="p-4 rounded-xl bg-purple-600/10">
-            <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                     d="M8 7V3m8 4V3M3 21h18M3 10h18M3 7h18M3 14h18"/>
             </svg>
@@ -87,7 +90,7 @@
       </div>
     </div>
 
-    <!-- Botão Nova Categoria e Lista -->
+    <!-- Área de ação - botão para criar nova categoria -->
     <div class="flex justify-center items-center mb-8">
       <button id="btn-show-form" class="btn btn-primary">
         <span class="flex items-center gap-2">
@@ -99,15 +102,15 @@
       </button>
     </div>
 
-    <!-- Lista de categorias existentes -->
+    <!-- Contêiner da lista de categorias (preenchido via JS) -->
     <div class="rounded-xl shadow-lg">
       <div id="categories-list">
-        <!-- Preenchido via JavaScript -->
+        <!-- Populado dinamicamente via JavaScript -->
       </div>
     </div>
   </div>
 
-  <!-- Modal do formulário -->
+  <!-- Modal para criação/edição de categorias -->
   <div id="category-modal" class="modal hidden">
     <div class="admin-form-container" style="max-width: 800px; max-height: 80vh; width: 95%;">
       <div class="modal-header-fixed">
@@ -119,7 +122,7 @@
             </svg>
           </button>
         </div>
-        <!-- Barra de progresso do formulário -->
+        <!-- Indicador visual de progresso do formulário -->
         <div class="progress-bar mt-4">
           <div class="progress-fill" id="formProgress"></div>
         </div>
@@ -127,13 +130,13 @@
 
       <div class="modal-content-scroll">
         <div id="category-form-container">
-          <!-- O formulário será inserido aqui via JavaScript -->
+          <!-- Formulário injetado dinamicamente via JavaScript -->
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Scripts -->
+  <!-- Importa scripts -->
   <script src="src/js/navbar.js"></script>
   <script src="src/js/animu.js"></script>
   <script src="src/js/search.js"></script>

@@ -15,7 +15,7 @@
   <link rel="stylesheet" href="src/css/navbar.css">
   <link rel="icon" href="src/data/favicon/favicon.ico" type="image/x-icon">
   <script>
-    // Verificação de acesso administrativo
+    // Verifica permissões de administrador
     (function () {
       const session = JSON.parse(localStorage.getItem('userSession'));
       if (!session || !session.isAdmin) {
