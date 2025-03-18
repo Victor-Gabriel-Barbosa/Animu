@@ -2,9 +2,12 @@
 <html lang="pt-BR">
 
 <head>
+  <!-- Meta tags e configurações básicas -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gerenciar Animes - Painel Admin</title>
+
+  <!-- Importa fontes e estilos -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="src/css/animu.css">
@@ -12,7 +15,7 @@
   <link rel="stylesheet" href="src/css/navbar.css">
   <link rel="icon" href="src/data/favicon/favicon.ico" type="image/x-icon">
   <script>
-    // Verificação imediata antes de carregar o resto da página
+    // Verificação de acesso administrativo
     (function () {
       const session = JSON.parse(localStorage.getItem('userSession'));
       if (!session || !session.isAdmin) {
@@ -24,7 +27,7 @@
 </head>
 
 <body>
-  <!-- Header -->
+  <!-- Cabeçalho da página -->
   <header class="relative py-8 mb-6 overflow-hidden">
     <div class="container mx-auto px-4 relative">
       <h1 class="text-4xl md:text-5xl font-bold text-center mb-2">
@@ -36,7 +39,7 @@
 
   <!-- Container principal -->
   <div class="container mx-auto px-4 max-w-7xl">
-    <!-- Botões de ação -->
+    <!-- Botões de ação principais -->
     <div class="flex gap-4 mb-6 justify-center">
       <button onclick="showAnimeForm()" class="btn btn-primary group">
         <span class="flex items-center gap-2">
@@ -56,7 +59,7 @@
       <input type="file" id="importFile" accept=".json" class="hidden" onchange="importAnimes(event)">
     </div>
 
-    <!-- Lista de animes -->
+    <!-- Tabela de listagem de animes -->
     <div class="table-container">
       <table>
         <thead>
@@ -69,34 +72,36 @@
           </tr>
         </thead>
         <tbody id="animesList">
-          <!-- Lista de animes será inserida aqui -->
+          <!-- Dados da tabela são preenchidos via JavaScript -->
         </tbody>
       </table>
     </div>
   </div>
 
-  <!-- Modal do formulário -->
+  <!-- Modal de formulário para criação/edição de anime -->
   <div id="animeModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-100">
     <div class="admin-form-container scrollbar-thin max-w-4xl w-full">
+      <!-- Cabeçalho fixo do modal -->
       <div class="modal-header-fixed">
         <div class="flex justify-between items-center">
           <h2 id="modalTitle" class="text-2xl font-bold">Novo Anime</h2>
           <button type="button" onclick="closeAnimeForm()" class="close-btn text-gray-500 hover:text-gray-700">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 24 24"
               stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
-        <!-- Barra de progresso do formulário -->
+        <!-- Barra de progresso do preenchimento do formulário -->
         <div class="progress-bar mt-4">
           <div class="progress-fill" id="formProgress"></div>
         </div>
       </div>
 
+      <!-- Conteúdo rolável do modal -->
       <div class="modal-content-scroll">
         <form id="animeForm" class="space-y-4">
-          <!-- Guia rápido -->
+          <!-- Guia de preenchimento rápido -->
           <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg mb-4">
             <h3 class="text-sm font-semibold mb-2">Dicas de preenchimento:</h3>
             <ul class="text-sm space-y-1">
@@ -106,7 +111,7 @@
             </ul>
           </div>
 
-          <!-- Campo de URL do MyAnimeList -->
+          <!-- Auto-preenchimento via MyAnimeList -->
           <div class="mb-4">
             <label class="block text-sm font-medium mb-1">URL do MyAnimeList (opcional)</label>
             <div class="flex gap-2">
@@ -119,9 +124,9 @@
             </div>
           </div>
 
-          <!-- Grid responsivo ajustado -->
+          <!-- Grade responsiva para campos do formulário -->
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8">
-            <!-- Coluna esquerda -->
+            <!-- Coluna esquerda - Informações básicas e mídia -->
             <div class="space-y-4 lg:space-y-6">
               <!-- Título Principal -->
               <div class="w-full">
@@ -132,7 +137,7 @@
                   class="w-full p-2 sm:p-3 border rounded text-sm sm:text-base">
               </div>
 
-              <!-- Imagem de Capa - Altura ajustável -->
+              <!-- Upload de imagem de capa -->
               <div class="w-full">
                 <label class="block text-sm font-medium mb-1">
                   Imagem de Capa <span class="text-red-500">*</span>
@@ -156,7 +161,7 @@
                 </div>
               </div>
 
-              <!-- Video de Trailer - Altura ajustável -->
+              <!-- Upload de trailer -->
               <div class="w-full">
                 <label class="block text-sm font-medium mb-1">Trailer do Anime</label>
                 <div id="trailerDropzone"
@@ -184,6 +189,7 @@
                 </div>
               </div>
 
+              <!-- Gerenciamento de produtores -->
               <div>
                 <label class="block text-sm font-medium mb-1">Produtores</label>
                 <div class="flex gap-2 mb-2">
@@ -195,14 +201,14 @@
                   </button>
                 </div>
                 <div id="producersList" class="space-y-2">
-                  <!-- Lista de produtores será inserida aqui -->
+                  <!-- Lista dinâmica de produtores -->
                 </div>
               </div>
             </div>
 
-            <!-- Coluna direita -->
+            <!-- Coluna direita - Metadados e classificação -->
             <div class="space-y-4 lg:space-y-6">
-              <!-- Títulos Alternativos -->
+              <!-- Seção de títulos alternativos -->
               <div>
                 <label class="block text-sm font-medium mb-1">Títulos Alternativos</label>
                 <div class="flex gap-2 mb-2">
@@ -218,11 +224,11 @@
                   </button>
                 </div>
                 <div id="altTitlesList" class="space-y-2">
-                  <!-- Títulos alternativos serão inseridos aqui -->
+                  <!-- Lista dinâmica de títulos alternativos -->
                 </div>
               </div>
 
-              <!-- Grid responsivo para campos menores -->
+              <!-- Grade para dados numéricos -->
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div class="w-full">
                   <label class="block text-sm font-medium mb-1">
@@ -241,6 +247,7 @@
                 </div>
               </div>
 
+              <!-- Status e classificação etária -->
               <div class="grid grid-cols-2 gap-4">
                 <div>
                   <label class="block text-sm font-medium mb-1">
@@ -268,6 +275,7 @@
                 </div>
               </div>
 
+              <!-- Temporada e data de lançamento -->
               <div class="grid grid-cols-2 gap-4">
                 <div>
                   <label class="block text-sm font-medium mb-1">Temporada</label>
@@ -287,6 +295,7 @@
                 </div>
               </div>
 
+              <!-- Gerenciamento de gêneros -->
               <div>
                 <label class="block text-sm font-medium mb-1">
                   Gêneros <span class="text-red-500">*</span>
@@ -300,10 +309,11 @@
                   </button>
                 </div>
                 <div id="genresList" class="tag-container">
-                  <!-- Gêneros serão inseridos aqui -->
+                  <!-- Lista dinâmica de gêneros -->
                 </div>
               </div>
 
+              <!-- Estúdio com autocompletar -->
               <div>
                 <label class="block text-sm font-medium mb-1">
                   Estúdio <span class="text-red-500">*</span>
@@ -311,6 +321,7 @@
                 <input type="text" id="studio" class="w-full p-2 border rounded" required list="studiosSuggestions">
               </div>
 
+              <!-- Origem do conteúdo -->
               <div>
                 <label class="block text-sm font-medium mb-1">
                   Fonte Original <span class="text-red-500">*</span>
@@ -326,6 +337,7 @@
                 </select>
               </div>
 
+              <!-- Gerenciamento de licenciadores -->
               <div>
                 <label class="block text-sm font-medium mb-1">Licenciadores</label>
                 <div class="flex gap-2 mb-2">
@@ -337,13 +349,13 @@
                   </button>
                 </div>
                 <div id="licensorsList" class="space-y-2">
-                  <!-- Lista de licenciadores será inserida aqui -->
+                  <!-- Lista dinâmica de licenciadores -->
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Campo único para Staff -->
+          <!-- Gerenciamento de staff -->
           <div>
             <label class="block text-sm font-medium mb-1">Staff</label>
             <div class="flex gap-2 mb-2">
@@ -362,11 +374,11 @@
               </button>
             </div>
             <div id="staffList" class="mt-2 flex flex-wrap gap-2">
-              <!-- Lista de membros da staff será inserida aqui -->
+              <!-- Lista dinâmica de membros da staff -->
             </div>
           </div>
 
-          <!-- Sinopse - Full width -->
+          <!-- Sinopse com botão de tradução -->
           <div class="w-full mt-6">
             <label class="block text-sm font-medium mb-1">
               Sinopse <span class="text-red-500">*</span>
@@ -386,7 +398,7 @@
             </div>
           </div>
 
-          <!-- Botões responsivos -->
+          <!-- Botões de controle do formulário -->
           <div class="flex flex-col sm:flex-row justify-end gap-2 sm:gap-4 mt-6">
             <button type="button" onclick="clearAnimeForm()"
               class="w-full sm:w-auto btn btn-secondary order-3 sm:order-1">
@@ -404,7 +416,7 @@
     </div>
   </div>
 
-  <!-- Template para sugestões de gêneros -->
+  <!-- Lista de sugestões para autocompletar gêneros -->
   <datalist id="genresSuggestions">
     <option value="Ação">
     <option value="Aventura">
@@ -418,7 +430,7 @@
     <option value="Sobrenatural">
   </datalist>
 
-  <!-- Template para sugestões de estúdios -->
+  <!-- Lista de sugestões para autocompletar estúdios -->
   <datalist id="studiosSuggestions">
     <option value="Toei Animation">
     <option value="Studio Ghibli">
@@ -430,7 +442,7 @@
     <option value="Bones">
   </datalist>
 
-  <!-- Scripts -->
+  <!-- Importa scripts -->
   <script src="src/js/navbar.js"></script>
   <script src="src/js/animu.js"></script>
   <script src="src/js/search.js"></script>

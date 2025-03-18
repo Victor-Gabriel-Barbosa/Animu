@@ -2,9 +2,12 @@
 <html lang="pt-BR">
 
 <head>
+  <!-- Meta tags e configurações básicas -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Recomendações - Animu</title>
+
+  <!-- Importa fontes e estilos -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="src/css/animu.css">
@@ -15,13 +18,16 @@
 </head>
 
 <body>
+  <!-- Container principal com efeito paralaxe -->
   <div class="parallax-container">
+    <!-- Seção de cabeçalho com imagem de fundo paralaxe -->
     <section class="parallax-section"
       style="--parallax-bg-image: url('https://img.freepik.com/fotos-gratis/paisagem-magica-de-fantasia_23-2151502913.jpg?ga=GA1.1.1952551659.1739965581&semt=ais_hybrid');">
       <div class="container mx-auto px-4 py-12">
-        <!-- Cabeçalho Animado -->
+        <!-- Cabeçalho com título e indicador de progresso circular -->
         <div class="parallax-content">
           <header class="text-center mb-16 recommendations-header">
+            <!-- Círculo de progresso animado -->
             <div class="recommendation-progress">
               <svg class="recommendation-circle" viewBox="0 0 36 36">
                 <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
@@ -39,9 +45,9 @@
       </div>
     </section>
 
-    <!-- Seção de Stats -->
+    <!-- Seção de estatísticas do usuário -->
     <div class="container mx-auto px-4 py-12">
-      <!-- Cards de Estatísticas -->
+      <!-- Cards com métricas de recomendação -->
       <div class="stats-grid mb-12">
         <div class="stat-rec-card">
           <div class="stat-rec-icon">🎯</div>
@@ -61,11 +67,12 @@
       </div>
     </div>
 
+    <!-- Segunda seção com efeito paralaxe -->
     <section class="parallax-section"
       style="--parallax-bg-image: url('https://img.freepik.com/fotos-gratis/paisagem-magica-de-fantasia_23-2151502913.jpg?ga=GA1.1.1952551659.1739965581&semt=ais_hybrid');">
       <div class="container mx-auto px-4 py-12">
         <div class="parallax-content">
-          <!-- Filtros Interativos -->
+          <!-- Abas de filtro para categorias de recomendação -->
           <div class="filter-tabs mx-10 mb-12 text-purple-600">
             <div class="filter-slider"></div>
             <button class="filter-tab active" data-filter="all">
@@ -86,8 +93,9 @@
             </button>
           </div>
 
-          <!-- Container de Recomendações -->
+          <!-- Seções de recomendações por categoria -->
           <div class="recommendations-wrapper">
+            <!-- Recomendações por gênero -->
             <div id="genres-recommendations" class="recommendation-section active mb-12">
               <div class="section-header flex justify-between items-center mb-6">
                 <h2 class="section-title text-2xl font-bold">Baseado nos seus Gêneros</h2>
@@ -98,6 +106,7 @@
               <div class="grid-recommendations"></div>
             </div>
 
+            <!-- Recomendações de animes similares -->
             <div id="similar-recommendations" class="recommendation-section mb-12">
               <div class="section-header flex justify-between items-center mb-6">
                 <h2 class="section-title text-2xl font-bold">Animes Similares</h2>
@@ -108,6 +117,7 @@
               <div class="grid-recommendations"></div>
             </div>
 
+            <!-- Recomendações de tendências -->
             <div id="trending-recommendations" class="recommendation-section mb-12">
               <div class="section-header flex justify-between items-center mb-6">
                 <h2 class="section-title text-2xl font-bold">Tendências Atuais</h2>
@@ -122,13 +132,14 @@
       </div>
     </section>
 
-    <!-- Insight Box -->
+    <!-- Caixa de insights com análise do perfil -->
     <div class="insight-box mt-12">
       <div class="insight-header">
         <span class="insight-icon">💡</span>
         <h3 class="insight-title">Análise do seu Perfil</h3>
       </div>
       <div class="insight-content">
+        <!-- Barras de preferência por gênero -->
         <div class="insight-stat">
           <div class="genre-preference">
             <span class="genre-label">Ação</span>
@@ -147,7 +158,7 @@
     </div>
   </div>
 
-  <!-- Scripts -->
+  <!-- Importa scripts -->
   <script src="src/js/navbar.js"></script>
   <script src="src/js/animu.js"></script>
   <script src="src/js/search.js"></script>

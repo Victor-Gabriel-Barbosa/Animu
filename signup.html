@@ -2,9 +2,12 @@
 <html lang="pt-BR">
 
 <head>
+  <!-- Meta tags e configurações básicas -->
   <meta charset="UTF-8"> 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Animu - Login</title> 
+  
+  <!-- Importa fontes e estilos -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="src/css/animu.css">
   <link rel="stylesheet" href="src/css/login.css">
@@ -13,32 +16,33 @@
 </head>
 
 <body class="sign-body">
-  <!-- Botão de voltar -->
+  <!-- Botão de navegação para voltar à página anterior -->
   <button id="back-button" class="back-button" title="Voltar">
     <i class="fas fa-arrow-left"></i>
   </button>
-  <!-- Dropdown do seletor de temas -->
+  
+  <!-- Seletor de tema com menu dropdown -->
   <div class="theme-selector">
     <button id="theme-dropdown-btn" class="theme-dropdown-btn" title="Personalizar tema">
       <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24">
         <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-3.03 0-5.5-2.47-5.5-5.5 0-1.82.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>
       </svg>
     </button>
-    <!-- ThemeManager irá injetar as opções do tema aqui -->
+    <!-- Menu de opções de tema (preenchido via JavaScript) -->
     <div id="theme-menu" class="theme-menu hidden"></div>
   </div>
   
-  <!-- Container principal do formulário de cadastro -->
+  <!-- Container do formulário com efeito de hover -->
   <div class="signup-container card-hover">
-    <!-- Título da página -->
+    <!-- Cabeçalho com logo e mensagem de boas-vindas -->
     <div class="signup-title">
-      <h1>Animu</h1> <!-- Nome do site -->
+      <h1>Animu</h1>
       <p class="welcome-text">Bem-vindo ao Animu! Crie sua conta para começar.</p>
     </div>
 
-    <!-- Formulário de cadastro -->
+    <!-- Formulário de registro do usuário -->
     <form id="register-form">
-      <!-- Campo para nome de usuário -->
+      <!-- Nome de usuário com ícone -->
       <div class="form-group">
         <input type="text" id="username" name="username" required placeholder=" ">
         <label for="username">
@@ -47,7 +51,7 @@
         </label>
       </div>
 
-      <!-- Campo para e-mail -->
+      <!-- Campo de e-mail com ícone -->
       <div class="form-group">
         <input type="email" id="email" name="email" required placeholder=" ">
         <label for="email">
@@ -56,7 +60,7 @@
         </label>
       </div>
 
-      <!-- Campo para senha -->
+      <!-- Campo de senha com toggle de visibilidade -->
       <div class="form-group">
         <div class="password-input-wrapper">
           <input type="password" id="password" name="password" required placeholder=" ">
@@ -71,7 +75,7 @@
         </div>
       </div>
 
-      <!-- Campo para confirmar a senha -->
+      <!-- Campo de confirmação de senha com toggle de visibilidade -->
       <div class="form-group">
         <div class="password-input-wrapper">
           <input type="password" id="confirm-password" name="confirm-password" required placeholder=" ">
@@ -86,21 +90,21 @@
         </div>
       </div>
 
-      <!-- Botão para submeter o formulário -->
+      <!-- Botão de submissão do formulário -->
       <button type="submit" class="signup-btn">
         <i class="fas fa-user-plus"></i>
         Criar Conta
       </button>
 
+      <!-- Link para página de login -->
       <div class="login-link">
         Já tem uma conta? <a href="signin.html">Faça login</a>
       </div>
     </form>
   </div>
 
-  <!-- Scripts -->
+  <!-- Importa scripts -->
   <script src="src/js/animu.js"></script> 
   <script src="src/js/login.js"></script> 
-</body>
 
 </html>

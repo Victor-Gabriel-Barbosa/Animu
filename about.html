@@ -2,9 +2,12 @@
 <html lang="pt-BR">
 
 <head>
+  <!-- Meta tags e configurações básicas -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Animu - Sobre</title>
+  
+  <!-- Importa fontes e estilos -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="src/css/animu.css">
   <link rel="stylesheet" href="src/css/navbar.css">
@@ -14,13 +17,17 @@
 </head>
 
 <body>
+  <!-- Container principal da página "Sobre" -->
   <div class="about-form card-hover" style="margin-top: 50px;">
+    <!-- Título principal -->
     <h1 class="form-title text-center text-3xl mb-8"><b>Bem-vindo ao Animu</b></h1>
 
     <div class="space-y-8">
+      <!-- Seção: Nossa Missão -->
       <section>
         <h2 class="gradient-text text-2xl mb-6">Nossa Missão</h2>
         <div class="flex flex-col md:flex-row gap-8 items-center">
+          <!-- Texto da missão -->
           <div class="flex-1">
             <p class="text-lg leading-relaxed">
               O Animu é uma plataforma dedicada aos fãs de anime, criada com o objetivo de fornecer
@@ -31,12 +38,14 @@
               compartilhar sua paixão por animes.
             </p>
           </div>
+          <!-- Logo da plataforma -->
           <div class="flex-1 text-center">
             <img src="src/data/favicon/web-app-manifest-512x512.png" alt="Animu Logo" class="max-w-[200px] mx-auto">
           </div>
         </div>
       </section>
 
+      <!-- Seção: Recursos da plataforma -->
       <section>
         <h2 class="gradient-text text-2xl mb-6">Recursos</h2>
         <ul class="resource-list">
@@ -49,7 +58,9 @@
         </ul>
       </section>
 
+      <!-- Layout em grid para informações técnicas e equipe -->
       <div class="grid md:grid-cols-2 gap-8">
+        <!-- Seção: Tecnologias utilizadas -->
         <section>
           <h2 class="gradient-text text-2xl mb-6">Tecnologias</h2>
           <div class="tag-container">
@@ -63,6 +74,7 @@
           </div>
         </section>
 
+        <!-- Seção: Informações sobre a equipe -->
         <section>
           <h2 class="gradient-text text-2xl mb-6">Equipe</h2>
           <div class="team-info">
@@ -74,6 +86,7 @@
         </section>
       </div>
 
+      <!-- Seção: Contatos e links externos -->
       <section>
         <h2 class="gradient-text text-2xl mb-6">Entre em Contato</h2>
         <div class="contact-section">
@@ -92,6 +105,7 @@
         </div>
       </section>
 
+      <!-- Informações de versão -->
       <div class="version-info">
         <span class="version-badge">Versão 1.0.0 Beta</span>
         <span class="text-sm opacity-75">Última atualização: Janeiro 2024</span>
@@ -99,12 +113,12 @@
     </div>
   </div>
 
-  <!-- Scripts -->
+  <!-- Importa scripts -->
   <script src="src/js/navbar.js"></script>
   <script src="src/js/search.js"></script>
   <script src="src/js/animu.js"></script>
   <script>
-    // Observer para animar seções quando ficarem visíveis
+    // Observer para animação de aparecimento das seções
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) entry.target.classList.add('visible');
@@ -113,7 +127,7 @@
       threshold: 0.1
     });
 
-    // Observa todas as seções
+    // Aplica o observer em todas as seções
     document.querySelectorAll('section').forEach(section => {
       observer.observe(section);
     });
