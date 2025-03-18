@@ -12,6 +12,5 @@ function checkAdminAccess() {
 
 // Inicialização da página administrativa
 document.addEventListener('DOMContentLoaded', function () {
-  // Verifica permissões apenas
   if (!checkAdminAccess()) return;
 });

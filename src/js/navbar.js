@@ -360,9 +360,7 @@ class Navbar {
       });
 
       document.addEventListener('click', (e) => {
-        if (!dropdownBtn.contains(e.target) && !dropdown.contains(e.target)) { 
-          dropdown.classList.add('hidden'); 
-        }
+        if (!dropdownBtn.contains(e.target) && !dropdown.contains(e.target)) dropdown.classList.add('hidden'); 
       });
     }
 
@@ -452,9 +450,7 @@ class Navbar {
           // Salva o estado do menu
           localStorage.setItem('sideMenuState', 'open');
           // Adiciona listener para dispositivos móveis
-          if (window.innerWidth <= 768) {
-            document.addEventListener('click', this.handleOutsideClick);
-          }
+          if (window.innerWidth <= 768) document.addEventListener('click', this.handleOutsideClick);
         } else {
           // Swipe esquerda - Fecha o menu
           sideMenu.classList.remove('open');

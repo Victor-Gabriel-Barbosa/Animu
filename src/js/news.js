@@ -26,10 +26,10 @@ class NewsManager {
         : this.currentPage === 'index' && this.renderNewsGrid(newsGrid, 4);
     }
 
-    // Novo sistema de views - Corrigindo as referências para views
+    // Sistema de views
     this.views = {
       grid: {
-        element: this.newsGridContainer, // Referência corrigida
+        element: this.newsGridContainer, 
         title: 'Notícias | Animu',
         init: () => this.initializeFilters()
       },
@@ -66,16 +66,14 @@ class NewsManager {
   switchToView(viewName, params = null, updateHistory = true) {
     if (!this.views[viewName]) return;
     
-    // Verificar se os elementos estão disponíveis
+    // Verifica se os elementos estão disponíveis
     if (viewName === 'detail' && !this.views.detail.element) {
       console.error("Elemento de visualização detalhada não encontrado");
       return;
     }
     
     // Esconde a view atual se o activeView for válido
-    if (this.activeView && this.views[this.activeView].element) {
-      this.views[this.activeView].element.style.display = 'none';
-    }
+    if (this.activeView && this.views[this.activeView].element) this.views[this.activeView].element.style.display = 'none';
 
     // Gerenciamento de visibilidade dos elementos da página
     if (viewName === 'detail') {
@@ -154,7 +152,7 @@ class NewsManager {
   createNewsCard(news) {
     const newsLink = this.currentPage === 'index'
       ? `news.html?id=${news.id}`  // Link direto para página de notícias quando na index
-      : `#`;  // Usando # em vez de javascript:void(0) para evitar comportamentos inesperados
+      : `#`;  
 
     const onClickHandler = this.currentPage === 'index'
       ? ''  // Sem handler quando na index

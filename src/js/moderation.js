@@ -1,8 +1,3 @@
-/**
- * Sistema de Moderação de Conteúdo
- * Utiliza Google Perspective API para detectar conteúdo tóxico
- */
-
 // Configurações globais de moderação
 const MODERATION_CONFIG = {
   maxContentLength: {
@@ -94,7 +89,10 @@ class ContentModerator {
       return { success: true, scores, spans };
     } catch (error) {
       console.error('Erro ao analisar texto com Perspective API:', error);
-      return { success: false, error: error.message };
+      return { 
+        success: false, 
+        error: error.message 
+      };
     }
   }
 

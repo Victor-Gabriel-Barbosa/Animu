@@ -191,9 +191,7 @@ function animateCounter(elementId, finalValue) {
     if (currentValue >= finalValue) {
       clearInterval(counterAnimation);
       element.textContent = finalValue;
-    } else {
-      element.textContent = Math.floor(currentValue);
-    }
+    } else element.textContent = Math.floor(currentValue);
   }, stepTime);
 }
 
@@ -207,13 +205,9 @@ function applyTrendIndicator(elementId, value) {
   if (!element) return;
   
   // Adiciona classes com base nos valores
-  if (value > 50) {
-    element.classList.add('high-value');
-  } else if (value > 20) {
-    element.classList.add('medium-value');
-  } else {
-    element.classList.add('low-value');
-  }
+  if (value > 50) element.classList.add('high-value');
+  else if (value > 20) element.classList.add('medium-value');
+  else element.classList.add('low-value');
   
   // Adiciona indicador de tendência apenas em telas maiores
   if (value > 30 && window.innerWidth > 480) {
@@ -252,9 +246,7 @@ function checkIfElementsInView() {
     rect.right <= (window.innerWidth || document.documentElement.clientWidth)
   );
   
-  if (isInView) {
-    statsContainer.classList.add('animate-in');
-  }
+  if (isInView) statsContainer.classList.add('animate-in');
 }
 
 // Adiciona o verificador de visibilidade ao evento de rolagem
@@ -611,6 +603,7 @@ function getActivityContent(activity) {
 
 /**
  * Atualiza avatar do usuário em todas as camadas de armazenamento
+ * 
  * @param {string} avatar - URL/Base64 da imagem
  * @param {string} userId - ID do usuário
  */
@@ -1284,6 +1277,7 @@ function loadChatMessages(senderId, receiverId) {
 
 /**
  * Envia uma mensagem do remetente para o destinatário no chat.
+ * 
  * @param {Event} event - O evento do formulário
  * @param {string} senderId - ID do usuário que envia a mensagem
  * @param {string} receiverId - ID do usuário que recebe a mensagem

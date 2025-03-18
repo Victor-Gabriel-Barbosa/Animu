@@ -501,5 +501,4 @@ document.addEventListener('DOMContentLoaded', async function () {
       } else window.location.href = 'index.html';
     });
   }
-
 });

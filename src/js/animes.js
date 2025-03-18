@@ -9,9 +9,7 @@ function findAnimeByTitle(title) {
   const animes = JSON.parse(localStorage.getItem('animeData')) || [];
   return animes.find(anime =>
     anime.primaryTitle.toLowerCase() === title.toLowerCase() ||
-    anime.alternativeTitles.some(alt =>
-      alt.title.toLowerCase() === title.toLowerCase()
-    )
+    anime.alternativeTitles.some(alt => alt.title.toLowerCase() === title.toLowerCase())
   );
 }
 
@@ -314,9 +312,7 @@ function renderAllAnimes() {
       .sort((a, b) => new Date(a.releaseDate) - new Date(b.releaseDate));
   } else if (categoryFilter) {
     filteredAnimes = animes.filter(anime =>
-      anime.genres.some(genre =>
-        normalizeCategory(genre) === normalizeCategory(categoryFilter)
-      )
+      anime.genres.some(genre => normalizeCategory(genre) === normalizeCategory(categoryFilter))
     );
   }
 
@@ -1208,9 +1204,7 @@ function findRelatedAnimes(currentAnime, limit = 10) {
     // Pontos por temporada similar
     if (currentAnime.season && anime.season &&
         currentAnime.season.period === anime.season.period &&
-        Math.abs(currentAnime.season.year - anime.season.year) <= 1) {
-      similarityScore += 1;
-    }
+        Math.abs(currentAnime.season.year - anime.season.year) <= 1) similarityScore += 1;
 
     if (similarityScore > 0) {
       relatedAnimes.push({
@@ -1531,9 +1525,7 @@ function toggleFavoriteFromCard(animeTitle) {
 
   if (isFavorited) {
     // Remove dos favoritos
-    users[userIndex].favoriteAnimes = users[userIndex].favoriteAnimes.filter(
-      title => title !== animeTitle
-    );
+    users[userIndex].favoriteAnimes = users[userIndex].favoriteAnimes.filter(title => title !== animeTitle);
   } else {
     // Adiciona aos favoritos
     users[userIndex].favoriteAnimes.push(animeTitle);
