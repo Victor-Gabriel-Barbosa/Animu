@@ -270,11 +270,17 @@
   justify-content: center;
   gap: 1rem;
   position: relative;
-  margin-bottom: 3rem;
   background: rgba(139, 92, 246, 0.1);
   border-radius: 1rem;
   padding: 0.5rem;
   box-shadow: 0 4px 16px rgba(139, 92, 246, 0.15);
+}
+
+.filter-tabs span {
+  font-size: 1.2rem;
+  font-weight: 1000;
+  color: white;
+  opacity: 0.8;
 }
 
 .filter-tab {
