@@ -12,7 +12,7 @@ class AnimeSearchBar {
       inputId: 'search-input',
       resultsId: 'search-results',
       debounceTime: 300,
-      minChars: 0,
+      minChars: 1,
       maxResults: 10,
       filters: {
         genre: {
@@ -139,8 +139,8 @@ class AnimeSearchBar {
           <div class="flex gap-2 items-center">
             <select id="${filterKey}-filter" class="flex-1">
               ${filter.options.map(option =>
-        `<option value="${option.value}">${option.label}</option>`
-      ).join('')}
+                `<option value="${option.value}">${option.label}</option>`
+              ).join('')}
             </select>
             <input type="date" 
                    id="custom-date-filter" 
@@ -157,10 +157,10 @@ class AnimeSearchBar {
         <label>${filter.label}</label>
         <select id="${filterKey}-filter">
           ${filter.options.map(option =>
-      `<option value="${option.value}">${option.label}</option>`
-    ).join('')}
+            `<option value="${option.value}">${option.label}</option>`
+          ).join('')}
         </select>
-      </div>
+      </div> 
     `;
   }
 
@@ -366,8 +366,9 @@ class AnimeSearchBar {
       const results = await this.searchAnimes(query);
 
       if (redirect) {
-        // Salva resultados no localStorage e redireciona
+        // Salva resultados e filtros no localStorage
         localStorage.setItem('searchResults', JSON.stringify(results));
+        localStorage.setItem('searchFilters', JSON.stringify(this.filters));
         window.location.href = `animes.html?search=${encodeURIComponent(query)}`;
       } else this.displayResults(results);
     } catch (error) {

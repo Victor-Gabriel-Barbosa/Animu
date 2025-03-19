@@ -974,21 +974,34 @@ function updateRatingDisplay(value) {
 function renderSearchResults(query) {
   const container = document.getElementById('anime-content');
   const results = JSON.parse(localStorage.getItem('searchResults')) || [];
+  const filters = JSON.parse(localStorage.getItem('searchFilters')) || {};
   const currentUser = JSON.parse(localStorage.getItem('userSession'));
 
   if (!container) return;
 
   document.title = `Resultados da busca: ${query}`;
+  
+  // Gera HTML dos filtros aplicados
+  const filtersHtml = formatFilterDisplay(filters);
+  
+  // Número de resultados encontrados
+  const resultsCount = `<span class="results-count">${results.length} ${results.length === 1 ? 'anime encontrado' : 'animes encontrados'}</span>`;
 
   container.innerHTML = `
     <h1 class="text-3xl font-bold mb-6">
       Resultados da busca: "${query}"
     </h1>
+    ${filtersHtml ? `
+    <div class="search-filters-display">
+      ${filtersHtml}
+    </div>` : ''}
     ${results.length === 0 ? `
       <div class="no-results">
         <p>Nenhum anime encontrado para sua busca.</p>
+        ${filtersHtml ? '<p class="text-sm mt-2">Tente remover alguns filtros para ampliar os resultados.</p>' : ''}
       </div>
     ` : `
+      <div class="mb-4 text-lg">${resultsCount}</div>
       <div class="anime-grid">
         ${results.map(anime => `
           <div class="anime-card">
@@ -1326,9 +1339,12 @@ window.addEventListener('DOMContentLoaded', () => {
 
   const animeTitle = getUrlParameter('anime');
   const searchQuery = getUrlParameter('search');
+  const nocache = getUrlParameter('nocache'); // Novo parâmetro para detectar limpeza de filtros
 
+  // Executa uma nova busca sem filtros ou usa os resultados salvos anteriormente
   if (searchQuery) {
-    renderSearchResults(decodeURIComponent(searchQuery));
+    if (nocache || !localStorage.getItem('searchResults')) searchWithoutFilters(decodeURIComponent(searchQuery));
+    else renderSearchResults(decodeURIComponent(searchQuery));
   } else if (animeTitle) {
     const anime = findAnimeByTitle(decodeURIComponent(animeTitle));
     renderAnimeDetails(anime);
@@ -1548,4 +1564,183 @@ function toggleFavoriteFromCard(animeTitle) {
     // Atualiza as estatísticas em tempo real
     updateAnimeStats(animeTitle);
   }
+}
+
+// Formata os filtros aplicados para exibição com ícones
+function formatFilterDisplay(filters) {
+  // Verifica se existe algum filtro aplicado
+  const hasFilters = Object.values(filters).some(value => value !== '' && value !== undefined);
+  if (!hasFilters) return '';
+  
+  const filterTags = [];
+  
+  // Gênero
+  if (filters.genre) filterTags.push(`
+    <span class="filter-tag genre">
+      <svg class="filter-icon" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M8.186 1.113a.5.5 0 0 0-.372 0L1.846 3.5 8 5.961 14.154 3.5 8.186 1.113zM15 4.239l-6.5 2.6v7.922l6.5-2.6V4.24zM7.5 14.762V6.838L1 4.239v7.923l6.5 2.6zM7.443.184a1.5 1.5 0 0 1 1.114 0l7.129 2.852A.5.5 0 0 1 16 3.5v8.662a1 1 0 0 1-.629.928l-7.185 2.874a.5.5 0 0 1-.372 0L.63 13.09a1 1 0 0 1-.63-.928V3.5a.5.5 0 0 1 .314-.464L7.443.184z"/>
+      </svg>
+      <span>Gênero: ${capitalizeFirstLetter(filters.genre)}</span>
+    </span>
+  `);
+  
+  // Data
+  if (filters.date) {
+    let dateLabel = '';
+    switch (filters.date) {
+      case 'this_season': dateLabel = 'Esta Temporada'; break;
+      case 'this_year': dateLabel = 'Este Ano'; break;
+      case 'last_year': dateLabel = 'Ano Passado'; break;
+      case 'older': dateLabel = '2 Anos ou Mais'; break;
+      case 'custom': dateLabel = `Data Personalizada: ${filters.customDate ? new Date(filters.customDate).toLocaleDateString('pt-BR') : 'N/A'}`; break;
+      default: dateLabel = filters.date;
+    }
+    
+    filterTags.push(`
+      <span class="filter-tag date">
+        <svg class="filter-icon" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/>
+          <path d="M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm-3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm-5 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1z"/>
+        </svg>
+        <span>${dateLabel}</span>
+      </span>
+    `);
+  }
+  
+  // Status
+  if (filters.status) {
+    let statusLabel = '';
+    switch (filters.status) {
+      case 'airing': statusLabel = 'Em exibição'; break;
+      case 'completed': statusLabel = 'Completo'; break;
+      case 'upcoming': statusLabel = 'Próximos'; break;
+      default: statusLabel = filters.status;
+    }
+    
+    filterTags.push(`
+      <span class="filter-tag status">
+        <svg class="filter-icon" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
+          <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
+        </svg>
+        <span>Status: ${statusLabel}</span>
+      </span>
+    `);
+  }
+  
+  // Temporada
+  if (filters.season) {
+    let seasonLabel = '';
+    switch (filters.season) {
+      case 'winter': seasonLabel = 'Inverno'; break;
+      case 'spring': seasonLabel = 'Primavera'; break;
+      case 'summer': seasonLabel = 'Verão'; break;
+      case 'fall': seasonLabel = 'Outono'; break;
+      default: seasonLabel = filters.season;
+    }
+    
+    filterTags.push(`
+      <span class="filter-tag season">
+        <svg class="filter-icon" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M7 1.414V4H2a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h5v6h2v-6h3.532a1 1 0 0 0 .768-.36l1.933-2.32a.5.5 0 0 0 0-.64L13.3 4.36a1 1 0 0 0-.768-.36H9V1.414a1 1 0 0 0-2 0zM12.532 5l1.666 2-1.666 2H2V5h10.532z"/>
+        </svg>
+        <span>Temporada: ${seasonLabel}</span>
+      </span>
+    `);
+  }
+  
+  // Classificação
+  if (filters.rating) {
+    filterTags.push(`
+      <span class="filter-tag rating">
+        <svg class="filter-icon" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>
+        </svg>
+        <span>Classificação: ${filters.rating}+ ⭐</span>
+      </span>
+    `);
+  }
+  
+  // Fonte
+  if (filters.source) {
+    let sourceLabel = '';
+    switch (filters.source) {
+      case 'manga': sourceLabel = 'Mangá'; break;
+      case 'light_novel': sourceLabel = 'Light Novel'; break;
+      case 'original': sourceLabel = 'Original'; break;
+      case 'game': sourceLabel = 'Jogo'; break;
+      case 'visual_novel': sourceLabel = 'Visual Novel'; break;
+      default: sourceLabel = filters.source;
+    }
+    
+    filterTags.push(`
+      <span class="filter-tag source">
+        <svg class="filter-icon" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M1 2.828c.885-.37 2.154-.769 3.388-.893 1.33-.134 2.458.063 3.112.752v9.746c-.935-.53-2.12-.603-3.213-.493-1.18.12-2.37.461-3.287.811V2.828zm7.5-.141c.654-.689 1.782-.886 3.112-.752 1.234.124 2.503.523 3.388.893v9.923c-.918-.35-2.107-.692-3.287-.81-1.094-.111-2.278-.039-3.213.492V2.687zM8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.105A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .707.455c.882-.4 2.303-.881 3.68-1.02 1.409-.142 2.59.087 3.223.877a.5.5 0 0 0 .78 0c.633-.79 1.814-1.019 3.222-.877 1.378.139 2.8.62 3.681 1.02A.5.5 0 0 0 16 13.5v-11a.5.5 0 0 0-.293-.455c-.952-.433-2.48-.952-3.994-1.105C10.413.809 8.985.936 8 1.783z"/>
+        </svg>
+        <span>Fonte: ${sourceLabel}</span>
+      </span>
+    `);
+  }
+
+  // Monta a estrutura completa do container de filtros
+  return `
+    <div class="filters-header">
+      <div class="filters-title">
+        <svg class="filters-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 4a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v2.586a1 1 0 0 1-.293.707l-6.414 6.414a1 1 0 0 0-.293.707V17l-4 4v-6.586a1 1 0 0 0-.293-.707L3.293 7.293A1 1 0 0 1 3 6.586V4z"/>
+        </svg>
+        Filtros aplicados
+      </div>
+      <button class="clear-filters-btn" onclick="clearSearchFilters()">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M5.83 5.146a.5.5 0 0 0 0 .708L7.975 8l-2.147 2.146a.5.5 0 0 0 .707.708l2.147-2.147 2.146 2.147a.5.5 0 0 0 .707-.708L9.39 8l2.146-2.146a.5.5 0 0 0-.707-.708L8.683 7.293 6.536 5.146a.5.5 0 0 0-.707 0z"/>
+          <path d="M13.683 1a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-7.08a2 2 0 0 1-1.519-.698L.241 8.65a1 1 0 0 1 0-1.302L5.084 1.7A2 2 0 0 1 6.603 1h7.08zm-7.08 1a1 1 0 0 0-.76.35L1 8l4.844 5.65a1 1 0 0 0 .759.35h7.08a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1h-7.08z"/>
+        </svg>
+        Limpar filtros
+      </button>
+    </div>
+    <div class="filter-tags-container">
+      ${filterTags.join('')}
+    </div>
+  `;
+}
+
+// Função auxiliar para capitalizar a primeira letra
+function capitalizeFirstLetter(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+// Limpa os filtros da busca e recarrega a página
+function clearSearchFilters() {
+  const searchQuery = getUrlParameter('search');
+  
+  // Remove tanto os filtros quanto os resultados do localStorage
+  localStorage.removeItem('searchFilters');
+  localStorage.removeItem('searchResults');
+  
+  // Adiciona um timestamp para evitar cache e força uma nova busca
+  if (searchQuery) window.location.href = `animes.html?search=${encodeURIComponent(searchQuery)}&nocache=${Date.now()}`;
+}
+
+// Realiza busca sem filtros
+function searchWithoutFilters(query) {
+  const animes = JSON.parse(localStorage.getItem('animeData')) || [];
+  
+  // Sistema de pontuação similar ao usado no AnimeSearchBar
+  const results = animes
+    .filter(anime => {
+      // Busca simples que verifica se o título principal ou alternativo contém a consulta
+      const matchesTitle = anime.primaryTitle.toLowerCase().includes(query.toLowerCase());
+      const matchesAltTitle = anime.alternativeTitles.some(alt => alt.title.toLowerCase().includes(query.toLowerCase()));
+      return matchesTitle || matchesAltTitle;
+    })
+    .sort((a, b) => {
+      // Ordenação básica por pontuação
+      return (parseFloat(b.score) || 0) - (parseFloat(a.score) || 0);
+    });
+  
+  // Salva resultados e renderiza
+  localStorage.setItem('searchResults', JSON.stringify(results));
+  renderSearchResults(query);
 }
