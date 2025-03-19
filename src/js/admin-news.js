@@ -1,6 +1,6 @@
 /**
  * Gerenciador de notícias para área administrativa
- * Permite criar, editar, excluir e visualizar notícias
+ * Controla a criação, edição, exclusão e visualização de notícias
  */
 document.addEventListener('DOMContentLoaded', function () {
   if (!checkAdminAccess()) return;
@@ -12,13 +12,13 @@ document.addEventListener('DOMContentLoaded', function () {
   const closeBtn = document.querySelector('.modal-close');
   const cancelBtn = document.getElementById('cancel-btn');
 
-  let editingId = null;
+  let editingId = null; // Armazena ID da notícia em edição
   let updateFormProgress;
 
-  // Inicialização
+  // Carrega notícias existentes ao iniciar
   loadNews();
 
-  // Inicialização do Quill
+  // Inicializa editor de texto rico Quill com opções de formatação
   const quill = new Quill('#editor-container', {
     theme: 'snow',
     modules: {
@@ -34,58 +34,57 @@ document.addEventListener('DOMContentLoaded', function () {
     placeholder: 'Digite o conteúdo da notícia...'
   });
 
-  // Configurar tema escuro se necessário
+  // Adapta tema do editor de acordo com o tema da aplicação
   if (document.documentElement.classList.contains('dark')) {
     document.querySelector('.ql-toolbar').classList.add('dark');
     document.querySelector('.ql-container').classList.add('dark');
   }
 
-  // Definir função updateFormProgress antes de usá-la
+  // Controla a barra de progresso do formulário
   updateFormProgress = function() {
     const progressBar = document.getElementById('formProgress');
     const requiredFields = ['title', 'category', 'summary', 'image'];
-    const totalFields = requiredFields.length + 1; // +1 para o campo de conteúdo
+    const totalFields = requiredFields.length + 1; // +1 para conteúdo do editor
     let filledFields = 0;
     
-    // Verifica campos obrigatórios
+    // Verifica campos obrigatórios preenchidos
     requiredFields.forEach(fieldId => {
       const field = document.getElementById(fieldId);
       if (field && field.value.trim()) filledFields++;
     });
 
-    // Verifica o conteúdo do editor Quill
+    // Verifica conteúdo do editor
     const content = quill.root.innerHTML.trim();
     if (content && content !== '<p><br></p>') filledFields++;
 
-    // Calcula e atualiza progresso
+    // Atualiza barra de progresso
     const progress = Math.round((filledFields / totalFields) * 100);
     progressBar.style.width = `${progress}%`;
     
-    // Atualiza cor baseado no progresso
+    // Altera cor da barra conforme progresso
     if (progress < 33) progressBar.style.background = 'var(--error-color, #EF4444)';
     else if (progress < 66) progressBar.style.background = 'var(--warning-color, #F59E0B)';
     else progressBar.style.background = 'var(--success-color, #10B981)';
   };
 
-  // Agora podemos configurar o formulário com a função já definida
+  // Configura monitoramento de campos para atualizar progresso
   function setupFormProgress() {
-    // Monitora mudanças em campos de texto e select
+    // Monitora campos de formulário
     form.querySelectorAll('input, select, textarea').forEach(field => {
       field.addEventListener('input', updateFormProgress);
       field.addEventListener('change', updateFormProgress);
     });
 
-    // Monitora mudanças no Quill
+    // Monitora alterações no editor
     quill.on('text-change', updateFormProgress);
 
-    // Atualização inicial
+    // Inicializa barra de progresso
     updateFormProgress();
   }
 
-  // Chamar setupFormProgress após definir todas as funções necessárias
   setupFormProgress();
 
-  // Event Listeners principais
+  // Configuração de eventos principais
   addBtn.addEventListener('click', () => openModal());
   closeBtn.addEventListener('click', closeModal);
   cancelBtn.addEventListener('click', closeModal);
@@ -94,39 +93,34 @@ document.addEventListener('DOMContentLoaded', function () {
   const clearBtn = document.getElementById('clear-btn');
   clearBtn.addEventListener('click', clearForm);
 
+  // Limpa todos os campos do formulário após confirmação
   function clearForm() {
     if (confirm('Tem certeza que deseja limpar todos os campos?')) {
-      // Limpa campos principais
+      // Reseta formulário e editor
       document.getElementById('title').value = '';
       document.getElementById('category').value = '';
       document.getElementById('tags').value = '';
       document.getElementById('summary').value = '';
-      
-      // Limpa o editor Quill
       quill.setContents([]);
       
-      // Limpa a imagem
+      // Limpa a imagem e esconde preview
       document.getElementById('image').value = '';
       imagePreview.classList.add('hidden');
       imageDropZone.querySelector('.upload-area').classList.remove('hidden');
       
-      // Reseta contadores
+      // Reseta contador e barra de progresso
       summaryCounter.textContent = `0/${maxLength}`;
       summaryCounter.classList.remove('text-red-500');
-      
-      // Usa updateFormProgress ao invés de setupFormProgress
       if (typeof updateFormProgress === 'function') updateFormProgress();
     }
   }
 
-  /**
-   * Carrega e exibe as notícias do localStorage
-   * Configura listeners para edição/exclusão
-   */
+  // Carrega notícias do localStorage e gera tabela com opções de gerenciamento
   function loadNews() {
     const news = JSON.parse(localStorage.getItem('news') || '[]');
     const newsList = document.querySelector('.admin-news-list');
   
+    // Exibe mensagem quando não há notícias
     if (!news.length) {
       newsList.innerHTML = `
         <div class="text-center py-8">
@@ -136,6 +130,7 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
   
+    // Gera tabela de notícias com imagens e ações
     newsList.innerHTML = `
       <div class="table-container">
         <table>
@@ -193,7 +188,7 @@ document.addEventListener('DOMContentLoaded', function () {
       </div>
     `;
   
-    // Adiciona event listeners para edição e exclusão
+    // Configura botões de ação para cada notícia
     document.querySelectorAll('.btn-edit').forEach(btn => {
       btn.addEventListener('click', () => editNews(btn.dataset.id));
     });
@@ -203,56 +198,62 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
   
-
   /**
-   * Gerencia estado do modal para criação/edição
-   * @param {Object|null} newsData - Dados da notícia para edição
+   * Abre modal para criar nova notícia ou editar existente
+   * @param {Object|null} newsData - Dados da notícia para edição (null para nova)
    */
   function openModal(newsData = null) {
     modal.classList.remove('hidden');
     if (newsData) {
+      // Modo de edição: preenche formulário com dados existentes
       editingId = newsData.id;
       document.getElementById('title').value = newsData.title;
       document.getElementById('category').value = newsData.category;
       document.getElementById('tags').value = newsData.tags.join(', ');
       document.getElementById('image').value = newsData.image;
-      // Atualiza preview da imagem se existir
+      
+      // Mostra preview da imagem existente
       if (newsData.image) {
         previewImage.src = newsData.image;
         imagePreview.classList.remove('hidden');
         imageDropZone.querySelector('.upload-area').classList.add('hidden');
       }
+      
       document.getElementById('summary').value = newsData.summary;
-      quill.clipboard.dangerouslyPasteHTML(newsData.content); // Setar conteúdo no editor
+      quill.clipboard.dangerouslyPasteHTML(newsData.content);
       document.getElementById('modal-title').textContent = 'Editar Notícia';
     } else {
+      // Modo de criação: limpa formulário
       editingId = null;
       form.reset();
       imagePreview.classList.add('hidden');
       imageDropZone.querySelector('.upload-area').classList.remove('hidden');
-      quill.setContents([]); // Limpar editor
+      quill.setContents([]);
       document.getElementById('modal-title').textContent = 'Nova Notícia';
     }
     
-    // Atualiza o progresso após abrir o modal
-    if (typeof updateFormProgress === 'function') setTimeout(updateFormProgress, 100); // Delay para garantir que o Quill está pronto
+    // Atualiza indicador de progresso
+    if (typeof updateFormProgress === 'function') setTimeout(updateFormProgress, 100);
   }
 
-  // Adiciona contador de caracteres para o resumo
+  // Configuração do contador de caracteres para o campo de resumo
   const summaryInput = document.getElementById('summary');
   const summaryCounter = document.getElementById('summary-counter');
   const maxLength = 200;
 
+  // Atualiza o contador de caracteres do resumo
   function updateSummaryCounter() {
     const currentLength = summaryInput.value.length;
     summaryCounter.textContent = `${currentLength}/${maxLength}`;
     
+    // Destaca contador quando próximo do limite
     if (currentLength >= maxLength * 0.9) summaryCounter.classList.add('text-red-500');
     else summaryCounter.classList.remove('text-red-500');
   }
 
   summaryInput.addEventListener('input', updateSummaryCounter);
 
+  // Fecha o modal e limpa o formulário
   function closeModal() {
     modal.classList.add('hidden');
     form.reset();
@@ -262,13 +263,13 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   /**
-   * Processa submissão do formulário
-   * Preserva data original em edições
+   * Processa submissão do formulário e salva os dados
+   * @param {Event} e - Evento de submissão
    */
   async function handleSubmit(e) {
     e.preventDefault();
 
-    // Validar campos obrigatórios
+    // Valida campos obrigatórios
     const requiredFields = ['title', 'category', 'summary', 'image'];
     const emptyFields = requiredFields.filter(field => !document.getElementById(field).value.trim());
     
@@ -277,13 +278,14 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
-    // Validar conteúdo do Quill
+    // Valida conteúdo do editor
     const content = quill.root.innerHTML.trim();
     if (!content || content === '<p><br></p>') {
       alert('Por favor, preencha o conteúdo da notícia');
       return;
     }
 
+    // Prepara objeto de dados da notícia
     const newsData = {
       id: editingId || Date.now().toString(),
       title: document.getElementById('title').value,
@@ -300,30 +302,34 @@ document.addEventListener('DOMContentLoaded', function () {
     loadNews();
   }
 
+  // Recupera data original de uma notícia existente
   async function getExistingDate(id) {
     const news = JSON.parse(localStorage.getItem('news') || '[]');
     const existingNews = news.find(item => item.id === id);
     return existingNews ? existingNews.date : new Date().toISOString();
   }
 
+  // Salva notícia no localStorage (nova ou atualizada)
   function saveNews(newsData) {
     const news = JSON.parse(localStorage.getItem('news') || '[]');
     const index = news.findIndex(item => item.id === newsData.id);
 
     if (index > -1) news[index] = newsData;
-    else news.unshift(newsData); // Adiciona no início do array
+    else news.unshift(newsData); // Adiciona no início para aparecer primeiro
 
     localStorage.setItem('news', JSON.stringify(news));
-    // Dispara evento para atualizar outras páginas
+    // Notifica outras páginas sobre a atualização
     window.dispatchEvent(new Event('newsUpdated'));
   }
 
+  // Abre modal com dados de uma notícia para edição
   function editNews(id) {
     const news = JSON.parse(localStorage.getItem('news') || '[]');
     const newsData = news.find(item => item.id === id);
     if (newsData) openModal(newsData);
   }
 
+  // Exclui notícia após confirmação
   function deleteNews(id) {
     if (confirm('Tem certeza que deseja excluir esta notícia?')) {
       const news = JSON.parse(localStorage.getItem('news') || '[]');
@@ -333,7 +339,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  // Gerenciamento de imagens
+  // Elementos para gerenciamento de imagem
   const imageDropZone = document.getElementById('image-drop-zone');
   const imageFile = document.getElementById('image-file');
   const imagePreview = document.querySelector('.image-preview');
@@ -341,7 +347,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const removeImageBtn = document.getElementById('remove-image');
   const imageInput = document.getElementById('image');
 
-  // Eventos de arrastar e soltar
+  // Configuração de eventos para área de upload de imagem
   imageDropZone.addEventListener('dragover', (e) => {
     e.preventDefault();
     imageDropZone.classList.add('dragover');
@@ -351,36 +357,39 @@ document.addEventListener('DOMContentLoaded', function () {
     imageDropZone.classList.remove('dragover');
   });
 
+  // Processa arquivo solto na área de upload
   imageDropZone.addEventListener('drop', (e) => {
     e.preventDefault();
     imageDropZone.classList.remove('dragover');
     handleImageFile(e.dataTransfer.files[0]);
   });
 
+  // Abre seletor de arquivo ao clicar na área
   imageDropZone.addEventListener('click', () => {
     imageFile.click();
   });
 
+  // Processa arquivo selecionado
   imageFile.addEventListener('change', (e) => {
     handleImageFile(e.target.files[0]);
   });
 
+  // Remove imagem selecionada
   removeImageBtn.addEventListener('click', (e) => {
     e.preventDefault();
-    e.stopPropagation(); // Impede que o evento chegue ao imageDropZone
+    e.stopPropagation(); // Evita ativação do clique no drop zone
     if (imageInput) {
       imageInput.value = '';
       imagePreview.classList.add('hidden');
       imageDropZone.querySelector('.upload-area').classList.remove('hidden');
       
-      // Atualiza a barra de progresso quando a imagem for removida
       if (typeof updateFormProgress === 'function') updateFormProgress();
     }
   });
 
   /**
-   * Processa arquivo de imagem e gera preview
-   * Converte para Base64 para armazenamento
+   * Converte arquivo de imagem para Base64 e exibe preview
+   * @param {File} file - Arquivo de imagem selecionado
    */
   function handleImageFile(file) {
     if (!file || !file.type.startsWith('image/')) return;
@@ -393,7 +402,6 @@ document.addEventListener('DOMContentLoaded', function () {
       imagePreview.classList.remove('hidden');
       imageDropZone.querySelector('.upload-area').classList.add('hidden');
       
-      // Atualiza a barra de progresso quando a imagem for carregada
       if (typeof updateFormProgress === 'function') updateFormProgress();
     };
     reader.readAsDataURL(file);

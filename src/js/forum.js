@@ -222,8 +222,7 @@ function renderReplies(replies, topicId, userId) {
  * @param {string} userId - ID do usuário atual
  */
 function renderTopicCard(topic, userId) {
-  const category = FORUM_CONFIG.categories.find(c => c.id === topic.category) ||
-    { icon: '💬', name: 'Geral' };
+  const category = FORUM_CONFIG.categories.find(c => c.id === topic.category) || { icon: '💬', name: 'Geral' };
 
   return `
     <div class="card p-6 mb-4 transform transition-all overflow-hidden" 
@@ -959,10 +958,7 @@ function updateCharCount(input, counterId) {
   counter.textContent = `${input.value.length}/${max}`;
 }
 
-/**
- * Inicialização do fórum
- * Carrega dados necessários e configura estado inicial
- */
+// Carrega dados necessários e configura estado inicial do fórum
 document.addEventListener('DOMContentLoaded', async () => {
   // Garante que forumTopics começa como array vazio
   forumTopics = [];

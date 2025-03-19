@@ -400,9 +400,7 @@ function getSeasonalAnimes(period, year) {
   const filtered = animes.filter(anime => {
     // Normaliza a temporada do anime para minúsculo
     const animePeriod = anime.season?.period?.toLowerCase().trim();
-    return anime.season &&
-      animePeriod === normalizedPeriod &&
-      anime.season.year === normalizedYear;
+    return anime.season && animePeriod === normalizedPeriod && anime.season.year === normalizedYear;
   });
 
   return filtered.sort((a, b) => (parseFloat(b.score) || 0) - (parseFloat(a.score) || 0));

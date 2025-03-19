@@ -31,8 +31,9 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('beforeunload', function (e) {
     const form = document.getElementById('animeForm');
     if (form && isFormDirty(form)) {
+      const message = 'Existem alterações não salvas. Deseja realmente sair?';
       e.preventDefault();
-      e.returnValue = '';
+      return message;
     }
   });
 });
@@ -547,7 +548,6 @@ function importAnimes(event) {
 
 /**
  * Configura uma área de arrastar e soltar (drop zone) para manipular arquivos e URLs.
- * 
  * @param {string} dropzoneId - ID do elemento HTML que servirá como zona de arrastar e soltar
  * @param {string} inputId - ID do input de arquivo associado
  * @param {string} urlInputId - ID do input que armazenará a URL
@@ -638,7 +638,6 @@ function setupDropZone(dropzoneId, inputId, urlInputId, previewId, dropHandler) 
 
 /**
  * Processa e comprime uma imagem quando ela é arrastada/soltada, exibindo preview
- * 
  * @param {File} file - O arquivo de imagem a ser processado
  * @param {HTMLInputElement} urlInput - Input onde será armazenada a URL da imagem em base64
  * @param {HTMLImageElement} previewElement - Elemento de imagem onde será exibido o preview
@@ -672,7 +671,6 @@ async function handleImageDrop(file, urlInput, previewElement) {
 
 /**
  * Manipula o upload de vídeo, seja por arquivo ou URL do YouTube
- * 
  * @param {(File|string)} file - O arquivo de vídeo ou URL do YouTube a ser processado
  * @param {HTMLInputElement} urlInput - O elemento de input que contém ou receberá a URL
  * @param {HTMLElement} previewElement - O elemento onde o preview do vídeo será exibido
@@ -692,7 +690,6 @@ function handleVideoDrop(file, urlInput, previewElement) {
 
 /**
  * Processa um arquivo de vídeo, exibindo uma prévia e armazenando seu conteúdo
- * 
  * @param {File} file - O arquivo de vídeo a ser processado
  * @param {HTMLInputElement} urlInput - O elemento de input onde será armazenada a URL do vídeo
  * @param {HTMLElement} previewElement - O elemento onde será exibida a prévia do vídeo
@@ -841,9 +838,7 @@ function updateMediaPreviews(anime) {
     if (anime.trailerUrl.includes('data:video')) trailerContent = `<video controls class="max-h-48 mx-auto"><source src="${anime.trailerUrl}"></video>`;
     else {
       const videoId = extractYouTubeId(anime.trailerUrl);
-      if (videoId) {
-        trailerContent = `<iframe width="280" height="157" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>`;
-      }
+      if (videoId) trailerContent = `<iframe width="280" height="157" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>`;
     }
 
     if (trailerContent) {

@@ -12,7 +12,7 @@ const MODERATION_CONFIG = {
     fallbackToLocalModeration: true, // Se a API falhar, usa moderação local
     forbiddenWords: [],
     partialCensoring: true, // Habilita censura parcial
-    censorCharacter: '•'    // Caractere usado para censura
+    censorCharacter: '•' // Caractere usado para censura
   }
 };
 

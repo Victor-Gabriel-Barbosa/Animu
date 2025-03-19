@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
-  // Redireciona usuários não-admin para a página inicial
+  // Verifica permissões de administrador e redireciona se necessário
   const sessionData = JSON.parse(localStorage.getItem('userSession'));
   if (!sessionData?.isAdmin) {
     window.location.href = 'index.html';
@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const totalAdmins = document.getElementById('total-admins');
   const novosUsuarios = document.getElementById('novos-usuarios');
 
-  // Gerenciamento de dados dos usuários no localStorage
+  // Carrega dados de usuários do armazenamento local
   function loadUsers() {
     try {
       return JSON.parse(localStorage.getItem('animuUsers')) || [];
@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  // Salva os usuários no localStorage e atualiza a interface	
+  // Persiste dados e atualiza a interface
   function saveUsers(users) {
     try {
       localStorage.setItem('animuUsers', JSON.stringify(users));
@@ -35,28 +35,32 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  // Converte data para formato brasileiro (dd/mm/aaaa)
+  // Formata data para padrão brasileiro
   function formatDate(dateString) {
     return new Date(dateString).toLocaleDateString('pt-BR');
   }
 
-  // Atualiza contadores de usuários totais, admins e novos (últimos 7 dias)
+  // Atualiza estatísticas do painel administrativo
   function updateStats() {
     const users = loadUsers();
     const admins = users.filter(user => user.isAdmin);
+    
+    // Calcula novos usuários nos últimos 7 dias
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const newUsers = users.filter(user => new Date(user.createdAt) > sevenDaysAgo);
 
+    // Atualiza contadores na interface
     totalUsuarios.textContent = users.length;
     totalAdmins.textContent = admins.length;
     novosUsuarios.textContent = newUsers.length;
   }
 
-  // Gera linha da tabela com dados e ações do usuário
+  // Gera elemento TR com dados e controles para cada usuário
   function createUserRow(user) {
     const tr = document.createElement('tr');
 
+    // Template da linha com informações e botões de ação
     tr.innerHTML = `
       <td>
         <div class="flex items-center">
@@ -92,13 +96,14 @@ document.addEventListener('DOMContentLoaded', function () {
     return tr;
   }
 
-  // Filtra e exibe usuários com base na busca e tipo selecionado
+  // Aplica filtros e popula tabela com usuários correspondentes
   function updateTable(filterValue = '', userType = 'all') {
     const users = loadUsers();
     tableBody.innerHTML = '';
 
     users
       .filter(user => {
+        // Filtra por termo de busca e tipo de usuário
         const matchesSearch = user.username.toLowerCase().includes(filterValue.toLowerCase()) ||
           user.email.toLowerCase().includes(filterValue.toLowerCase());
         const matchesType = userType === 'all' ||
@@ -111,7 +116,7 @@ document.addEventListener('DOMContentLoaded', function () {
       });
   }
 
-  // Funções globais para ações na interface
+  // Alterna privilégios de administrador para um usuário
   window.toggleAdminStatus = function (userId) {
     const users = loadUsers();
     const user = users.find(u => u.id === userId);
@@ -121,6 +126,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   };
 
+  // Remove usuário após confirmação
   window.deleteUser = function (userId) {
     if (!confirm('Tem certeza que deseja excluir este usuário?')) return;
     const users = loadUsers();
@@ -128,7 +134,7 @@ document.addEventListener('DOMContentLoaded', function () {
     saveUsers(updatedUsers);
   };
 
-  // Event listeners para filtros e busca
+  // Conecta eventos de interface aos manipuladores de filtro
   searchInput.addEventListener('input', () => {
     updateTable(searchInput.value, filterType.value);
   });
@@ -137,7 +143,7 @@ document.addEventListener('DOMContentLoaded', function () {
     updateTable(searchInput.value, filterType.value);
   });
 
-  // Inicializa a interface
+  // Inicialização da interface administrativa
   updateTable();
   updateStats();
 });

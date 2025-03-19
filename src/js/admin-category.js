@@ -29,7 +29,7 @@ class CategoryManager {
     window.addEventListener('beforeunload', (e) => {
       if (this.isFormDirty()) {
         e.preventDefault();
-        e.returnValue = '';
+        return 'Há alterações não salvas. Deseja realmente sair?';
       }
     });
   }
@@ -820,7 +820,7 @@ class CategoryManager {
   }
 }
 
-// Inicialização quando o DOM estiver carregado
+// Inicializa quando o DOM estiver carregado
 document.addEventListener('DOMContentLoaded', () => {
   // Verifica se o usuário tem permissão de admin
   const manager = new CategoryManager();

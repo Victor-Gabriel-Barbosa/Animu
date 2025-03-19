@@ -262,7 +262,7 @@ document.addEventListener('DOMContentLoaded', function() {
   window.addEventListener('resize', function() {
     adjustStatisticsLayout();
     
-    // Remover e reaplicar indicadores de tendência quando a tela mudar de tamanho
+    // Remove e reaplica indicadores de tendência quando a tela mudar de tamanho
     const statsElements = ['stats-animes', 'stats-reviews', 'stats-likes', 'stats-favorites'];
     statsElements.forEach(id => {
       const element = document.getElementById(id);
@@ -425,18 +425,18 @@ function shareAnime(event, animeTitle, coverImage) {
           <label class="text-sm text-gray-500">Selecione os amigos:</label>
           <div class="mt-2 max-h-48 overflow-y-auto space-y-2">
             ${currentUser.friends.map(friendId => {
-    const friend = users.find(u => u.id === friendId);
-    if (!friend) return '';
-    return `
+              const friend = users.find(u => u.id === friendId);
+              if (!friend) return '';
+              return `
                 <label class="flex items-center gap-3 p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg">
                   <input type="checkbox" value="${friend.id}" 
-                         class="w-4 h-4 text-purple-600 rounded border-gray-300">
+                        class="w-4 h-4 text-purple-600 rounded border-gray-300">
                   <img src="${friend.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(friend.username)}`}" 
-                       class="w-8 h-8 rounded-full">
+                      class="w-8 h-8 rounded-full">
                   <span>${friend.displayName || friend.username}</span>
                 </label>
               `;
-  }).join('')}
+            }).join('')}
           </div>
         </div>
         <div class="flex justify-end gap-3">
@@ -603,7 +603,6 @@ function getActivityContent(activity) {
 
 /**
  * Atualiza avatar do usuário em todas as camadas de armazenamento
- * 
  * @param {string} avatar - URL/Base64 da imagem
  * @param {string} userId - ID do usuário
  */
@@ -1207,9 +1206,7 @@ function loadChatMessages(senderId, receiverId) {
   container.innerHTML = messages.map(msg => {
     const isMine = msg.senderId === senderId;
     const user = isMine ? sender : receiver;
-    const messageClasses = isMine ?
-      'ml-auto' :
-      'mr-auto';
+    const messageClasses = isMine ? 'ml-auto' : 'mr-auto';
 
     const avatar = user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.username || 'User')}`;
 
@@ -1277,7 +1274,6 @@ function loadChatMessages(senderId, receiverId) {
 
 /**
  * Envia uma mensagem do remetente para o destinatário no chat.
- * 
  * @param {Event} event - O evento do formulário
  * @param {string} senderId - ID do usuário que envia a mensagem
  * @param {string} receiverId - ID do usuário que recebe a mensagem

@@ -24,7 +24,7 @@ function initThemeSystem() {
 
   // Listener para mudanças na preferência do sistema
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
-  prefersDark.addListener(() => {
+  prefersDark.addEventListener('change', () => {
     if (localStorage.getItem('theme') === 'system') window.applyTheme('system');
   });
 }
@@ -151,7 +151,7 @@ window.ThemeManager = {
     if (window.location.pathname.includes('signin.html') || window.location.pathname.includes('signup.html')) this.initThemeDropdown();
 
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
-    prefersDark.addListener(() => {
+    prefersDark.addEventListener('change', () => {
       if (localStorage.getItem('theme') === 'system') this.applyTheme('system');
     });
   }
@@ -165,9 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const adminPanel = document.getElementById("admin-panel");
   const sessionData = JSON.parse(localStorage.getItem('userSession'));
 
-  if (sessionData?.isAdmin && adminPanel) {
-    adminPanel.classList.remove("hidden");
-  }
+  if (sessionData?.isAdmin && adminPanel) adminPanel.classList.remove("hidden");
 
   // Gerenciamento do menu administrativo
   const adminButton = document.getElementById('admin-menu-button');
@@ -317,10 +315,8 @@ function toggleFavorite(animeTitle) {
 
   const isFavorited = users[userIndex].favoriteAnimes.includes(animeTitle);
 
-  if (isFavorited) {
-    // Remove dos favoritos
-    users[userIndex].favoriteAnimes = users[userIndex].favoriteAnimes.filter(title => title !== animeTitle);
-  } else users[userIndex].favoriteAnimes.push(animeTitle); // Adiciona aos favoritos
+  if (isFavorited) users[userIndex].favoriteAnimes = users[userIndex].favoriteAnimes.filter(title => title !== animeTitle); // Remove dos favoritos
+  else users[userIndex].favoriteAnimes.push(animeTitle); // Adiciona aos favoritos
 
   // Atualiza o localStorage
   localStorage.setItem('animuUsers', JSON.stringify(users));
@@ -774,7 +770,7 @@ function updateCurrentSeasonLink() {
 
 // Inicialização da página
 window.addEventListener('DOMContentLoaded', () => {
-  window.ThemeManager.init(); // Inicializa o sistema de temas primeiro
+  window.ThemeManager.init();
   updateUserInterface();
   updateCurrentSeasonLink();
   renderFeaturedAnimes();

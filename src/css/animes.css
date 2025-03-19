@@ -140,7 +140,7 @@
   transform: scale(1.15);
 }
 
-/* Manter apenas as informações básicas sempre visíveis */
+/* Mantém apenas as informações básicas sempre visíveis */
 .anime-card .anime-info {
   position: absolute;
   bottom: 0;
@@ -956,16 +956,16 @@
 .carousel-container {
   position: relative;
   width: 100%;
-  max-width: 1200px; /* Reduzido de 1400px para melhor proporção */
+  max-width: 1200px; 
   margin: 0 auto;
-  padding: 0 35px; /* Reduzido para dar mais espaço aos cards */
+  padding: 0 35px;
 }
 
 .carousel-wrapper {
   position: relative;
   overflow: hidden;
   margin: 0 -10px;
-  max-height: 360px; /* Reduzido para manter proporção */
+  max-height: 360px;
 }
 
 .carousel-track {
@@ -975,10 +975,10 @@
 
 .carousel-track .anime-card {
   flex: 0 0 calc(20% - 20px);
-  min-width: 140px; /* Reduzido */
-  max-width: 200px; /* Adicionado limite máximo */
+  min-width: 140px; 
+  max-width: 200px; 
   margin: 0 10px;
-  max-height: 360px; /* Altura máxima do card */
+  max-height: 360px; 
 }
 
 /* Estilos melhorados para os botões do carrossel */
@@ -1147,7 +1147,7 @@
   .carousel-track .anime-card {
     flex: 0 0 calc(100% - 20px);
     min-width: 120px;
-    max-width: 180px; /* Limitando a largura máxima em telas pequenas */
+    max-width: 180px; 
     max-height: 280px;
   }
   
@@ -1228,17 +1228,17 @@
 
 .hero-backdrop {
   position: absolute;
-  top: -50px; /* Aumenta a área para o efeito parallax */
+  top: -50px; 
   left: 0;
   width: 100%;
-  height: calc(100% + 100px); /* Aumenta a altura para compensar o movimento */
+  height: calc(100% + 100px); 
   background-size: cover;
   background-position: center;
-  background-attachment: fixed; /* Adiciona efeito parallax nativo */
+  background-attachment: fixed; 
   filter: blur(4px);
   opacity: 0.7;
   transform: scale(1.1);
-  will-change: transform; /* Otimiza performance */
+  will-change: transform;
 }
 
 .hero-gradient {

@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
       if (password !== confirmPassword) throw new Error('As senhas não coincidem.');
 
-      // Verificar usuário ou e-mail existente
+      // Verifica usuário ou e-mail existente
       const userExists = this.users.some(user => user.username === username || user.email === email);
 
       if (userExists) throw new Error('Usuário ou e-mail já cadastrado!');
