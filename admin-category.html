@@ -15,10 +15,7 @@
   <link rel="stylesheet" href="src/css/navbar.css">
   <link rel="icon" href="src/data/favicon/favicon.ico" type="image/x-icon">
   
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <!-- Firebase SDK - Removido daqui para evitar carregamento duplo -->
   
   <script>
     // Verifica permissões de administrador
@@ -141,6 +138,11 @@
       </div>
     </div>
   </div>
+
+  <!-- Scripts do Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 
   <!-- Importa scripts -->
   <script src="src/js/firebase-config.js"></script>

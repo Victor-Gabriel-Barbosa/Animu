@@ -26,20 +26,12 @@ class CategoryManager {
       if (e.target.id === 'category-modal') this.closeModal();
     }, { passive: true }); // Adiciona passive: true para melhor performance
 
-    // Adiciona alerta ao tentar sair da página
+    // Adiciona alerta ao tentar sair da página com alterações não salvas
     window.addEventListener('beforeunload', (e) => {
-      // Salva categorias no Firebase antes de sair
-      this.saveCategoriesOnFirebase();
-      
       if (this.isFormDirty()) {
         e.preventDefault();
         return 'Há alterações não salvas. Deseja realmente sair?';
       }
-    });
-    
-    // Também salva quando o usuário navega para outra página
-    window.addEventListener('pagehide', () => {
-      this.saveCategoriesOnFirebase();
     });
   }
 
@@ -841,16 +833,27 @@ class CategoryManager {
   // Carrega categorias do Firebase
   async loadCategoriesFromFirebase() {
     try {
+      console.log('Tentando carregar categorias do Firebase...');
       const snapshot = await db.collection('categories').doc('categoriesList').get();
       
-      if (snapshot.exists && snapshot.data().items) {
+      if (snapshot.exists && snapshot.data() && snapshot.data().items) {
+        const categoriesData = snapshot.data().items;
+        console.log('Categorias encontradas no Firebase:', categoriesData.length);
+        
         // Salva no localStorage
-        localStorage.setItem('animuCategories', JSON.stringify(snapshot.data().items));
-        console.log('Categorias carregadas do Firebase com sucesso');
+        localStorage.setItem('animuCategories', JSON.stringify(categoriesData));
         this.firebaseLoaded = true;
         this.loadCategories(); // Atualiza a interface
       } else {
         console.log('Nenhuma categoria encontrada no Firebase, usando dados locais');
+        const localCategories = this.getCategories();
+        
+        if (localCategories && localCategories.length > 0) {
+          console.log('Dados locais encontrados, salvando no Firebase...');
+          this.firebaseLoaded = true;
+          await this.saveCategoriesOnFirebase(); // Salva os dados locais no Firebase
+        }
+        
         this.loadCategories(); // Carrega do localStorage se não houver no Firebase
       }
     } catch (error) {
@@ -861,18 +864,31 @@ class CategoryManager {
 
   // Salva categorias no Firebase
   async saveCategoriesOnFirebase() {
-    // Se não carregamos do Firebase ainda, não salvamos
-    if (!this.firebaseLoaded) return;
-    
     try {
+      console.log('Tentando salvar categorias no Firebase...');
       const categories = this.getCategories();
+      
+      if (!categories || categories.length === 0) {
+        console.warn('Nenhuma categoria para salvar no Firebase');
+        return;
+      }
+      
+      // Não verifica mais firebaseLoaded para garantir que sempre tente salvar
       await db.collection('categories').doc('categoriesList').set({
         items: categories,
         lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
       });
-      console.log('Categorias salvas no Firebase com sucesso');
+      
+      console.log('Categorias salvas no Firebase com sucesso:', categories.length, 'categorias');
+      this.firebaseLoaded = true;  // Marca como carregado após salvar com sucesso
+      
+      // Dispara evento personalizado para notificar que as categorias foram atualizadas
+      window.dispatchEvent(new CustomEvent('categoriesSaved', { 
+        detail: { count: categories.length }
+      }));
     } catch (error) {
       console.error('Erro ao salvar categorias no Firebase:', error);
+      alert(`Erro ao salvar no Firebase: ${error.message}. Verifique o console para mais detalhes.`);
     }
   }
 }
