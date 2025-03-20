@@ -15,6 +15,9 @@ document.addEventListener('DOMContentLoaded', function () {
   let editingId = null; // Armazena ID da notícia em edição
   let updateFormProgress;
 
+  // Referência à coleção de notícias no Firestore
+  const newsCollection = db.collection('news');
+
   // Carrega notícias existentes ao iniciar
   loadNews();
 
@@ -115,87 +118,112 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  // Carrega notícias do localStorage e gera tabela com opções de gerenciamento
-  function loadNews() {
-    const news = JSON.parse(localStorage.getItem('news') || '[]');
-    const newsList = document.querySelector('.admin-news-list');
-  
-    // Exibe mensagem quando não há notícias
-    if (!news.length) {
-      newsList.innerHTML = `
+  // Carrega notícias do Firestore e gera tabela com opções de gerenciamento
+  async function loadNews() {
+    try {
+      const newsListElement = document.querySelector('.admin-news-list');
+      newsListElement.innerHTML = `
         <div class="text-center py-8">
-          <p class="text-gray-500 dark:text-gray-400">Nenhuma notícia cadastrada</p>
+          <p class="text-gray-500 dark:text-gray-400">Carregando notícias...</p>
         </div>
       `;
-      return;
-    }
-  
-    // Gera tabela de notícias com imagens e ações
-    newsList.innerHTML = `
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Imagem</th>
-              <th>Título</th>
-              <th>Categoria</th>
-              <th>Data</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${news.map(item => `
+
+      // Busca todas as notícias ordenadas por data (decrescente)
+      const snapshot = await newsCollection.orderBy('date', 'desc').get();
+      
+      // Exibe mensagem quando não há notícias
+      if (snapshot.empty) {
+        newsListElement.innerHTML = `
+          <div class="text-center py-8">
+            <p class="text-gray-500 dark:text-gray-400">Nenhuma notícia cadastrada</p>
+          </div>
+        `;
+        return;
+      }
+      
+      // Converte documentos do Firestore em array de notícias
+      const news = [];
+      snapshot.forEach(doc => {
+        news.push({
+          id: doc.id,
+          ...doc.data()
+        });
+      });
+      
+      // Gera tabela de notícias com imagens e ações
+      newsListElement.innerHTML = `
+        <div class="table-container">
+          <table>
+            <thead>
               <tr>
-                <td>
-                  <div class="w-20 h-12 rounded overflow-hidden">
-                    <img src="${item.image}" alt="${item.title}" class="w-full h-full object-cover">
-                  </div>
-                </td>
-                <td>
-                  <div class="max-w-xs">
-                    <p class="font-medium truncate">${item.title}</p>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 truncate">${item.summary}</p>
-                  </div>
-                </td>
-                <td>
-                  <span class="px-2 py-1 text-xs text-white bg-purple-100 dark:bg-purple-900 rounded-full">
-                    ${item.category}
-                  </span>
-                </td>
-                <td>${new Date(item.date).toLocaleDateString('pt-BR')}</td>
-                <td>
-                  <div class="flex items-center gap-2">
-                    <button class="btn-action btn-edit" title="Editar" data-id="${item.id}">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                      </svg>
-                    </button>
-                    <button class="btn-action btn-delete" title="Remover" data-id="${item.id}">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 6h18"></path>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                        <line x1="10" y1="11" x2="10" y2="17"></line>
-                        <line x1="14" y1="11" x2="14" y2="17"></line>
-                      </svg>
-                    </button>
-                  </div>
-                </td>
+                <th>Imagem</th>
+                <th>Título</th>
+                <th>Categoria</th>
+                <th>Data</th>
+                <th>Ações</th>
               </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </div>
-    `;
-  
-    // Configura botões de ação para cada notícia
-    document.querySelectorAll('.btn-edit').forEach(btn => {
-      btn.addEventListener('click', () => editNews(btn.dataset.id));
-    });
-  
-    document.querySelectorAll('.btn-delete').forEach(btn => {
-      btn.addEventListener('click', () => deleteNews(btn.dataset.id));
-    });
+            </thead>
+            <tbody>
+              ${news.map(item => `
+                <tr>
+                  <td>
+                    <div class="w-20 h-12 rounded overflow-hidden">
+                      <img src="${item.image}" alt="${item.title}" class="w-full h-full object-cover">
+                    </div>
+                  </td>
+                  <td>
+                    <div class="max-w-xs">
+                      <p class="font-medium truncate">${item.title}</p>
+                      <p class="text-sm text-gray-500 dark:text-gray-400 truncate">${item.summary}</p>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="px-2 py-1 text-xs text-white bg-purple-100 dark:bg-purple-900 rounded-full">
+                      ${item.category}
+                    </span>
+                  </td>
+                  <td>${new Date(item.date).toLocaleDateString('pt-BR')}</td>
+                  <td>
+                    <div class="flex items-center gap-2">
+                      <button class="btn-action btn-edit" title="Editar" data-id="${item.id}">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                      </button>
+                      <button class="btn-action btn-delete" title="Remover" data-id="${item.id}">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M3 6h18"></path>
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                          <line x1="10" y1="11" x2="10" y2="17"></line>
+                          <line x1="14" y1="11" x2="14" y2="17"></line>
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+      
+      // Configura botões de ação para cada notícia
+      document.querySelectorAll('.btn-edit').forEach(btn => {
+        btn.addEventListener('click', () => editNews(btn.dataset.id));
+      });
+      
+      document.querySelectorAll('.btn-delete').forEach(btn => {
+        btn.addEventListener('click', () => deleteNews(btn.dataset.id));
+      });
+    } catch (error) {
+      console.error('Erro ao carregar notícias:', error);
+      document.querySelector('.admin-news-list').innerHTML = `
+        <div class="text-center py-8 text-red-500">
+          <p>Erro ao carregar notícias. Por favor, tente novamente.</p>
+        </div>
+      `;
+    }
   }
   
   /**
@@ -285,57 +313,99 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
-    // Prepara objeto de dados da notícia
-    const newsData = {
-      id: editingId || Date.now().toString(),
-      title: document.getElementById('title').value,
-      category: document.getElementById('category').value,
-      tags: document.getElementById('tags').value.split(',').map(tag => tag.trim()).filter(tag => tag),
-      image: document.getElementById('image').value,
-      summary: document.getElementById('summary').value,
-      content: content,
-      date: editingId ? (await getExistingDate(editingId)) : new Date().toISOString()
-    };
+    try {
+      // Mostra loader ou feedback visual
+      document.getElementById('save-btn').disabled = true;
+      document.getElementById('save-btn').innerHTML = 'Salvando...';
 
-    saveNews(newsData);
-    closeModal();
-    loadNews();
+      // Prepara objeto de dados da notícia
+      const newsData = {
+        title: document.getElementById('title').value,
+        category: document.getElementById('category').value,
+        tags: document.getElementById('tags').value.split(',').map(tag => tag.trim()).filter(tag => tag),
+        image: document.getElementById('image').value,
+        summary: document.getElementById('summary').value,
+        content: content,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+
+      // Se é um novo documento, adiciona a data de criação
+      if (!editingId) {
+        newsData.date = new Date().toISOString();
+        newsData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      }
+
+      await saveNews(newsData);
+      closeModal();
+      loadNews();
+    } catch (error) {
+      console.error('Erro ao salvar notícia:', error);
+      alert('Erro ao salvar notícia. Por favor, tente novamente.');
+    } finally {
+      document.getElementById('save-btn').disabled = false;
+      document.getElementById('save-btn').innerHTML = 'Salvar Notícia';
+    }
   }
 
   // Recupera data original de uma notícia existente
   async function getExistingDate(id) {
-    const news = JSON.parse(localStorage.getItem('news') || '[]');
-    const existingNews = news.find(item => item.id === id);
-    return existingNews ? existingNews.date : new Date().toISOString();
+    try {
+      const doc = await newsCollection.doc(id).get();
+      if (doc.exists) return doc.data().date;
+    } catch (error) {
+      console.error('Erro ao recuperar data original:', error);
+    }
+    return new Date().toISOString();
   }
 
-  // Salva notícia no localStorage (nova ou atualizada)
-  function saveNews(newsData) {
-    const news = JSON.parse(localStorage.getItem('news') || '[]');
-    const index = news.findIndex(item => item.id === newsData.id);
-
-    if (index > -1) news[index] = newsData;
-    else news.unshift(newsData); // Adiciona no início para aparecer primeiro
-
-    localStorage.setItem('news', JSON.stringify(news));
-    // Notifica outras páginas sobre a atualização
-    window.dispatchEvent(new Event('newsUpdated'));
+  // Salva notícia no Firestore (nova ou atualizada)
+  async function saveNews(newsData) {
+    try {
+      if (editingId) {
+        // Atualiza documento existente
+        await newsCollection.doc(editingId).update(newsData);
+        console.log('Notícia atualizada com sucesso!');
+      } else {
+        // Cria novo documento
+        await newsCollection.add(newsData);
+        console.log('Notícia criada com sucesso!');
+      }
+      // Notifica outras páginas sobre a atualização (opcional)
+      window.dispatchEvent(new Event('newsUpdated'));
+    } catch (error) {
+      console.error('Erro ao salvar no Firestore:', error);
+      throw error; // Propaga o erro para tratamento superior
+    }
   }
 
   // Abre modal com dados de uma notícia para edição
-  function editNews(id) {
-    const news = JSON.parse(localStorage.getItem('news') || '[]');
-    const newsData = news.find(item => item.id === id);
-    if (newsData) openModal(newsData);
+  async function editNews(id) {
+    try {
+      const doc = await newsCollection.doc(id).get();
+      if (doc.exists) {
+        const newsData = {
+          id: doc.id,
+          ...doc.data()
+        };
+        openModal(newsData);
+      } else alert('Notícia não encontrada');
+    } catch (error) {
+      console.error('Erro ao recuperar notícia para edição:', error);
+      alert('Erro ao carregar os dados da notícia');
+    }
   }
 
   // Exclui notícia após confirmação
-  function deleteNews(id) {
+  async function deleteNews(id) {
     if (confirm('Tem certeza que deseja excluir esta notícia?')) {
-      const news = JSON.parse(localStorage.getItem('news') || '[]');
-      const filteredNews = news.filter(item => item.id !== id);
-      localStorage.setItem('news', JSON.stringify(filteredNews));
-      loadNews();
+      try {
+        await newsCollection.doc(id).delete();
+        console.log('Notícia excluída com sucesso!');
+        loadNews(); // Recarrega a lista
+      } catch (error) {
+        console.error('Erro ao excluir notícia:', error);
+        alert('Erro ao excluir notícia. Por favor, tente novamente.');
+      }
     }
   }
 
