@@ -1,10 +1,10 @@
 document.addEventListener('DOMContentLoaded', async function () {
   class AuthManager {
     constructor() {
-      this.users = this.loadUsers();
       this.loginAttempts = {};
       this.maxAttempts = 3;
       this.lockoutDuration = 15 * 60 * 1000; // 15 minutos em milissegundos
+      this.usersCollection = db.collection('users');
     }
 
     // Função para hash de senha usando SHA-256
@@ -60,18 +60,41 @@ document.addEventListener('DOMContentLoaded', async function () {
       } else delete this.loginAttempts[username];
     }
 
-    // Carrega usuários do localStorage
-    loadUsers() {
-      return JSON.parse(localStorage.getItem('animuUsers') || '[]');
+    // Carrega usuários do Firestore
+    async loadUsers() {
+      try {
+        const snapshot = await this.usersCollection.get();
+        return snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+      } catch (error) {
+        console.error("Erro ao carregar usuários do Firebase:", error);
+        // Fallback para localStorage se o Firebase falhar
+        return JSON.parse(localStorage.getItem('animuUsers') || '[]');
+      }
     }
 
-    // Salva usuários no localStorage
-    saveUsers() {
-      localStorage.setItem('animuUsers', JSON.stringify(this.users));
+    // Salva um usuário no Firestore
+    async saveUser(user) {
+      try {
+        // Se o usuário já tem ID, atualiza o documento existente
+        if (user.id && user.id.length > 0) {
+          await this.usersCollection.doc(user.id).set(user);
+        } else {
+          // Caso contrário, cria novo documento com ID gerado pelo Firestore
+          const docRef = await this.usersCollection.add(user);
+          user.id = docRef.id;
+        }
+        return user;
+      } catch (error) {
+        console.error("Erro ao salvar usuário no Firebase:", error);
+        throw error;
+      }
     }
 
     // Valida registro de usuário
-    validateRegistration(username, email, password, confirmPassword) {
+    async validateRegistration(username, email, password, confirmPassword) {
       // Validações básicas
       if (username.length < 3) throw new Error('Nome de usuário deve ter pelo menos 3 caracteres.');
 
@@ -82,17 +105,25 @@ document.addEventListener('DOMContentLoaded', async function () {
 
       if (password !== confirmPassword) throw new Error('As senhas não coincidem.');
 
-      // Verifica usuário ou e-mail existente
-      const userExists = this.users.some(user => user.username === username || user.email === email);
+      // Verifica usuário ou e-mail existente no Firestore
+      try {
+        const usernameSnapshot = await this.usersCollection.where('username', '==', username).get();
+        const emailSnapshot = await this.usersCollection.where('email', '==', email).get();
 
-      if (userExists) throw new Error('Usuário ou e-mail já cadastrado!');
+        if (!usernameSnapshot.empty || !emailSnapshot.empty) {
+          throw new Error('Usuário ou e-mail já cadastrado!');
+        }
+      } catch (error) {
+        console.error("Erro ao verificar usuário existente:", error);
+        throw error;
+      }
     }
 
     // Registro de usuário
     async registerUser(username, email, password, confirmPassword) {
       try {
         // Valida registro
-        this.validateRegistration(username, email, password, confirmPassword);
+        await this.validateRegistration(username, email, password, confirmPassword);
 
         // Valida força da senha
         const passwordValidation = this.validatePasswordStrength(password);
@@ -106,25 +137,23 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         // Cria novo usuário
         const newUser = {
-          id: Date.now().toString(),
           username,
           email,
           password: hashedPassword,
-          avatar: avatar, // Armazena o avatar no objeto do usuário
-          isAdmin: true,
-          createdAt: new Date().toISOString()
+          avatar: avatar,
+          isAdmin: this.shouldBeAdmin(email), // Determina se é admin baseado em regras
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
         };
 
-        // Adiciona usuário
-        this.users.push(newUser);
-        this.saveUsers();
+        // Salva usuário no Firestore e obtém o objeto com ID
+        const savedUser = await this.saveUser(newUser);
 
         // Cria sessão do usuário automaticamente
         const sessionData = {
-          userId: newUser.id,
-          username: newUser.username,
-          isAdmin: newUser.isAdmin,
-          avatar: newUser.avatar,
+          userId: savedUser.id,
+          username: savedUser.username,
+          isAdmin: savedUser.isAdmin,
+          avatar: savedUser.avatar,
           loginTime: new Date().toISOString()
         };
 
@@ -136,6 +165,13 @@ document.addEventListener('DOMContentLoaded', async function () {
         this.showError(error.message);
         return false;
       }
+    }
+
+    // Define regras para determinar se um usuário deve ser admin
+    shouldBeAdmin(email) {
+      // Exemplo: todos os emails terminados em @admin.com são admins
+      // Você pode customizar esta regra conforme necessário
+      return email.endsWith('@admin.com');
     }
 
     // Salva credenciais do usuário
@@ -171,21 +207,39 @@ document.addEventListener('DOMContentLoaded', async function () {
       return diffDays <= 30; // Expira após 30 dias
     }
 
-    // Novo método para encontrar usuário por username ou email
-    findUser(identifier) {
-      return this.users.find(u =>
-        u.username.toLowerCase() === identifier.toLowerCase() ||
-        u.email.toLowerCase() === identifier.toLowerCase()
-      );
+    // Encontrar usuário por username ou email no Firestore
+    async findUser(identifier) {
+      try {
+        // Busca por username
+        let snapshot = await this.usersCollection.where('username', '==', identifier).get();
+        
+        if (snapshot.empty) {
+          // Se não encontrou por username, busca por email
+          snapshot = await this.usersCollection.where('email', '==', identifier).get();
+        }
+        
+        if (!snapshot.empty) {
+          const userData = snapshot.docs[0].data();
+          return {
+            id: snapshot.docs[0].id,
+            ...userData
+          };
+        }
+        
+        return null;
+      } catch (error) {
+        console.error("Erro ao buscar usuário:", error);
+        throw error;
+      }
     }
 
-    // Método de login atualizado
+    // Método de login atualizado para usar Firestore
     async loginUser(identifier, password, remember = false) {
       try {
         this.checkLoginAttempts(identifier);
 
         const hashedPassword = await this.hashPassword(password);
-        const user = this.findUser(identifier);
+        const user = await this.findUser(identifier);
 
         if (!user) throw new Error('Usuário não encontrado.');
 
@@ -347,23 +401,37 @@ document.addEventListener('DOMContentLoaded', async function () {
       existingErrors.forEach(error => error.remove());
     }
 
-    // Migra senhas antigas para hash
-    async migrateOldPasswords() {
-      let needsSave = false;
-      for (let user of this.users) {
-        // Verifica se a senha não está em formato hash (64 caracteres hex)
-        if (user.password && user.password.length !== 64) {
-          user.password = await this.hashPassword(user.password);
-          needsSave = true;
+    // Migração de dados do localStorage para o Firebase
+    async migrateLocalStorageToFirebase() {
+      try {
+        const localUsers = JSON.parse(localStorage.getItem('animuUsers') || '[]');
+        if (localUsers.length === 0) return;
+
+        // Para cada usuário no localStorage
+        for (const user of localUsers) {
+          // Verifica se o usuário já existe no Firestore
+          const existingUser = await this.findUser(user.username);
+          if (!existingUser) {
+            // Se não existir, salva no Firestore
+            await this.saveUser({
+              ...user,
+              createdAt: user.createdAt || new Date().toISOString()
+            });
+          }
         }
+        
+        console.log('Migração de usuários para o Firebase concluída');
+      } catch (error) {
+        console.error('Erro na migração de usuários para o Firebase:', error);
       }
-      if (needsSave) this.saveUsers();
     }
   }
 
   // Inicializa AuthManager
   const authManager = new AuthManager();
-  await authManager.migrateOldPasswords(); // Migra senhas antigas
+  
+  // Migra dados do localStorage para o Firebase
+  await authManager.migrateLocalStorageToFirebase();
 
   // Armazena a página anterior quando o usuário acessa as páginas de login/registro
   if (window.location.pathname.includes('signin.html') || window.location.pathname.includes('signup.html')) {
