@@ -19,13 +19,19 @@ document.addEventListener('DOMContentLoaded', () => {
     window.location.href = 'index.html';
     return;
   }
-  loadAnimesList();
-  setupDropZone('coverImageDropzone', 'coverImageInput', 'coverImage', 'coverImagePreview', handleImageDrop);
-  setupDropZone('trailerDropzone', 'trailerInput', 'trailerUrl', 'trailerPreview', handleVideoDrop);
-  setupMediaRemoval();
-  initializeCategorySelector();
-  setupDateInput();
-  updateFormProgress();
+  
+  // Verifica a conexão com o Firebase antes de carregar os animes
+  checkFirebaseConnection().then(isConnected => {
+    if (isConnected) {
+      loadAnimesList();
+      setupDropZone('coverImageDropzone', 'coverImageInput', 'coverImage', 'coverImagePreview', handleImageDrop);
+      setupDropZone('trailerDropzone', 'trailerInput', 'trailerUrl', 'trailerPreview', handleVideoDrop);
+      setupMediaRemoval();
+      initializeCategorySelector();
+      setupDateInput();
+      updateFormProgress();
+    }
+  });
 
   // Adiciona alerta ao tentar sair da página
   window.addEventListener('beforeunload', function (e) {
@@ -38,11 +44,86 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// Carrega lista de animes
-function loadAnimesList() {
-  const animes = JSON.parse(localStorage.getItem('animeData')) || [];
-  const tbody = document.getElementById('animesList');
+// Carrega lista de animes do Firebase
+async function loadAnimesList() {
+  try {
+    const animesSnapshot = await db.collection('animes').orderBy('primaryTitle').get();
+    const animes = [];
+    
+    animesSnapshot.forEach(doc => {
+      animes.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+    
+    const tbody = document.getElementById('animesList');
+    
+    if (animes.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="5" class="text-center py-4">
+            Nenhum anime cadastrado. Adicione seu primeiro anime!
+          </td>
+        </tr>
+      `;
+      return;
+    }
 
+    tbody.innerHTML = animes.map((anime, index) => `
+      <tr>
+        <td>
+          <img src="${anime.coverImage}" alt="${anime.primaryTitle}" class="h-20 w-14 object-cover rounded">
+        </td>
+        <td>
+          <div class="text-sm font-medium">${anime.primaryTitle}</div>
+          <div class="text-sm text-gray-500">${anime.alternativeTitles[0]?.title || ''}</div>
+        </td>
+        <td>
+          ${anime.episodes || 'N/A'}
+        </td>
+        <td>
+          <span class="px-2 py-1 rounded-full ${getStatusClass(anime.status)}">
+            ${anime.status || 'N/A'}
+          </span>
+        </td>
+        <td>
+          <div class="action-buttons">
+            <button class="btn-action btn-edit" title="Editar" onclick="editAnime('${anime.id}')">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+            </button>
+            <button class="btn-action btn-delete" title="Remover" onclick="deleteAnime('${anime.id}')">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 6h18"></path>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                <line x1="10" y1="11" x2="10" y2="17"></line>
+                <line x1="14" y1="11" x2="14" y2="17"></line>
+              </svg>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  } catch (error) {
+    console.error('Erro ao carregar animes:', error);
+    alert('Erro ao carregar a lista de animes. Verifique sua conexão com a internet.');
+    
+    // Fallback para dados locais em caso de erro
+    const localAnimes = JSON.parse(localStorage.getItem('animeData')) || [];
+    if (localAnimes.length > 0) {
+      alert('Carregando dados de cache local...');
+      renderAnimesList(localAnimes);
+    }
+  }
+}
+
+// Função auxiliar para renderizar a lista de animes
+function renderAnimesList(animes) {
+  const tbody = document.getElementById('animesList');
+  
   tbody.innerHTML = animes.map((anime, index) => `
     <tr>
       <td>
@@ -62,13 +143,13 @@ function loadAnimesList() {
       </td>
       <td>
         <div class="action-buttons">
-          <button class="btn-action btn-edit" title="Editar" onclick="editAnime(${index})">
+          <button class="btn-action btn-edit" title="Editar" onclick="editAnime('${anime.id || index}')">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
             </svg>
           </button>
-          <button class="btn-action btn-delete" title="Remover" onclick="deleteAnime(${index})">
+          <button class="btn-action btn-delete" title="Remover" onclick="deleteAnime('${anime.id || index}')">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M3 6h18"></path>
               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -323,65 +404,117 @@ function removeLicensor(index) {
   updateLicensorsList();
 }
 
-// Carrega dados do anime para edição
-function editAnime(index) {
+// Carrega dados do anime para edição a partir do Firebase
+async function editAnime(animeId) {
   try {
-    const animes = JSON.parse(localStorage.getItem('animeData')) || [];
-    const anime = animes[index];
-    if (!anime) throw new Error('Anime não encontrado');
+    console.log('Iniciando edição do anime com ID:', animeId);
+    // Exibir indicador de carregamento
+    document.body.classList.add('loading');
+    
+    let anime;
+    
+    // Verifica se o ID é string (do Firebase) ou número (localStorage legado)
+    if (typeof animeId === 'string') {
+      console.log('Buscando anime no Firebase, ID:', animeId);
+      const animeDoc = await db.collection('animes').doc(animeId).get();
+      
+      if (!animeDoc.exists) {
+        console.error('Documento não encontrado no Firebase com ID:', animeId);
+        throw new Error('Anime não encontrado no banco de dados');
+      }
+      
+      anime = {
+        id: animeDoc.id,
+        ...animeDoc.data()
+      };
+      console.log('Anime encontrado no Firebase:', anime.primaryTitle);
+    } else {
+      // Modo legado - busca no localStorage
+      console.log('Modo legado: buscando anime no localStorage, índice:', animeId);
+      const animes = JSON.parse(localStorage.getItem('animeData')) || [];
+      anime = animes[animeId];
+      
+      if (!anime) {
+        console.error('Anime não encontrado no localStorage com índice:', animeId);
+        throw new Error('Anime não encontrado no armazenamento local');
+      }
+    }
 
-    currentAnimeId = index;
+    currentAnimeId = animeId;
+    document.getElementById('modalTitle').textContent = `Editar: ${anime.primaryTitle}`;
     showAnimeForm();
 
     // Configura temporizador para garantir que o modal esteja visível
     setTimeout(() => {
-      // Preenche campos básicos
-      document.getElementById('primaryTitle').value = anime.primaryTitle || '';
-      document.getElementById('coverImage').value = anime.coverImage || '';
-      document.getElementById('synopsis').value = anime.synopsis || '';
-      document.getElementById('episodes').value = anime.episodes || '';
-      document.getElementById('episodeDuration').value = anime.episodeDuration || '';
-      document.getElementById('status').value = anime.status || 'Em Exibição';
-      document.getElementById('ageRating').value = anime.ageRating || 'Livre';
-      document.getElementById('seasonPeriod').value = anime.season?.period || 'inverno';
+      try {
+        console.log('Preenchendo campos do formulário com dados do anime');
+        // Preenche campos básicos
+        document.getElementById('primaryTitle').value = anime.primaryTitle || '';
+        document.getElementById('coverImage').value = anime.coverImage || '';
+        document.getElementById('synopsis').value = anime.synopsis || '';
+        document.getElementById('episodes').value = anime.episodes || '';
+        document.getElementById('episodeDuration').value = anime.episodeDuration || '';
+        document.getElementById('status').value = anime.status || 'Em Exibição';
+        document.getElementById('ageRating').value = anime.ageRating || 'Livre';
+        document.getElementById('seasonPeriod').value = anime.season?.period || 'inverno';
 
-      // Formata a data para o formato yyyy-MM-dd
-      const releaseDate = anime.releaseDate ? new Date(anime.releaseDate).toISOString().split('T')[0] : '';
-      document.getElementById('releaseDate').value = releaseDate;
+        // Formata a data para o formato yyyy-MM-dd
+        const releaseDate = anime.releaseDate ? new Date(anime.releaseDate).toISOString().split('T')[0] : '';
+        document.getElementById('releaseDate').value = releaseDate;
 
-      document.getElementById('studio').value = anime.studio || '';
-      document.getElementById('source').value = anime.source || '';
-      document.getElementById('trailerUrl').value = anime.trailerUrl || '';
+        document.getElementById('studio').value = anime.studio || '';
+        document.getElementById('source').value = anime.source || '';
+        document.getElementById('trailerUrl').value = anime.trailerUrl || '';
 
-      // Reseta e preenche arrays
-      alternativeTitles = Array.isArray(anime.alternativeTitles) ? [...anime.alternativeTitles] : [];
-      genres = Array.isArray(anime.genres) ? [...anime.genres] : [];
-      producers = Array.isArray(anime.producers) ? [...anime.producers] : [];
-      licensors = Array.isArray(anime.licensors) ? [...anime.licensors] : [];
-      staffMembers = anime.staff || [];
+        // Reseta e preenche arrays
+        alternativeTitles = Array.isArray(anime.alternativeTitles) ? [...anime.alternativeTitles] : [];
+        genres = Array.isArray(anime.genres) ? [...anime.genres] : [];
+        producers = Array.isArray(anime.producers) ? [...anime.producers] : [];
+        licensors = Array.isArray(anime.licensors) ? [...anime.licensors] : [];
+        staffMembers = Array.isArray(anime.staff) ? [...anime.staff] : [];
 
-      // Atualiza todas as listas visuais
-      updateAlternativeTitlesList();
-      updateGenresList();
-      updateProducersList();
-      updateLicensorsList();
-      updateStaffList();
+        console.log('Atualizando listas visuais');
+        // Atualiza todas as listas visuais
+        updateAlternativeTitlesList();
+        updateGenresList();
+        updateProducersList();
+        updateLicensorsList();
+        updateStaffList();
 
-      // Atualiza previews de mídia
-      updateMediaPreviews(anime);
-
+        console.log('Atualizando previews de mídia');
+        // Atualiza previews de mídia
+        updateMediaPreviews(anime);
+        
+        console.log('Anime carregado com sucesso para edição');
+        // Captura o estado inicial após preencher o formulário
+        initialFormState = getFormState();
+        
+        // Remove o indicador de carregamento
+        document.body.classList.remove('loading');
+      } catch (innerError) {
+        console.error('Erro ao preencher formulário:', innerError);
+        document.body.classList.remove('loading');
+        alert(`Erro ao preencher formulário: ${innerError.message}`);
+      }
     }, 100);
 
   } catch (error) {
     console.error('Erro ao editar anime:', error);
-    alert('Erro ao carregar dados do anime para edição.');
+    alert(`Erro ao carregar dados do anime para edição: ${error.message}`);
+    document.body.classList.remove('loading');
   }
 }
 
-// Salva anime (novo ou editado)
+// Salva anime (novo ou editado) no Firebase
 document.getElementById('animeForm').addEventListener('submit', async function (e) {
   e.preventDefault();
   isFormSaving = true; // Define a flag antes de salvar
+  
+  // Adiciona indicador de carregamento
+  const submitBtn = this.querySelector('button[type="submit"]');
+  const originalBtnText = submitBtn.innerHTML;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = `<span class="spinner"></span> Salvando...`;
 
   try {
     // Validações básicas
@@ -397,28 +530,39 @@ document.getElementById('animeForm').addEventListener('submit', async function (
     // Validação de campos obrigatórios
     if (!primaryTitle || !synopsis || !episodes || !episodeDuration || !studio || !source) {
       alert('Por favor, preencha todos os campos obrigatórios.');
+      isFormSaving = false;
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalBtnText;
       return;
     }
 
     // Validação de gêneros
     if (genres.length === 0) {
       alert('Por favor, adicione pelo menos um gênero.');
+      isFormSaving = false;
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalBtnText;
       return;
     }
 
     // Validação de imagem de capa
     if (!coverImage) {
       alert('Por favor, adicione uma imagem de capa.');
+      isFormSaving = false;
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalBtnText;
       return;
     }
 
     // Validação de data de lançamento
     if (!releaseDate) {
       alert('Por favor, selecione uma data de lançamento.');
+      isFormSaving = false;
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalBtnText;
       return;
     }
 
-    const animes = JSON.parse(localStorage.getItem('animeData')) || [];
     const now = new Date().toISOString();
 
     // Comprime imagem se existir
@@ -450,34 +594,67 @@ document.getElementById('animeForm').addEventListener('submit', async function (
       updatedAt: now
     };
 
-    let updatedAnimes = [];
+    // Verificar se é edição ou adição de novo anime
     if (currentAnimeId !== null) {
-      const existingAnime = animes[currentAnimeId];
-      if (!existingAnime) throw new Error('Anime não encontrado');
-
-      updatedAnimes = [...animes];
-      updatedAnimes[currentAnimeId] = {
-        ...existingAnime,
-        ...formData,
-        score: existingAnime.score || 0,
-        popularity: existingAnime.popularity || 0,
-        comments: existingAnime.comments || [],
-        createdAt: existingAnime.createdAt
-      };
+      if (typeof currentAnimeId === 'string') {
+        // É uma edição em um documento do Firebase
+        const animeRef = db.collection('animes').doc(currentAnimeId);
+        
+        // Obtém o documento atual para preservar dados que não estão no formulário
+        const animeDoc = await animeRef.get();
+        if (!animeDoc.exists) {
+          throw new Error('Anime não encontrado para atualização');
+        }
+        
+        const existingData = animeDoc.data();
+        
+        // Mescla os dados existentes com as atualizações
+        await animeRef.update({
+          ...formData,
+          score: existingData.score || 0,
+          popularity: existingData.popularity || 0,
+          comments: existingData.comments || [],
+          createdAt: existingData.createdAt
+        });
+      } else {
+        // É uma edição de um item do localStorage (compatibilidade legada)
+        const animes = JSON.parse(localStorage.getItem('animeData')) || [];
+        const existingAnime = animes[currentAnimeId];
+        
+        // Cria um novo documento no Firebase
+        await db.collection('animes').add({
+          ...formData,
+          score: existingAnime?.score || 0,
+          popularity: existingAnime?.popularity || 0,
+          comments: existingAnime?.comments || [],
+          createdAt: existingAnime?.createdAt || now
+        });
+        
+        // Remove do localStorage para evitar duplicação
+        animes.splice(currentAnimeId, 1);
+        localStorage.setItem('animeData', JSON.stringify(animes));
+      }
     } else {
-      updatedAnimes = [...animes, {
+      // É um novo anime
+      await db.collection('animes').add({
         ...formData,
         createdAt: now,
         comments: [],
         score: 0,
         popularity: 0
-      }];
+      });
     }
 
-    // Verifica espaço disponível
-    if (!checkStorageQuota(updatedAnimes)) throw new Error('Limite de armazenamento excedido. Tente remover alguns animes antigos.');
+    // Backup local (opcional)
+    try {
+      const animeSnapshot = await db.collection('animes').get();
+      const animes = [];
+      animeSnapshot.forEach(doc => animes.push(doc.data()));
+      localStorage.setItem('animeData', JSON.stringify(animes));
+    } catch (backupError) {
+      console.warn('Não foi possível criar backup local:', backupError);
+    }
 
-    localStorage.setItem('animeData', JSON.stringify(updatedAnimes));
     closeAnimeForm();
     loadAnimesList();
     alert('Anime salvo com sucesso!');
@@ -485,65 +662,171 @@ document.getElementById('animeForm').addEventListener('submit', async function (
   } catch (error) {
     console.error('Erro ao salvar anime:', error);
     alert(`Erro ao salvar o anime: ${error.message}`);
-    isFormSaving = false; // Reseta a flag em caso de erro
+    isFormSaving = false;
+  } finally {
+    // Restaura o botão
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalBtnText;
   }
 });
 
-// Exclui anime e seus comentários
-function deleteAnime(index) {
+// Exclui anime do Firebase
+async function deleteAnime(animeId) {
   if (confirm('Tem certeza que deseja excluir este anime? Todos os comentários associados também serão excluídos.')) {
-    const animes = JSON.parse(localStorage.getItem('animeData')) || [];
-    const animeToDelete = animes[index];
-
-    // Remove o anime do array de animes
-    animes.splice(index, 1);
-    localStorage.setItem('animeData', JSON.stringify(animes));
-
-    // Remove os comentários associados ao anime
-    const comments = JSON.parse(localStorage.getItem('animeComments')) || {};
-    if (comments[animeToDelete.primaryTitle]) {
-      delete comments[animeToDelete.primaryTitle];
-      localStorage.setItem('animeComments', JSON.stringify(comments));
-    }
-
-    // Atualiza a lista de animes na interface
-    loadAnimesList();
-  }
-}
-
-// Exporta dados dos animes
-function exportAnimes() {
-  const animes = localStorage.getItem('animeData');
-  const blob = new Blob([animes], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'animes_backup.json';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-// Importa dados dos animes
-function importAnimes(event) {
-  const file = event.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      try {
-        const animes = JSON.parse(e.target.result);
-        if (Array.isArray(animes)) {
+    try {
+      // Adiciona indicador de carregamento
+      document.body.classList.add('loading');
+      
+      if (typeof animeId === 'string') {
+        // Exclui do Firebase
+        await db.collection('animes').doc(animeId).delete();
+        
+        // Também exclui comentários associados a este anime
+        const commentSnapshot = await db.collection('animeComments')
+          .where('animeId', '==', animeId)
+          .get();
+          
+        const batch = db.batch();
+        commentSnapshot.forEach(doc => batch.delete(doc.ref));
+        
+        if (!commentSnapshot.empty) {
+          await batch.commit();
+        }
+      } else {
+        // Modo legado - remove do localStorage
+        const animes = JSON.parse(localStorage.getItem('animeData')) || [];
+        if (animes[animeId]) {
+          const animeToDelete = animes[animeId];
+          
+          // Remove o anime do array de animes
+          animes.splice(animeId, 1);
           localStorage.setItem('animeData', JSON.stringify(animes));
-          loadAnimesList();
-          alert('Dados importados com sucesso!');
-        } else throw new Error('Formato inválido');
-      } catch (error) {
-        alert('Erro ao importar dados. Verifique se o arquivo está no formato correto.');
+          
+          // Remove os comentários associados ao anime
+          const comments = JSON.parse(localStorage.getItem('animeComments')) || {};
+          if (comments[animeToDelete.primaryTitle]) {
+            delete comments[animeToDelete.primaryTitle];
+            localStorage.setItem('animeComments', JSON.stringify(comments));
+          }
+        }
       }
-    };
-    reader.readAsText(file);
+      
+      // Atualiza a interface
+      await loadAnimesList();
+      document.body.classList.remove('loading');
+      alert('Anime excluído com sucesso!');
+    } catch (error) {
+      console.error('Erro ao excluir anime:', error);
+      alert('Erro ao excluir o anime. Por favor, tente novamente.');
+      document.body.classList.remove('loading');
+    }
   }
+}
+
+// Exporta dados dos animes do Firebase
+async function exportAnimes() {
+  try {
+    document.body.classList.add('loading');
+    
+    const animesSnapshot = await db.collection('animes').get();
+    const animes = [];
+    
+    animesSnapshot.forEach(doc => {
+      animes.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+    
+    const blob = new Blob([JSON.stringify(animes, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `animes_backup_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    document.body.classList.remove('loading');
+  } catch (error) {
+    console.error('Erro ao exportar animes:', error);
+    alert('Erro ao exportar dados. Verifique sua conexão com a internet.');
+    document.body.classList.remove('loading');
+  }
+}
+
+// Importa dados dos animes para o Firebase
+async function importAnimes(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  if (confirm('Esta operação substituirá todos os animes existentes. Deseja continuar?')) {
+    try {
+      document.body.classList.add('loading');
+      
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        try {
+          const animes = JSON.parse(e.target.result);
+          
+          if (!Array.isArray(animes)) {
+            throw new Error('Formato inválido');
+          }
+          
+          // Exclui todos os animes existentes
+          const animesSnapshot = await db.collection('animes').get();
+          const batch = db.batch();
+          animesSnapshot.forEach(doc => batch.delete(doc.ref));
+          
+          if (!animesSnapshot.empty) {
+            await batch.commit();
+          }
+          
+          // Adiciona os novos animes
+          const importBatch = db.batch();
+          for (const anime of animes) {
+            const animeId = anime.id;
+            const animeData = {...anime};
+            
+            // Remove o campo id para não duplicar no documento
+            if (animeData.id) {
+              delete animeData.id;
+            }
+            
+            // Gera um novo ID ou usa o existente
+            const docRef = animeId ? 
+              db.collection('animes').doc(animeId) : 
+              db.collection('animes').doc();
+              
+            importBatch.set(docRef, animeData);
+          }
+          
+          await importBatch.commit();
+          
+          // Atualiza a lista
+          await loadAnimesList();
+          document.body.classList.remove('loading');
+          alert('Dados importados com sucesso!');
+          
+        } catch (error) {
+          console.error('Erro ao processar arquivo:', error);
+          alert('Erro ao importar dados. Verifique se o arquivo está no formato correto.');
+          document.body.classList.remove('loading');
+        }
+      };
+      
+      reader.readAsText(file);
+      
+    } catch (error) {
+      console.error('Erro na importação:', error);
+      alert('Erro ao ler o arquivo. Tente novamente.');
+      document.body.classList.remove('loading');
+    }
+  }
+  
+  // Limpa o input do arquivo para permitir selecionar o mesmo arquivo novamente
+  event.target.value = '';
 }
 
 /**
@@ -1586,114 +1869,4 @@ function updateStaffList() {
   }).join('<div class="border-t my-2"></div>');
 
   container.innerHTML = html || '<p class="text-sm text-gray-500">Nenhum membro da staff adicionado</p>';
-}
-
-// Modifique a função showAnimeForm para incluir a limpeza da staff
-function showAnimeForm() {
-  const modalContent = document.querySelector('.admin-form-container');
-  const modal = document.getElementById('animeModal');
-  modal.classList.remove('hidden');
-
-  // Reseta a posição de rolagem do formulário
-  if (modalContent) modalContent.scrollTop = 0;
-
-  if (!currentAnimeId) {
-    document.getElementById('modalTitle').textContent = 'Adicionar Novo Anime';
-    document.getElementById('animeForm').reset();
-
-    // Limpa arrays
-    alternativeTitles = [];
-    genres = [];
-    producers = [];
-    licensors = [];
-    staffMembers = [];
-
-    // Limpa os previews e valores dos campos de imagem e trailer
-    const coverPreview = document.getElementById('coverImagePreview');
-    const coverPrompt = coverPreview.previousElementSibling;
-    const removeCoverBtn = document.getElementById('removeCoverImage');
-
-    coverPreview.src = '';
-    coverPreview.classList.add('hidden');
-    coverPrompt.classList.remove('hidden');
-    removeCoverBtn.classList.add('hidden');
-    document.getElementById('coverImage').value = '';
-
-    const trailerPreview = document.getElementById('trailerPreview');
-    const trailerPrompt = trailerPreview.previousElementSibling;
-    const removeTrailerBtn = document.getElementById('removeTrailer');
-
-    trailerPreview.innerHTML = '';
-    trailerPreview.classList.add('hidden');
-    trailerPrompt.classList.remove('hidden');
-    removeTrailerBtn.classList.add('hidden');
-    document.getElementById('trailerUrl').value = '';
-
-    // Atualiza todas as listas
-    updateAlternativeTitlesList();
-    updateGenresList();
-    updateProducersList();
-    updateLicensorsList();
-    updateStaffList();
-  }
-
-  // Captura o estado inicial do formulário após o preenchimento
-  setTimeout(() => { 
-    initialFormState = getFormState(); 
-  }, 100);
-}
-
-// Modifique a função editAnime para carregar os dados da staff
-function editAnime(index) {
-  try {
-    const animes = JSON.parse(localStorage.getItem('animeData')) || [];
-    const anime = animes[index];
-    if (!anime) throw new Error('Anime não encontrado');
-
-    currentAnimeId = index;
-    showAnimeForm();
-
-    // Configura temporizador para garantir que o modal esteja visível
-    setTimeout(() => {
-      // Preenche campos básicos
-      document.getElementById('primaryTitle').value = anime.primaryTitle || '';
-      document.getElementById('coverImage').value = anime.coverImage || '';
-      document.getElementById('synopsis').value = anime.synopsis || '';
-      document.getElementById('episodes').value = anime.episodes || '';
-      document.getElementById('episodeDuration').value = anime.episodeDuration || '';
-      document.getElementById('status').value = anime.status || 'Em Exibição';
-      document.getElementById('ageRating').value = anime.ageRating || 'Livre';
-      document.getElementById('seasonPeriod').value = anime.season?.period || 'inverno';
-
-      // Formata a data para o formato yyyy-MM-dd
-      const releaseDate = anime.releaseDate ? new Date(anime.releaseDate).toISOString().split('T')[0] : '';
-      document.getElementById('releaseDate').value = releaseDate;
-
-      document.getElementById('studio').value = anime.studio || '';
-      document.getElementById('source').value = anime.source || '';
-      document.getElementById('trailerUrl').value = anime.trailerUrl || '';
-
-      // Reseta e preenche arrays
-      alternativeTitles = Array.isArray(anime.alternativeTitles) ? [...anime.alternativeTitles] : [];
-      genres = Array.isArray(anime.genres) ? [...anime.genres] : [];
-      producers = Array.isArray(anime.producers) ? [...anime.producers] : [];
-      licensors = Array.isArray(anime.licensors) ? [...anime.licensors] : [];
-      staffMembers = anime.staff || [];
-
-      // Atualiza todas as listas visuais
-      updateAlternativeTitlesList();
-      updateGenresList();
-      updateProducersList();
-      updateLicensorsList();
-      updateStaffList();
-
-      // Atualiza previews de mídia
-      updateMediaPreviews(anime);
-
-    }, 100);
-
-  } catch (error) {
-    console.error('Erro ao editar anime:', error);
-    alert('Erro ao carregar dados do anime para edição.');
-  }
 }
