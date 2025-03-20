@@ -591,7 +591,8 @@ document.getElementById('animeForm').addEventListener('submit', async function (
       licensors: [...licensors],
       staff: [...staffMembers],
       trailerUrl: document.getElementById('trailerUrl').value.trim(),
-      updatedAt: now
+      updatedAt: now,
+      favoriteCount: 0 // Inicializa o contador de favoritos para novos animes
     };
 
     // Verificar se é edição ou adição de novo anime
@@ -608,13 +609,14 @@ document.getElementById('animeForm').addEventListener('submit', async function (
         
         const existingData = animeDoc.data();
         
-        // Mescla os dados existentes com as atualizações
+        // Mescla os dados existentes com as atualizações, preservando o contador de favoritos existente
         await animeRef.update({
           ...formData,
           score: existingData.score || 0,
           popularity: existingData.popularity || 0,
           comments: existingData.comments || [],
-          createdAt: existingData.createdAt
+          createdAt: existingData.createdAt,
+          favoriteCount: existingData.favoriteCount || 0 // Preserva o contador existente ou inicializa com 0
         });
       } else {
         // É uma edição de um item do localStorage (compatibilidade legada)
@@ -627,7 +629,8 @@ document.getElementById('animeForm').addEventListener('submit', async function (
           score: existingAnime?.score || 0,
           popularity: existingAnime?.popularity || 0,
           comments: existingAnime?.comments || [],
-          createdAt: existingAnime?.createdAt || now
+          createdAt: existingAnime?.createdAt || now,
+          favoriteCount: existingAnime?.favoriteCount || 0 // Preserva o contador existente ou inicializa com 0
         });
         
         // Remove do localStorage para evitar duplicação
@@ -641,7 +644,8 @@ document.getElementById('animeForm').addEventListener('submit', async function (
         createdAt: now,
         comments: [],
         score: 0,
-        popularity: 0
+        popularity: 0,
+        favoriteCount: 0 // Inicializa contador de favoritos para novos animes
       });
     }
 
