@@ -1,14 +1,15 @@
 // Classe para gerenciamento das notícias
 class NewsManager {
   constructor() {
-    // Carrega dados do localStorage e configura listeners globais
-    this.newsData = JSON.parse(localStorage.getItem('news') || '[]');
-
-    // Listeners para sincronização de dados entre abas
-    window.addEventListener('newsUpdated', () => this.refreshData());
-    window.addEventListener('storage', (e) => { 
-      if (e.key === 'news') this.refreshData(); 
-    });
+    // Inicializa Firebase se disponível
+    this.db = window.firebase ? firebase.firestore() : null;
+    this.newsCollection = this.db ? this.db.collection('news') : null;
+    
+    // Armazena as notícias
+    this.newsData = [];
+    
+    // Inicializa indicador de carregamento
+    this.isLoading = false;
 
     // Identifica contexto da página atual
     this.currentPage = this.getCurrentPage();
@@ -18,14 +19,6 @@ class NewsManager {
     this.newsGridContainer = document.querySelector('.news-grid')?.parentElement;
     this.paginationContainer = document.querySelector('.pagination-container');
     
-    // Inicializa grid com base no contexto da página
-    const newsGrid = document.querySelector('.news-grid');
-    if (newsGrid) {
-      this.currentPage === 'news'
-        ? this.initializeFilters()
-        : this.currentPage === 'index' && this.renderNewsGrid(newsGrid, 4);
-    }
-
     // Sistema de views
     this.views = {
       grid: {
@@ -40,7 +33,107 @@ class NewsManager {
     };
 
     this.activeView = null;
-    this.init();
+    
+    // Carrega notícias e inicializa a página
+    this.loadNewsData().then(() => {
+      this.init();
+    });
+  }
+
+  async loadNewsData() {
+    try {
+      this.isLoading = true;
+      const newsGrid = document.querySelector('.news-grid');
+      
+      if (newsGrid) {
+        // Exibe indicador de carregamento
+        newsGrid.innerHTML = `
+          <div class="flex justify-center items-center w-full py-12">
+            <div class="loader"></div>
+            <p class="ml-3 text-gray-600">Carregando notícias...</p>
+          </div>
+        `;
+      }
+
+      // Primeiro tenta carregar do cache
+      if (typeof newsCache !== 'undefined') {
+        const cachedNews = newsCache.getAll();
+        if (cachedNews.length > 0) {
+          console.log('Carregando notícias do cache local');
+          this.newsData = cachedNews;
+          
+          // Inicializa grid com base no contexto da página
+          if (newsGrid) {
+            this.currentPage === 'news'
+              ? this.initializeFilters()
+              : this.currentPage === 'index' && this.renderNewsGrid(newsGrid, 4);
+          }
+          
+          // Mesmo com cache, atualiza em segundo plano
+          this.fetchFromFirestore();
+          return;
+        }
+      }
+
+      // Se não tem cache, carrega diretamente do Firestore
+      await this.fetchFromFirestore();
+      
+      // Inicializa grid com base no contexto da página
+      if (newsGrid) {
+        this.currentPage === 'news'
+          ? this.initializeFilters()
+          : this.currentPage === 'index' && this.renderNewsGrid(newsGrid, 4);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar notícias:', error);
+      const newsGrid = document.querySelector('.news-grid');
+      if (newsGrid) {
+        newsGrid.innerHTML = `
+          <div class="text-center py-8 text-red-500">
+            <p>Erro ao carregar notícias. Por favor, tente novamente.</p>
+            <button class="btn btn-secondary mt-4" onclick="newsManager.loadNewsData()">
+              Tentar novamente
+            </button>
+          </div>
+        `;
+      }
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  async fetchFromFirestore() {
+    if (!this.newsCollection) {
+      console.error('Firebase não está disponível');
+      return;
+    }
+
+    try {
+      console.log('Carregando notícias do Firestore');
+      const snapshot = await this.newsCollection.orderBy('date', 'desc').get();
+      
+      // Converte documentos do Firestore em array de notícias
+      const news = [];
+      snapshot.forEach(doc => {
+        news.push({
+          id: doc.id,
+          ...doc.data()
+        });
+      });
+      
+      // Atualiza dados locais
+      this.newsData = news;
+      
+      // Salva no localStorage para acesso offline
+      localStorage.setItem('news', JSON.stringify(news));
+      
+      console.log(`${news.length} notícias carregadas do Firestore`);
+      
+      return news;
+    } catch (error) {
+      console.error('Erro ao carregar do Firestore:', error);
+      throw error;
+    }
   }
 
   init() {
@@ -226,6 +319,35 @@ class NewsManager {
     // Inicializa listeners dos filtros se existirem
     this.searchInput && this.setupEventListeners();
     this.updateNews();
+    
+    // Popula categorias do filtro com base nas notícias carregadas
+    this.populateCategoryFilter();
+  }
+  
+  populateCategoryFilter() {
+    if (!this.categoryFilter) return;
+    
+    // Obtém todas as categorias únicas das notícias
+    const categories = [...new Set(this.newsData.map(news => news.category))];
+    
+    // Mantém a opção "Todas as categorias"
+    const currentOptions = Array.from(this.categoryFilter.options).map(opt => opt.value);
+    const defaultOption = this.categoryFilter.options[0];
+    
+    // Limpa e recria as opções
+    this.categoryFilter.innerHTML = '';
+    this.categoryFilter.appendChild(defaultOption);
+    
+    // Adiciona as categorias em ordem alfabética
+    categories.sort().forEach(category => {
+      // Pula se categoria for vazia
+      if (!category) return;
+      
+      const option = document.createElement('option');
+      option.value = category;
+      option.textContent = category;
+      this.categoryFilter.appendChild(option);
+    });
   }
 
   setupEventListeners() {
@@ -321,12 +443,51 @@ class NewsManager {
     // Encontra a notícia pelo ID
     const news = this.newsData.find(item => item.id.toString() === newsId.toString());
 
+    // Tenta buscar do Firestore se não encontrar localmente
+    if (!news && this.newsCollection) {
+      // Mostra indicador de carregamento
+      const detailView = document.getElementById('news-detail-view');
+      if (detailView) {
+        const contentArea = document.getElementById('news-content');
+        if (contentArea) {
+          contentArea.innerHTML = `
+            <div class="flex justify-center items-center w-full py-12">
+              <div class="loader"></div>
+              <p class="ml-3 text-gray-600">Carregando notícia...</p>
+            </div>
+          `;
+        }
+      }
+
+      // Busca no Firestore
+      this.newsCollection.doc(newsId).get().then(doc => {
+        if (doc.exists) {
+          const newsData = {
+            id: doc.id,
+            ...doc.data()
+          };
+          this.displayNewsDetails(newsData);
+        } else {
+          this.showGridView();
+        }
+      }).catch(error => {
+        console.error('Erro ao carregar notícia:', error);
+        this.showGridView();
+      });
+      
+      return;
+    }
+
     // Redireciona para grid se notícia não existir
     if (!news) {
       this.showGridView();
       return;
     }
 
+    this.displayNewsDetails(news);
+  }
+  
+  displayNewsDetails(news) {
     // Atualiza metadata da página
     document.title = `${news.title} | Animu`;
     this.updateMetaTags(news);
@@ -351,7 +512,7 @@ class NewsManager {
       elements.image.alt = news.title;
     }
     elements.summary && (elements.summary.textContent = news.summary);
-    elements.content && (elements.content.innerHTML = this.formatContent(news.content));
+    elements.content && (elements.content.innerHTML = news.content || '');
     elements.tags && (elements.tags.innerHTML = news.tags
       .map(tag => `<span class="news-tag">#${tag}</span>`)
       .join(''));
@@ -484,3 +645,11 @@ class NewsManager {
 
 // Inicializa gerenciador de notícias
 const newsManager = new NewsManager();
+
+// Listener para evento de atualização de cache
+window.addEventListener('newsCacheUpdated', () => {
+  if (newsManager) {
+    console.log('Cache de notícias atualizado, recarregando dados');
+    newsManager.loadNewsData();
+  }
+});

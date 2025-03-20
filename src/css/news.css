@@ -742,3 +742,18 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Indicador de carregamento */
+.loader {
+  border: 3px solid rgba(149, 85, 219, 0.2);
+  border-radius: 50%;
+  border-top: 3px solid var(--primary-color, #9555db);
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

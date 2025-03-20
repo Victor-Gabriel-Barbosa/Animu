@@ -3,6 +3,7 @@ class CategoryDisplay {
   constructor() {
     this.mainContainer = document.getElementById('main-categories');
     this.subContainer = document.getElementById('subcategories');
+    this.firebaseLoaded = false; // Flag para controlar se já carregamos do Firebase
     this.initialize();
     
     // Recarrega categorias quando houver atualizações
@@ -10,8 +11,47 @@ class CategoryDisplay {
   }
 
   initialize() {
-    this.renderCategories();
+    // Tenta carregar do Firebase primeiro
+    this.loadCategoriesFromFirebase()
+      .catch(error => {
+        console.error('Erro ao carregar categorias do Firebase:', error);
+        // Em caso de erro, carrega do localStorage
+        this.renderCategories();
+      });
+    
     this.setupEventListeners();
+  }
+
+  // Função para carregar categorias do Firebase
+  async loadCategoriesFromFirebase() {
+    try {
+      console.log('Carregando categorias do Firebase...');
+      
+      // Verifica se o Firebase está disponível
+      if (typeof firebase === 'undefined' || !firebase.firestore) {
+        console.warn('Firebase não está disponível. Carregando do localStorage.');
+        this.renderCategories();
+        return;
+      }
+      
+      const snapshot = await firebase.firestore().collection('categories').doc('categoriesList').get();
+      
+      if (snapshot.exists && snapshot.data() && snapshot.data().items) {
+        const categoriesData = snapshot.data().items;
+        console.log('Categorias encontradas no Firebase:', categoriesData.length);
+        
+        // Salva no localStorage para uso offline
+        localStorage.setItem('animuCategories', JSON.stringify(categoriesData));
+        this.firebaseLoaded = true;
+        this.renderCategories(); // Atualiza a interface com dados do Firebase
+      } else {
+        console.log('Nenhuma categoria encontrada no Firebase, usando dados locais');
+        this.renderCategories(); // Carrega do localStorage se não houver no Firebase
+      }
+    } catch (error) {
+      console.error('Erro ao carregar categorias do Firebase:', error);
+      throw error; // Propaga o erro para ser tratado no initialize()
+    }
   }
 
   getCategories() {
