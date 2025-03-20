@@ -4,10 +4,11 @@ class CategoryManager {
     // Adiciona variáveis para controlar o estado do formulário
     this.initialFormState = null;
     this.isFormSaving = false;
+    this.firebaseLoaded = false; // Controla se já carregamos do Firebase
 
     this.setupFormVisibility();
-    this.loadCategories();
-    this.updateStatistics(); // Adiciona chamada inicial
+    this.loadCategoriesFromFirebase(); // Carrega categorias do Firebase primeiro
+    this.updateStatistics();
 
     // Adiciona o event listener para atualização de categorias
     window.addEventListener('categoriesUpdated', () => { 
@@ -27,10 +28,18 @@ class CategoryManager {
 
     // Adiciona alerta ao tentar sair da página
     window.addEventListener('beforeunload', (e) => {
+      // Salva categorias no Firebase antes de sair
+      this.saveCategoriesOnFirebase();
+      
       if (this.isFormDirty()) {
         e.preventDefault();
         return 'Há alterações não salvas. Deseja realmente sair?';
       }
+    });
+    
+    // Também salva quando o usuário navega para outra página
+    window.addEventListener('pagehide', () => {
+      this.saveCategoriesOnFirebase();
     });
   }
 
@@ -485,6 +494,9 @@ class CategoryManager {
     try {
       localStorage.setItem('animuCategories', JSON.stringify(updatedCategories));
 
+      // Salva no Firebase também
+      await this.saveCategoriesOnFirebase();
+
       // Atualiza a lista de categorias na página
       this.loadCategories();
 
@@ -513,6 +525,10 @@ class CategoryManager {
     // Salva no localStorage
     try {
       localStorage.setItem('animuCategories', JSON.stringify(updatedCategories));
+      
+      // Salva no Firebase também
+      await this.saveCategoriesOnFirebase();
+      
       window.dispatchEvent(new Event('categoriesUpdated'));
     } catch (error) {
       throw new Error('Erro ao atualizar categoria: ' + error.message);
@@ -677,6 +693,9 @@ class CategoryManager {
 
       // Atualiza o localStorage
       localStorage.setItem('animuCategories', JSON.stringify(updatedCategories));
+      
+      // Atualiza no Firebase também
+      await this.saveCategoriesOnFirebase();
 
       // Recarrega a lista de categorias
       this.loadCategories();
@@ -817,6 +836,44 @@ class CategoryManager {
     const subCount = categories.filter(cat => cat.isSubcategory).length;
     const subElement = document.getElementById('sub-categories');
     if (subElement) subElement.textContent = subCount;
+  }
+
+  // Carrega categorias do Firebase
+  async loadCategoriesFromFirebase() {
+    try {
+      const snapshot = await db.collection('categories').doc('categoriesList').get();
+      
+      if (snapshot.exists && snapshot.data().items) {
+        // Salva no localStorage
+        localStorage.setItem('animuCategories', JSON.stringify(snapshot.data().items));
+        console.log('Categorias carregadas do Firebase com sucesso');
+        this.firebaseLoaded = true;
+        this.loadCategories(); // Atualiza a interface
+      } else {
+        console.log('Nenhuma categoria encontrada no Firebase, usando dados locais');
+        this.loadCategories(); // Carrega do localStorage se não houver no Firebase
+      }
+    } catch (error) {
+      console.error('Erro ao carregar categorias do Firebase:', error);
+      this.loadCategories(); // Em caso de erro, carrega do localStorage
+    }
+  }
+
+  // Salva categorias no Firebase
+  async saveCategoriesOnFirebase() {
+    // Se não carregamos do Firebase ainda, não salvamos
+    if (!this.firebaseLoaded) return;
+    
+    try {
+      const categories = this.getCategories();
+      await db.collection('categories').doc('categoriesList').set({
+        items: categories,
+        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      console.log('Categorias salvas no Firebase com sucesso');
+    } catch (error) {
+      console.error('Erro ao salvar categorias no Firebase:', error);
+    }
   }
 }
 
