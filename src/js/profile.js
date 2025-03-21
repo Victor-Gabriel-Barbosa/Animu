@@ -1,4 +1,7 @@
-document.addEventListener('DOMContentLoaded', function () {
+// Inicializa o gerenciador de usuários para operações de usuário
+const userManager = new UserManager();
+
+document.addEventListener('DOMContentLoaded', async function () {
   // Obtém ID do usuário da URL se existir
   const urlParams = new URLSearchParams(window.location.search);
   const profileId = urlParams.get('id');
@@ -10,45 +13,51 @@ document.addEventListener('DOMContentLoaded', function () {
     return;
   }
 
-  // Carrega dados do usuário
-  const users = JSON.parse(localStorage.getItem('animuUsers')) || [];
-  let currentUser;
+  try {
+    // Carrega todos os usuários para referência
+    const users = await userManager.loadUsers();
+    let currentUser;
 
-  // Se houver ID na URL, carrega o perfil do usuário específico
-  if (profileId) {
-    currentUser = users.find(user => user.id === profileId);
-    if (!currentUser) {
-      alert('Usuário não encontrado');
-      window.location.href = 'profile.html';
-      return;
+    // Se houver ID na URL, carrega o perfil do usuário específico
+    if (profileId) {
+      currentUser = users.find(user => user.id === profileId);
+      if (!currentUser) {
+        alert('Usuário não encontrado');
+        window.location.href = 'profile.html';
+        return;
+      }
+
+      // Verifica se é amigo
+      const loggedUser = users.find(user => user.id === sessionData.userId);
+      const isFriend = loggedUser.friends?.includes(currentUser.id);
+
+      if (!isFriend && currentUser.id !== sessionData.userId) {
+        alert('Você precisa ser amigo deste usuário para ver seu perfil');
+        window.location.href = 'profile.html';
+        return;
+      }
+
+      // Ajusta interface para perfil visitado
+      adjustInterfaceForVisitedProfile(currentUser, sessionData.userId === currentUser.id);
+    } else {
+      // Carrega o próprio perfil usando o userManager
+      currentUser = await userManager.findUser(sessionData.username);
+      if (!currentUser) {
+        console.error('Usuário não encontrado');
+        return;
+      }
     }
 
-    // Verifica se é amigo
-    const loggedUser = users.find(user => user.id === sessionData.userId);
-    const isFriend = loggedUser.friends?.includes(currentUser.id);
-
-    if (!isFriend && currentUser.id !== sessionData.userId) {
-      alert('Você precisa ser amigo deste usuário para ver seu perfil');
-      window.location.href = 'profile.html';
-      return;
-    }
-
-    // Ajusta interface para perfil visitado
-    adjustInterfaceForVisitedProfile(currentUser, sessionData.userId === currentUser.id);
-  } else currentUser = users.find(user => user.id === sessionData.userId); // Carrega o próprio perfil 
-
-  if (!currentUser) {
-    console.error('Usuário não encontrado');
-    return;
+    // Inicializa os dados do perfil
+    initializeProfile(currentUser);
+    loadStatistics(currentUser);
+    loadAchievements(currentUser);
+    loadFavoriteAnimes(currentUser);
+    loadActivityTimeline(currentUser);
+    setupEventListeners(currentUser, sessionData.userId === currentUser.id);
+  } catch (error) {
+    console.error("Erro ao carregar dados do perfil:", error);
   }
-
-  // Inicializa os dados do perfil
-  initializeProfile(currentUser);
-  loadStatistics(currentUser);
-  loadAchievements(currentUser);
-  loadFavoriteAnimes(currentUser);
-  loadActivityTimeline(currentUser);
-  setupEventListeners(currentUser, sessionData.userId === currentUser.id);
 });
 
 /**
@@ -93,44 +102,19 @@ function adjustInterfaceForVisitedProfile(profileUser, isOwnProfile) {
   }
 }
 
-// Inicializa a página de perfil após carregamento do DOM
-document.addEventListener('DOMContentLoaded', function () {
-  // Redireciona para login se não houver sessão ativa
-  const sessionData = JSON.parse(localStorage.getItem('userSession'));
-  if (!sessionData) {
-    window.location.href = 'signin.html';
-    return;
-  }
-
-  // Carrega os dados do usuário
-  const users = JSON.parse(localStorage.getItem('animuUsers')) || [];
-  const currentUser = users.find(user => user.id === sessionData.userId);
-
-  if (!currentUser) {
-    console.error('Usuário não encontrado');
-    return;
-  }
-
-  // Inicializa os dados do perfil
-  initializeProfile(currentUser);
-  loadStatistics(currentUser);
-  loadAchievements(currentUser);
-  loadFavoriteAnimes(currentUser);
-  loadActivityTimeline(currentUser);
-  setupEventListeners(currentUser);
-});
-
 // Exibe informações básicas do perfil do usuário
 function initializeProfile(user) {
   // Atualiza informações básicas
   document.getElementById('profile-username').textContent = user.username;
   document.getElementById('profile-email').textContent = user.email;
   document.getElementById('display-name').textContent = user.displayName || user.username;
-  document.getElementById('profile-joined').textContent = `Membro desde: ${new Date(user.createdAt).toLocaleDateString('pt-BR')}`;
+  
+  // Usa o formatador de data do UserManager para exibir a data de criação da conta
+  const formattedDate = userManager.formatFirestoreDate(user.createdAt);
+  document.getElementById('profile-joined').textContent = `Membro desde: ${formattedDate}`;
 
   // Usa o avatar da sessão do usuário
-  const sessionData = JSON.parse(localStorage.getItem('userSession'));
-  if (sessionData && sessionData.avatar) document.getElementById('profile-avatar').src = sessionData.avatar;
+  if (user.avatar) document.getElementById('profile-avatar').src = user.avatar;
 
   // Atualiza gêneros favoritos
   const favoriteGenres = document.getElementById('favorite-genres');
@@ -606,23 +590,30 @@ function getActivityContent(activity) {
  * @param {string} avatar - URL/Base64 da imagem
  * @param {string} userId - ID do usuário
  */
-function changeAvatar(avatar, userId) {
-  // Atualiza no localStorage
-  const users = JSON.parse(localStorage.getItem('animuUsers')) || [];
-  const userIndex = users.findIndex(u => u.id === userId);
-
-  if (userIndex !== -1) {
-    users[userIndex].avatar = avatar;
-    localStorage.setItem('animuUsers', JSON.stringify(users));
+async function changeAvatar(avatar, userId) {
+  try {
+    // Carrega o usuário atualmente
+    const users = await userManager.loadUsers();
+    const userToUpdate = users.find(u => u.id === userId);
+    
+    if (userToUpdate) {
+      // Atualiza o avatar
+      userToUpdate.avatar = avatar;
+      
+      // Salva as alterações no Firestore
+      await userManager.saveUser(userToUpdate);
+      
+      // Atualiza na sessão atual
+      const sessionData = JSON.parse(localStorage.getItem('userSession'));
+      sessionData.avatar = avatar;
+      localStorage.setItem('userSession', JSON.stringify(sessionData));
+      
+      // Atualiza a imagem na interface
+      document.getElementById('profile-avatar').src = avatar;
+    }
+  } catch (error) {
+    console.error("Erro ao atualizar avatar:", error);
   }
-
-  // Atualiza na sessão atual
-  const sessionData = JSON.parse(localStorage.getItem('userSession'));
-  sessionData.avatar = avatar;
-  localStorage.setItem('userSession', JSON.stringify(sessionData));
-
-  // Atualiza a imagem na interface
-  document.getElementById('profile-avatar').src = avatar;
 }
 
 // Inicializa seletor de gêneros para edição do perfil
@@ -731,7 +722,7 @@ function setupEventListeners(user, isOwnProfile) {
     });
 
     // Formulário de edição
-    editForm.addEventListener('submit', (e) => {
+    editForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const displayName = document.getElementById('edit-display-name').value;
@@ -739,20 +730,17 @@ function setupEventListeners(user, isOwnProfile) {
       const selectedGenres = Array.from(document.querySelectorAll('input[name="genres"]:checked')).map(checkbox => checkbox.value);
       const newAvatar = previewAvatar.src;
 
-      // Atualiza dados do usuário
-      const users = JSON.parse(localStorage.getItem('animuUsers')) || [];
-      const userIndex = users.findIndex(u => u.id === user.id);
-
-      if (userIndex !== -1) {
-        users[userIndex] = {
-          ...users[userIndex],
+      try {
+        // Atualiza dados do usuário no Firestore
+        const updatedUser = {
+          ...user,
           displayName,
           email,
           favoriteGenres: selectedGenres,
           avatar: newAvatar
         };
 
-        localStorage.setItem('animuUsers', JSON.stringify(users));
+        await userManager.saveUser(updatedUser);
 
         // Atualiza a sessão com o novo avatar
         const sessionData = JSON.parse(localStorage.getItem('userSession'));
@@ -761,6 +749,9 @@ function setupEventListeners(user, isOwnProfile) {
 
         // Atualiza a página
         window.location.reload();
+      } catch (error) {
+        console.error("Erro ao atualizar perfil:", error);
+        alert("Ocorreu um erro ao salvar as alterações. Por favor, tente novamente.");
       }
     });
 
@@ -799,142 +790,159 @@ function setupEventListeners(user, isOwnProfile) {
 }
 
 // Sistema de Amizades
-function initializeFriendSystem(currentUser) {
-  loadFriends(currentUser);
-  loadFriendRequests(currentUser);
-  setupFriendSearchListener();
+async function initializeFriendSystem(currentUser) {
+  try {
+    await loadFriends(currentUser);
+    await loadFriendRequests(currentUser);
+    setupFriendSearchListener();
 
-  // Adiciona o evento de click ao botão existente no HTML
-  const addFriendBtn = document.getElementById('add-friend-btn');
-  if (addFriendBtn) addFriendBtn.addEventListener('click', showAddFriendModal);
+    // Adiciona o evento de click ao botão existente no HTML
+    const addFriendBtn = document.getElementById('add-friend-btn');
+    if (addFriendBtn) addFriendBtn.addEventListener('click', showAddFriendModal);
+  } catch (error) {
+    console.error("Erro ao inicializar sistema de amizades:", error);
+  }
 }
 
 // Carrega e exibe a lista de amigos do usuário na interface
-function loadFriends(user) {
+async function loadFriends(user) {
   const friendsList = document.getElementById('friends-list');
   const friends = user.friends || [];
-  const users = JSON.parse(localStorage.getItem('animuUsers')) || [];
+  
+  try {
+    // Usa o UserManager para carregar todos os usuários
+    const users = await userManager.loadUsers();
 
-  if (friends.length === 0) {
-    friendsList.innerHTML = `
-      <div class="text-center py-8">
-        <svg class="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-        </svg>
-        <p class="text-gray-500 mt-4">Nenhum amigo adicionado</p>
-        <button onclick="showAddFriendModal()" 
-                class="mt-4 text-purple-600 hover:text-purple-700 font-medium">
-          Começar a adicionar amigos
-        </button>
-      </div>
-    `;
-    return;
-  }
+    if (friends.length === 0) {
+      friendsList.innerHTML = `
+        <div class="text-center py-8">
+          <svg class="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+          </svg>
+          <p class="text-gray-500 mt-4">Nenhum amigo adicionado</p>
+          <button onclick="showAddFriendModal()" 
+                  class="mt-4 text-purple-600 hover:text-purple-700 font-medium">
+            Começar a adicionar amigos
+          </button>
+        </div>
+      `;
+      return;
+    }
 
-  friendsList.innerHTML = friends.map(friendId => {
-    const friend = users.find(u => u.id === friendId);
-    if (!friend) return '';
+    friendsList.innerHTML = friends.map(friendId => {
+      const friend = users.find(u => u.id === friendId);
+      if (!friend) return '';
 
-    return `
-      <div class="friend-card group">
-        <div class="flex items-center gap-3">
-          <div class="relative">
-            <a href="profile.html?id=${friend.id}" class="block">
-              <img src="${friend.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(friend.username)}`}" 
-                   alt="${friend.username}" 
-                   class="w-12 h-12 rounded-full object-cover transition-transform duration-300">
-              <div class="status-indicator ${friend.online ? 'status-online' : 'status-offline'}"></div>
-            </a>
-          </div>
-          
-          <div class="flex-1 min-w-0">
-            <a href="profile.html?id=${friend.id}" class="hover:text-purple-600 transition-colors">
-              <h4 class="font-medium truncate">
-                ${friend.displayName || friend.username}
-              </h4>
-              <p class="text-xs text-gray-500">
-                ${friend.online ? 'Online' : 'Offline'}
-              </p>
-            </a>
-          </div>
-          
-          <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button onclick="openChat('${friend.id}')" 
-                    class="action-btn text-purple-600 hover:text-purple-700"
-                    title="Iniciar chat">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-              </svg>
-            </button>
+      return `
+        <div class="friend-card group">
+          <div class="flex items-center gap-3">
+            <div class="relative">
+              <a href="profile.html?id=${friend.id}" class="block">
+                <img src="${friend.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(friend.username)}`}" 
+                     alt="${friend.username}" 
+                     class="w-12 h-12 rounded-full object-cover transition-transform duration-300">
+                <div class="status-indicator ${friend.online ? 'status-online' : 'status-offline'}"></div>
+              </a>
+            </div>
             
-            <button onclick="removeFriend('${friend.id}')" 
-                    class="action-btn text-red-600 hover:text-red-700"
-                    title="Remover amigo">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-              </svg>
-            </button>
+            <div class="flex-1 min-w-0">
+              <a href="profile.html?id=${friend.id}" class="hover:text-purple-600 transition-colors">
+                <h4 class="font-medium truncate">
+                  ${friend.displayName || friend.username}
+                </h4>
+                <p class="text-xs text-gray-500">
+                  ${friend.online ? 'Online' : 'Offline'}
+                </p>
+              </a>
+            </div>
+            
+            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button onclick="openChat('${friend.id}')" 
+                      class="action-btn text-purple-600 hover:text-purple-700"
+                      title="Iniciar chat">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                </svg>
+              </button>
+              
+              <button onclick="removeFriend('${friend.id}')" 
+                      class="action-btn text-red-600 hover:text-red-700"
+                      title="Remover amigo">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    `;
-  }).join('');
+      `;
+    }).join('');
+  } catch (error) {
+    console.error("Erro ao carregar amigos:", error);
+    friendsList.innerHTML = '<p class="text-center text-red-500">Erro ao carregar lista de amigos</p>';
+  }
 }
 
 // Carrega e exibe solicitações de amizade pendentes para um usuário
-function loadFriendRequests(user) {
+async function loadFriendRequests(user) {
   const requestsContainer = document.getElementById('friend-requests');
   const requests = user.friendRequests || [];
-  const users = JSON.parse(localStorage.getItem('animuUsers')) || [];
+  
+  try {
+    // Usa o UserManager para carregar todos os usuários
+    const users = await userManager.loadUsers();
 
-  if (requests.length === 0) {
-    requestsContainer.style.display = 'none';
-    return;
-  }
+    if (requests.length === 0) {
+      requestsContainer.style.display = 'none';
+      return;
+    }
 
-  requestsContainer.style.display = 'block';
-  const requestsList = requestsContainer.querySelector('div');
-  requestsList.innerHTML = requests.map(requestId => {
-    const requester = users.find(u => u.id === requestId);
-    if (!requester) return '';
+    requestsContainer.style.display = 'block';
+    const requestsList = requestsContainer.querySelector('div');
+    requestsList.innerHTML = requests.map(requestId => {
+      const requester = users.find(u => u.id === requestId);
+      if (!requester) return '';
 
-    return `
-      <div class="friend-request-card">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <img src="${requester.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(requester.username)}`}" 
-                 alt="${requester.username}" 
-                 class="w-10 h-10 rounded-full">
-            <div>
-              <h4 class="font-medium">${requester.displayName || requester.username}</h4>
-              <p class="text-xs text-gray-500">Quer ser seu amigo</p>
+      return `
+        <div class="friend-request-card">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <img src="${requester.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(requester.username)}`}" 
+                   alt="${requester.username}" 
+                   class="w-10 h-10 rounded-full">
+              <div>
+                <h4 class="font-medium">${requester.displayName || requester.username}</h4>
+                <p class="text-xs text-gray-500">Quer ser seu amigo</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <button onclick="acceptFriendRequest('${requester.id}')" 
+                      class="text-green-500 hover:text-green-600 transition-colors"
+                      title="Aceitar solicitação">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                        d="M5 13l4 4L19 7"/>
+                </svg>
+              </button>
+              <button onclick="rejectFriendRequest('${requester.id}')" 
+                      class="text-red-500 hover:text-red-600 transition-colors"
+                      title="Recusar solicitação">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                        d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
             </div>
           </div>
-          <div class="flex items-center gap-3">
-            <button onclick="acceptFriendRequest('${requester.id}')" 
-                    class="text-green-500 hover:text-green-600 transition-colors"
-                    title="Aceitar solicitação">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                      d="M5 13l4 4L19 7"/>
-              </svg>
-            </button>
-            <button onclick="rejectFriendRequest('${requester.id}')" 
-                    class="text-red-500 hover:text-red-600 transition-colors"
-                    title="Recusar solicitação">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                      d="M6 18L18 6M6 6l12 12"/>
-              </svg>
-            </button>
-          </div>
         </div>
-      </div>
-    `;
-  }).join('');
+      `;
+    }).join('');
+  } catch (error) {
+    console.error("Erro ao carregar solicitações de amizade:", error);
+  }
 }
 
 // Exibe o modal para adicionar amigos, limpando os campos de busca
@@ -960,42 +968,49 @@ function setupFriendSearchListener() {
       return;
     }
 
-    const users = JSON.parse(localStorage.getItem('animuUsers')) || [];
-    const currentUser = JSON.parse(localStorage.getItem('userSession'));
-    const filteredUsers = users.filter(user =>
-      user.id !== currentUser.userId &&
-      (user.username.toLowerCase().includes(query) ||
-        (user.displayName && user.displayName.toLowerCase().includes(query)))
-    );
+    try {
+      // Usa o UserManager para carregar os usuários
+      const users = await userManager.loadUsers();
+      const currentUser = JSON.parse(localStorage.getItem('userSession'));
+      
+      const filteredUsers = users.filter(user =>
+        user.id !== currentUser.userId &&
+        (user.username.toLowerCase().includes(query) ||
+          (user.displayName && user.displayName.toLowerCase().includes(query)))
+      );
 
-    // Verifica se o usuário já é amigo ou se já existe uma solicitação pendente
-    resultsContainer.innerHTML = filteredUsers.length ?
-      filteredUsers.map(user => {
-        const targetUser = users.find(u => u.id === user.id);
-        const isAlreadyFriend = targetUser.friends?.includes(currentUser.userId);
-        const hasPendingRequest = targetUser.friendRequests?.includes(currentUser.userId);
+      // Verifica se o usuário já é amigo ou se já existe uma solicitação pendente
+      resultsContainer.innerHTML = filteredUsers.length ?
+        filteredUsers.map(user => {
+          const targetUser = users.find(u => u.id === user.id);
+          const isAlreadyFriend = targetUser.friends?.includes(currentUser.userId);
+          const hasPendingRequest = targetUser.friendRequests?.includes(currentUser.userId);
 
-        return `
-          <div class="flex items-center justify-between p-2">
-            <div class="flex items-center gap-2">
-              <img src="${user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}`}" 
-                   alt="${user.username}" 
-                   class="w-8 h-8 rounded-full">
-              <span>${user.displayName || user.username}</span>
+          return `
+            <div class="flex items-center justify-between p-2">
+              <div class="flex items-center gap-2">
+                <img src="${user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}`}" 
+                     alt="${user.username}" 
+                     class="w-8 h-8 rounded-full">
+                <span>${user.displayName || user.username}</span>
+              </div>
+              ${isAlreadyFriend ?
+              '<span class="text-sm text-gray-500">Já é amigo</span>' :
+              hasPendingRequest ?
+                '<span class="text-sm text-gray-500">Solicitação pendente</span>' :
+                `<button onclick="sendFriendRequest('${user.id}')" 
+                        class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded-lg transition-colors">
+                  Adicionar
+                </button>`
+            }
             </div>
-            ${isAlreadyFriend ?
-            '<span class="text-sm text-gray-500">Já é amigo</span>' :
-            hasPendingRequest ?
-              '<span class="text-sm text-gray-500">Solicitação pendente</span>' :
-              `<button onclick="sendFriendRequest('${user.id}')" 
-                      class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded-lg transition-colors">
-                Adicionar
-              </button>`
-          }
-          </div>
-        `;
-      }).join('') :
-      '<div class="text-center text-gray-500 dark:text-gray-400 py-8">Nenhum usuário encontrado</div>';
+          `;
+        }).join('') :
+        '<div class="text-center text-gray-500 dark:text-gray-400 py-8">Nenhum usuário encontrado</div>';
+    } catch (error) {
+      console.error("Erro na busca de amigos:", error);
+      resultsContainer.innerHTML = '<div class="text-center text-red-500 py-8">Erro ao buscar usuários</div>';
+    }
   }, 300));
 
   closeModal.addEventListener('click', () => {
@@ -1005,108 +1020,157 @@ function setupFriendSearchListener() {
 }
 
 // Envia pedido de amizade
-function sendFriendRequest(targetUserId) {
-  const users = JSON.parse(localStorage.getItem('animuUsers')) || [];
-  const currentUser = JSON.parse(localStorage.getItem('userSession'));
-  const targetUserIndex = users.findIndex(u => u.id === targetUserId);
-  const currentUserIndex = users.findIndex(u => u.id === currentUser.userId);
+async function sendFriendRequest(targetUserId) {
+  try {
+    // Carrega todos os usuários
+    const users = await userManager.loadUsers();
+    const currentUser = JSON.parse(localStorage.getItem('userSession'));
+    
+    const targetUserIndex = users.findIndex(u => u.id === targetUserId);
+    const currentUserIndex = users.findIndex(u => u.id === currentUser.userId);
 
-  if (targetUserIndex === -1 || currentUserIndex === -1) return;
+    if (targetUserIndex === -1 || currentUserIndex === -1) return;
 
-  const targetUser = users[targetUserIndex];
-  const currentUserData = users[currentUserIndex];
+    const targetUser = users[targetUserIndex];
+    const currentUserData = users[currentUserIndex];
 
-  // Verifica se já existe uma solicitação ou se já são amigos
-  if (targetUser.friendRequests?.includes(currentUser.userId) || targetUser.friends?.includes(currentUser.userId)) return;
+    // Verifica se já existe uma solicitação ou se já são amigos
+    if (targetUser.friendRequests?.includes(currentUser.userId) || targetUser.friends?.includes(currentUser.userId)) return;
 
-  // Nova verificação: se o usuário atual tem uma solicitação pendente do usuário alvo
-  if (currentUserData.friendRequests?.includes(targetUserId)) {
+    // Nova verificação: se o usuário atual tem uma solicitação pendente do usuário alvo
+    if (currentUserData.friendRequests?.includes(targetUserId)) {
+      const button = event.target;
+      button.disabled = true;
+      button.textContent = 'Solicitação pendente recebida';
+      button.classList.remove('bg-purple-500', 'hover:bg-purple-600');
+      button.classList.add('bg-gray-400');
+      return;
+    }
+
+    // Inicializa o array de solicitações se não existir
+    if (!targetUser.friendRequests) targetUser.friendRequests = [];
+
+    // Adiciona a solicitação
+    targetUser.friendRequests.push(currentUser.userId);
+    
+    // Salva as alterações no usuário alvo
+    await userManager.saveUser(targetUser);
+
+    // Atualiza a interface
     const button = event.target;
     button.disabled = true;
-    button.textContent = 'Solicitação pendente recebida';
+    button.textContent = 'Solicitação enviada';
     button.classList.remove('bg-purple-500', 'hover:bg-purple-600');
     button.classList.add('bg-gray-400');
-    return;
+
+    // Mostra uma notificação
+    const notification = document.createElement('div');
+    notification.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg';
+    notification.textContent = 'Solicitação de amizade enviada!';
+    document.body.appendChild(notification);
+
+    // Remove a notificação após 3 segundos
+    setTimeout(() => { 
+      notification.remove(); 
+    }, 3000);
+  } catch (error) {
+    console.error("Erro ao enviar solicitação de amizade:", error);
+    alert("Ocorreu um erro ao enviar a solicitação de amizade.");
   }
-
-  // Inicializa o array de solicitações se não existir
-  if (!users[targetUserIndex].friendRequests) users[targetUserIndex].friendRequests = [];
-
-  // Adiciona a solicitação
-  users[targetUserIndex].friendRequests.push(currentUser.userId);
-  localStorage.setItem('animuUsers', JSON.stringify(users));
-
-  // Atualiza a interface
-  const button = event.target;
-  button.disabled = true;
-  button.textContent = 'Solicitação enviada';
-  button.classList.remove('bg-purple-500', 'hover:bg-purple-600');
-  button.classList.add('bg-gray-400');
-
-  // Mostra uma notificação
-  const notification = document.createElement('div');
-  notification.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg';
-  notification.textContent = 'Solicitação de amizade enviada!';
-  document.body.appendChild(notification);
-
-  // Remove a notificação após 3 segundos
-  setTimeout(() => { 
-    notification.remove(); 
-  }, 3000);
 }
 
 // Aceita uma solicitação de amizade e atualiza as listas de amigos dos usuários envolvidos
-function acceptFriendRequest(requesterId) {
-  const users = JSON.parse(localStorage.getItem('animuUsers')) || [];
-  const currentUser = JSON.parse(localStorage.getItem('userSession'));
-  const currentUserIndex = users.findIndex(u => u.id === currentUser.userId);
-  const requesterIndex = users.findIndex(u => u.id === requesterId);
+async function acceptFriendRequest(requesterId) {
+  try {
+    // Carrega todos os usuários
+    const users = await userManager.loadUsers();
+    const currentUser = JSON.parse(localStorage.getItem('userSession'));
+    
+    const currentUserIndex = users.findIndex(u => u.id === currentUser.userId);
+    const requesterIndex = users.findIndex(u => u.id === requesterId);
 
-  if (currentUserIndex === -1 || requesterIndex === -1) return;
+    if (currentUserIndex === -1 || requesterIndex === -1) return;
 
-  // Remove a solicitação e adiciona à lista de amigos de ambos
-  users[currentUserIndex].friendRequests = users[currentUserIndex].friendRequests.filter(id => id !== requesterId);
-  users[currentUserIndex].friends = users[currentUserIndex].friends || [];
-  users[requesterIndex].friends = users[requesterIndex].friends || [];
+    // Obtém os objetos de usuário
+    const currentUserData = users[currentUserIndex];
+    const requesterData = users[requesterIndex];
 
-  users[currentUserIndex].friends.push(requesterId);
-  users[requesterIndex].friends.push(currentUser.userId);
+    // Remove a solicitação e adiciona à lista de amigos de ambos
+    currentUserData.friendRequests = currentUserData.friendRequests.filter(id => id !== requesterId);
+    currentUserData.friends = currentUserData.friends || [];
+    requesterData.friends = requesterData.friends || [];
 
-  localStorage.setItem('animuUsers', JSON.stringify(users));
-  window.location.reload();
+    currentUserData.friends.push(requesterId);
+    requesterData.friends.push(currentUser.userId);
+
+    // Salva as alterações em ambos os usuários
+    await userManager.saveUser(currentUserData);
+    await userManager.saveUser(requesterData);
+    
+    window.location.reload();
+  } catch (error) {
+    console.error("Erro ao aceitar solicitação de amizade:", error);
+    alert("Ocorreu um erro ao aceitar a solicitação de amizade.");
+  }
 }
 
 // Rejeita uma solicitação de amizade removendo o ID do solicitante da lista de pedidos pendentes
-function rejectFriendRequest(requesterId) {
-  const users = JSON.parse(localStorage.getItem('animuUsers')) || [];
-  const currentUser = JSON.parse(localStorage.getItem('userSession'));
-  const currentUserIndex = users.findIndex(u => u.id === currentUser.userId);
+async function rejectFriendRequest(requesterId) {
+  try {
+    // Carrega todos os usuários
+    const users = await userManager.loadUsers();
+    const currentUser = JSON.parse(localStorage.getItem('userSession'));
+    const currentUserIndex = users.findIndex(u => u.id === currentUser.userId);
 
-  if (currentUserIndex === -1) return;
+    if (currentUserIndex === -1) return;
 
-  // Remove a solicitação
-  users[currentUserIndex].friendRequests = users[currentUserIndex].friendRequests.filter(id => id !== requesterId);
-  localStorage.setItem('animuUsers', JSON.stringify(users));
-  loadFriendRequests(users[currentUserIndex]);
+    // Obtém o objeto de usuário atualizado
+    const currentUserData = users[currentUserIndex];
+
+    // Remove a solicitação
+    currentUserData.friendRequests = currentUserData.friendRequests.filter(id => id !== requesterId);
+    
+    // Salva as alterações
+    await userManager.saveUser(currentUserData);
+    
+    loadFriendRequests(currentUserData);
+  } catch (error) {
+    console.error("Erro ao rejeitar solicitação de amizade:", error);
+    alert("Ocorreu um erro ao rejeitar a solicitação de amizade.");
+  }
 }
 
 // Remove um amigo da lista de amigos do usuário atual e da lista do amigo removido
-function removeFriend(friendId) {
+async function removeFriend(friendId) {
   if (!confirm('Tem certeza que deseja remover este amigo?')) return;
 
-  const users = JSON.parse(localStorage.getItem('animuUsers')) || [];
-  const currentUser = JSON.parse(localStorage.getItem('userSession'));
-  const currentUserIndex = users.findIndex(u => u.id === currentUser.userId);
-  const friendIndex = users.findIndex(u => u.id === friendId);
+  try {
+    // Carrega todos os usuários
+    const users = await userManager.loadUsers();
+    const currentUser = JSON.parse(localStorage.getItem('userSession'));
+    
+    const currentUserIndex = users.findIndex(u => u.id === currentUser.userId);
+    const friendIndex = users.findIndex(u => u.id === friendId);
 
-  if (currentUserIndex === -1 || friendIndex === -1) return;
+    if (currentUserIndex === -1 || friendIndex === -1) return;
 
-  // Remove da lista de amigos de ambos os usuários
-  users[currentUserIndex].friends = users[currentUserIndex].friends.filter(id => id !== friendId);
-  users[friendIndex].friends = users[friendIndex].friends.filter(id => id !== currentUser.userId);
+    // Obtém os objetos de usuário
+    const currentUserData = users[currentUserIndex];
+    const friendData = users[friendIndex];
 
-  localStorage.setItem('animuUsers', JSON.stringify(users));
-  window.location.reload();
+    // Remove da lista de amigos de ambos os usuários
+    currentUserData.friends = currentUserData.friends.filter(id => id !== friendId);
+    friendData.friends = friendData.friends.filter(id => id !== currentUser.userId);
+
+    // Salva as alterações em ambos os usuários
+    await userManager.saveUser(currentUserData);
+    await userManager.saveUser(friendData);
+    
+    window.location.reload();
+  } catch (error) {
+    console.error("Erro ao remover amigo:", error);
+    alert("Ocorreu um erro ao remover o amigo.");
+  }
 }
 
 /**

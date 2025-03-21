@@ -1,10 +1,13 @@
 // Classe para gerenciamento de categorias
-class CategoryManager {
+class CategoryAdmin {
   constructor() {
     // Adiciona variáveis para controlar o estado do formulário
     this.initialFormState = null;
     this.isFormSaving = false;
     this.firebaseLoaded = false; // Controla se já carregamos do Firebase
+    
+    // Inicializa o gerenciador de Firestore
+    this.categoryFirestore = new CategoryManager();
 
     this.setupFormVisibility();
     this.loadCategoriesFromFirebase(); // Carrega categorias do Firebase primeiro
@@ -463,37 +466,20 @@ class CategoryManager {
 
   // Salva uma nova categoria no localStorage e atualiza a interface
   async saveCategory(categoryData) {
-    const categories = this.getCategories();
-
-    // Adiciona campo isSubcategory e normaliza os dados
-    const newCategory = {
-      ...categoryData,
-      // Obtém o valor correto do radio button
-      isSubcategory: categoryData.isSubcategory,
-      name: categoryData.name.trim(),
-      description: categoryData.description.trim(),
-      icon: categoryData.icon.trim()
-    };
-
-    // Verifica se já existe uma categoria com o mesmo nome
-    if (categories.some(cat => cat.name.toLowerCase() === newCategory.name.toLowerCase())) throw new Error('Já existe uma categoria com este nome');
-
-    // Se não existirem categorias ainda, cria um array
-    const updatedCategories = categories.length ? categories : [];
-    updatedCategories.push(newCategory);
-
-    // Salva no localStorage
     try {
-      localStorage.setItem('animuCategories', JSON.stringify(updatedCategories));
+      // Utiliza o CategoryManager para adicionar categoria
+      const result = await this.categoryFirestore.addCategory(categoryData);
+      
+      if (result.success) {
+        // Atualiza a lista de categorias na página
+        this.loadCategories();
 
-      // Salva no Firebase também
-      await this.saveCategoriesOnFirebase();
-
-      // Atualiza a lista de categorias na página
-      this.loadCategories();
-
-      // Força a atualização da página de categorias se ela estiver aberta em outra aba
-      window.dispatchEvent(new Event('categoriesUpdated'));
+        // Força a atualização da página de categorias se ela estiver aberta em outra aba
+        window.dispatchEvent(new Event('categoriesUpdated'));
+        return true;
+      } else {
+        throw new Error(result.message);
+      }
     } catch (error) {
       throw new Error('Erro ao salvar categoria: ' + error.message);
     }
@@ -501,27 +487,16 @@ class CategoryManager {
 
   // Atualiza uma categoria existente na lista de categoria
   async updateCategory(categoryData) {
-    const categories = this.getCategories();
-
-    // Verifica se existe outra categoria com o mesmo nome (exceto a própria)
-    if (categories.some(cat =>
-      cat.id !== categoryData.id &&
-      cat.name.toLowerCase() === categoryData.name.toLowerCase()
-    )) throw new Error('Já existe uma categoria com este nome');
-
-    // Atualiza a categoria
-    const updatedCategories = categories.map(cat =>
-      cat.id === categoryData.id ? categoryData : cat
-    );
-
-    // Salva no localStorage
     try {
-      localStorage.setItem('animuCategories', JSON.stringify(updatedCategories));
+      // Utiliza o CategoryManager para atualizar categoria
+      const result = await this.categoryFirestore.updateCategory(categoryData);
       
-      // Salva no Firebase também
-      await this.saveCategoriesOnFirebase();
-      
-      window.dispatchEvent(new Event('categoriesUpdated'));
+      if (result.success) {
+        window.dispatchEvent(new Event('categoriesUpdated'));
+        return true;
+      } else {
+        throw new Error(result.message);
+      }
     } catch (error) {
       throw new Error('Erro ao atualizar categoria: ' + error.message);
     }
@@ -680,19 +655,16 @@ class CategoryManager {
     if (!confirm('Tem certeza que deseja excluir esta categoria?')) return;
 
     try {
-      const categories = this.getCategories();
-      const updatedCategories = categories.filter(cat => cat.id !== categoryId);
-
-      // Atualiza o localStorage
-      localStorage.setItem('animuCategories', JSON.stringify(updatedCategories));
+      // Utiliza o CategoryManager para excluir categoria
+      const result = await this.categoryFirestore.deleteCategory(categoryId);
       
-      // Atualiza no Firebase também
-      await this.saveCategoriesOnFirebase();
-
-      // Recarrega a lista de categorias
-      this.loadCategories();
-
-      alert('Categoria excluída com sucesso!');
+      if (result.success) {
+        // Recarrega a lista de categorias
+        this.loadCategories();
+        alert('Categoria excluída com sucesso!');
+      } else {
+        alert('Erro ao excluir categoria: ' + result.message);
+      }
     } catch (error) {
       alert('Erro ao excluir categoria: ' + error.message);
     }
@@ -812,36 +784,70 @@ class CategoryManager {
   }
 
   // Adiciona este novo método
-  updateStatistics() {
-    const categories = this.getCategories();
-    
-    // Atualiza total de categorias
-    const totalElement = document.getElementById('total-categories');
-    if (totalElement) totalElement.textContent = categories.length;
-    
-    // Conta categorias principais
-    const mainCount = categories.filter(cat => !cat.isSubcategory).length;
-    const mainElement = document.getElementById('main-categories');
-    if (mainElement) mainElement.textContent = mainCount;
-    
-    // Conta subcategorias
-    const subCount = categories.filter(cat => cat.isSubcategory).length;
-    const subElement = document.getElementById('sub-categories');
-    if (subElement) subElement.textContent = subCount;
+  async updateStatistics() {
+    try {
+      // Utiliza o CategoryManager para obter estatísticas
+      const result = await this.categoryFirestore.getCategoryStats();
+      
+      if (result.success) {
+        const { stats } = result;
+        
+        // Atualiza total de categorias
+        const totalElement = document.getElementById('total-categories');
+        if (totalElement) totalElement.textContent = stats.total;
+        
+        // Atualiza categorias principais
+        const mainElement = document.getElementById('main-categories');
+        if (mainElement) mainElement.textContent = stats.main;
+        
+        // Atualiza subcategorias
+        const subElement = document.getElementById('sub-categories');
+        if (subElement) subElement.textContent = stats.sub;
+      } else {
+        // Fallback para cálculo local se houver erro
+        const categories = this.getCategories();
+        
+        // Atualiza total de categorias
+        const totalElement = document.getElementById('total-categories');
+        if (totalElement) totalElement.textContent = categories.length;
+        
+        // Conta categorias principais
+        const mainCount = categories.filter(cat => !cat.isSubcategory).length;
+        const mainElement = document.getElementById('main-categories');
+        if (mainElement) mainElement.textContent = mainCount;
+        
+        // Conta subcategorias
+        const subCount = categories.filter(cat => cat.isSubcategory).length;
+        const subElement = document.getElementById('sub-categories');
+        if (subElement) subElement.textContent = subCount;
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar estatísticas:', error);
+      // Fallback para método antigo em caso de erro
+      const categories = this.getCategories();
+      const totalElement = document.getElementById('total-categories');
+      if (totalElement) totalElement.textContent = categories.length;
+      
+      const mainCount = categories.filter(cat => !cat.isSubcategory).length;
+      const mainElement = document.getElementById('main-categories');
+      if (mainElement) mainElement.textContent = mainCount;
+      
+      const subCount = categories.filter(cat => cat.isSubcategory).length;
+      const subElement = document.getElementById('sub-categories');
+      if (subElement) subElement.textContent = subCount;
+    }
   }
 
   // Carrega categorias do Firebase
   async loadCategoriesFromFirebase() {
     try {
       console.log('Tentando carregar categorias do Firebase...');
-      const snapshot = await db.collection('categories').doc('categoriesList').get();
       
-      if (snapshot.exists && snapshot.data() && snapshot.data().items) {
-        const categoriesData = snapshot.data().items;
-        console.log('Categorias encontradas no Firebase:', categoriesData.length);
-        
-        // Salva no localStorage
-        localStorage.setItem('animuCategories', JSON.stringify(categoriesData));
+      // Utiliza o CategoryManager para carregar categorias
+      const result = await this.categoryFirestore.loadCategories();
+      
+      if (result.success) {
+        console.log('Categorias carregadas com sucesso do Firebase:', result.data.length);
         this.firebaseLoaded = true;
         this.loadCategories(); // Atualiza a interface
       } else {
@@ -851,7 +857,7 @@ class CategoryManager {
         if (localCategories && localCategories.length > 0) {
           console.log('Dados locais encontrados, salvando no Firebase...');
           this.firebaseLoaded = true;
-          await this.saveCategoriesOnFirebase(); // Salva os dados locais no Firebase
+          await this.categoryFirestore.saveCategories(localCategories);
         }
         
         this.loadCategories(); // Carrega do localStorage se não houver no Firebase
@@ -873,19 +879,20 @@ class CategoryManager {
         return;
       }
       
-      // Não verifica mais firebaseLoaded para garantir que sempre tente salvar
-      await db.collection('categories').doc('categoriesList').set({
-        items: categories,
-        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-      });
+      // Utiliza o CategoryManager para salvar categorias
+      const result = await this.categoryFirestore.saveCategories(categories);
       
-      console.log('Categorias salvas no Firebase com sucesso:', categories.length, 'categorias');
-      this.firebaseLoaded = true;  // Marca como carregado após salvar com sucesso
-      
-      // Dispara evento personalizado para notificar que as categorias foram atualizadas
-      window.dispatchEvent(new CustomEvent('categoriesSaved', { 
-        detail: { count: categories.length }
-      }));
+      if (result.success) {
+        console.log('Categorias salvas no Firebase com sucesso:', categories.length, 'categorias');
+        this.firebaseLoaded = true;  // Marca como carregado após salvar com sucesso
+        
+        // Dispara evento personalizado para notificar que as categorias foram atualizadas
+        window.dispatchEvent(new CustomEvent('categoriesSaved', { 
+          detail: { count: categories.length }
+        }));
+      } else {
+        console.error('Erro ao salvar no Firebase:', result.message);
+      }
     } catch (error) {
       console.error('Erro ao salvar categorias no Firebase:', error);
       alert(`Erro ao salvar no Firebase: ${error.message}. Verifique o console para mais detalhes.`);
@@ -896,6 +903,6 @@ class CategoryManager {
 // Inicializa quando o DOM estiver carregado
 document.addEventListener('DOMContentLoaded', () => {
   // Verifica se o usuário tem permissão de admin
-  const manager = new CategoryManager();
+  const manager = new CategoryAdmin();
   if (manager.checkAdminAccess()) window.categoryManager = manager; // Torna acessível globalmente para os event handlers
 });

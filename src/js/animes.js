@@ -56,7 +56,7 @@ function getYouTubeEmbedUrl(url) {
 const STAFF_LIMIT = 6; // Limite inicial de membros da staff mostrados
 
 // Renderiza detalhes completos do anime na página
-function renderAnimeDetails(anime) {
+async function renderAnimeDetails(anime) {
   const container = document.getElementById('anime-content');
   const commentsSection = document.getElementById('comments-section');
 
@@ -246,7 +246,11 @@ function renderAnimeDetails(anime) {
   updateFavoriteButton(anime.primaryTitle);
 
   // Adiciona renderização de animes relacionados após renderizar os detalhes do anime
-  renderRelatedAnimes(anime);
+  try {
+    await renderRelatedAnimes(anime);
+  } catch (error) {
+    console.error('Erro ao renderizar animes relacionados:', error);
+  }
 
   // Adicione esta linha antes do return
   initParallax();
@@ -1312,105 +1316,111 @@ async function findRelatedAnimes(currentAnime, limit = 10) {
 }
 
 // Renderiza carrossel de animes relacionados com Swiper
-function renderRelatedAnimes(currentAnime) {
+async function renderRelatedAnimes(currentAnime) {
   const relatedSection = document.getElementById('related-animes-section');
   const swiperWrapper = document.getElementById('related-animes-wrapper');
   
   if (!relatedSection || !swiperWrapper || !currentAnime) return;
 
-  const relatedAnimes = findRelatedAnimes(currentAnime);
-  
-  if (relatedAnimes.length === 0) {
-    relatedSection.style.display = 'none';
-    return;
-  }
-
-  // Mostra a seção
-  relatedSection.style.display = 'block';
-  
-  // Renderiza os cards
-  swiperWrapper.innerHTML = relatedAnimes.map(anime => `
-    <div class="swiper-slide">
-      <a href="animes.html?anime=${encodeURIComponent(anime.primaryTitle)}" class="anime-card">
-        <div class="image-wrapper">
-          <img 
-            src="${anime.coverImage}" 
-            alt="${anime.primaryTitle}" 
-            class="anime-image"
-            onerror="this.src='https://ui-avatars.com/api/?name=Anime&background=8B5CF6&color=fff'">
-          
-          <div class="quick-info">
-            <span class="info-pill">⭐ ${Number(anime.score).toFixed(1)}</span>
-            <span class="info-pill">
-              <svg class="meta-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-4h2v2h-2v-2zm0-2h2V7h-2v7z"/>
-              </svg>
-              ${anime.episodes > 0 ? anime.episodes : '?'} eps
-            </span>
-          </div>
-        </div>
-
-        <div class="anime-info">
-          <h3 class="anime-title line-clamp-2">${anime.primaryTitle}</h3>
-          <div class="anime-meta">
-            <span class="meta-item">
-              <svg class="meta-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18z"/>
-              </svg>
-              ${(JSON.parse(localStorage.getItem('animeComments')) || {})[anime.primaryTitle]?.length || 0}
-            </span>
-            <button 
-              class="meta-item favorite-count ${isAnimeFavorited(anime.primaryTitle) ? 'is-favorited' : ''}"
-              onclick="event.preventDefault(); toggleFavoriteFromCard('${anime.primaryTitle}')"
-            >
-              <svg class="meta-icon heart-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-              </svg>
-              <span class="favorite-number">${countAnimeFavorites(anime.primaryTitle)}</span>
-            </button>
-          </div>
-        </div>
-      </a>
-    </div>
-  `).join('');
-
-  // Inicializa o Swiper
-  new Swiper('.related-swiper', {
-    slidesPerView: 2,
-    spaceBetween: 20,
-    loop: true,
-    autoplay: {
-      delay: 3000,
-      disableOnInteraction: false,
-      pauseOnMouseEnter: true
-    },
-    pagination: {
-      el: '.related-pagination',
-      clickable: true,
-      dynamicBullets: true,
-    },
-    navigation: {
-      nextEl: '.related-swiper .swiper-button-next',
-      prevEl: '.related-swiper .swiper-button-prev',
-    },
-    breakpoints: {
-      // quando a largura da janela é >= 640px
-      640: {
-        slidesPerView: 3,
-        spaceBetween: 20
-      },
-      // quando a largura da janela é >= 768px
-      768: {
-        slidesPerView: 4,
-        spaceBetween: 20
-      },
-      // quando a largura da janela é >= 1024px
-      1024: {
-        slidesPerView: 5,
-        spaceBetween: 20
-      }
+  try {
+    // Aguarda a resolução da Promise de findRelatedAnimes
+    const relatedAnimes = await findRelatedAnimes(currentAnime);
+    
+    if (!relatedAnimes || relatedAnimes.length === 0) {
+      relatedSection.style.display = 'none';
+      return;
     }
-  });
+
+    // Mostra a seção
+    relatedSection.style.display = 'block';
+    
+    // Renderiza os cards
+    swiperWrapper.innerHTML = relatedAnimes.map(anime => `
+      <div class="swiper-slide">
+        <a href="animes.html?anime=${encodeURIComponent(anime.primaryTitle)}" class="anime-card">
+          <div class="image-wrapper">
+            <img 
+              src="${anime.coverImage}" 
+              alt="${anime.primaryTitle}" 
+              class="anime-image"
+              onerror="this.src='https://ui-avatars.com/api/?name=Anime&background=8B5CF6&color=fff'">
+            
+            <div class="quick-info">
+              <span class="info-pill">⭐ ${Number(anime.score).toFixed(1)}</span>
+              <span class="info-pill">
+                <svg class="meta-icon" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-4h2v2h-2v-2zm0-2h2V7h-2v7z"/>
+                </svg>
+                ${anime.episodes > 0 ? anime.episodes : '?'} eps
+              </span>
+            </div>
+          </div>
+
+          <div class="anime-info">
+            <h3 class="anime-title line-clamp-2">${anime.primaryTitle}</h3>
+            <div class="anime-meta">
+              <span class="meta-item">
+                <svg class="meta-icon" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18z"/>
+                </svg>
+                ${(JSON.parse(localStorage.getItem('animeComments')) || {})[anime.primaryTitle]?.length || 0}
+              </span>
+              <button 
+                class="meta-item favorite-count ${isAnimeFavorited(anime.primaryTitle) ? 'is-favorited' : ''}"
+                onclick="event.preventDefault(); toggleFavoriteFromCard('${anime.primaryTitle}')"
+              >
+                <svg class="meta-icon heart-icon" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                </svg>
+                <span class="favorite-number">${countAnimeFavorites(anime.primaryTitle)}</span>
+              </button>
+            </div>
+          </div>
+        </a>
+      </div>
+    `).join('');
+
+    // Inicializa o Swiper
+    new Swiper('.related-swiper', {
+      slidesPerView: 2,
+      spaceBetween: 20,
+      loop: true,
+      autoplay: {
+        delay: 3000,
+        disableOnInteraction: false,
+        pauseOnMouseEnter: true
+      },
+      pagination: {
+        el: '.related-pagination',
+        clickable: true,
+        dynamicBullets: true,
+      },
+      navigation: {
+        nextEl: '.related-swiper .swiper-button-next',
+        prevEl: '.related-swiper .swiper-button-prev',
+      },
+      breakpoints: {
+        // quando a largura da janela é >= 640px
+        640: {
+          slidesPerView: 3,
+          spaceBetween: 20
+        },
+        // quando a largura da janela é >= 768px
+        768: {
+          slidesPerView: 4,
+          spaceBetween: 20
+        },
+        // quando a largura da janela é >= 1024px
+        1024: {
+          slidesPerView: 5,
+          spaceBetween: 20
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Erro ao renderizar animes relacionados:', error);
+    relatedSection.style.display = 'none';
+  }
 }
 
 // Inicialização da página
@@ -1435,7 +1445,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       }
     } else if (animeTitle) {
       const anime = await findAnimeByTitle(decodeURIComponent(animeTitle));
-      renderAnimeDetails(anime);
+      await renderAnimeDetails(anime);
 
       // Adiciona handler para o formulário de comentários
       const commentForm = document.getElementById('comment-form');

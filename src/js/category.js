@@ -3,58 +3,58 @@ class CategoryDisplay {
   constructor() {
     this.mainContainer = document.getElementById('main-categories');
     this.subContainer = document.getElementById('subcategories');
-    this.firebaseLoaded = false; // Flag para controlar se já carregamos do Firebase
+    this.categoryManager = new CategoryManager(); // Instância do CategoryManager
     this.initialize();
     
     // Recarrega categorias quando houver atualizações
     window.addEventListener('categoriesUpdated', () => this.renderCategories());
   }
 
-  initialize() {
-    // Tenta carregar do Firebase primeiro
-    this.loadCategoriesFromFirebase()
-      .catch(error => {
-        console.error('Erro ao carregar categorias do Firebase:', error);
-        // Em caso de erro, carrega do localStorage
-        this.renderCategories();
-      });
+  async initialize() {
+    try {
+      // Inicializa o CategoryManager e carrega categorias
+      await this.loadCategories();
+    } catch (error) {
+      console.error('Erro ao inicializar categorias:', error);
+      // Em caso de erro, tenta renderizar com dados do localStorage
+      this.renderCategories();
+    }
     
     this.setupEventListeners();
   }
 
-  // Função para carregar categorias do Firebase
-  async loadCategoriesFromFirebase() {
+  // Função para carregar categorias usando CategoryManager
+  async loadCategories() {
     try {
-      console.log('Carregando categorias do Firebase...');
+      console.log('Carregando categorias usando CategoryManager...');
       
-      // Verifica se o Firebase está disponível
-      if (typeof firebase === 'undefined' || !firebase.firestore) {
-        console.warn('Firebase não está disponível. Carregando do localStorage.');
+      // Primeiro tenta sincronizar categorias (local com remoto)
+      const syncResult = await this.categoryManager.syncCategories();
+      
+      if (syncResult.success) {
+        console.log('Categorias sincronizadas com sucesso');
         this.renderCategories();
         return;
       }
       
-      const snapshot = await firebase.firestore().collection('categories').doc('categoriesList').get();
+      // Se a sincronização falhar, tenta carregar diretamente
+      const result = await this.categoryManager.loadCategories();
       
-      if (snapshot.exists && snapshot.data() && snapshot.data().items) {
-        const categoriesData = snapshot.data().items;
-        console.log('Categorias encontradas no Firebase:', categoriesData.length);
-        
-        // Salva no localStorage para uso offline
-        localStorage.setItem('animuCategories', JSON.stringify(categoriesData));
-        this.firebaseLoaded = true;
-        this.renderCategories(); // Atualiza a interface com dados do Firebase
+      if (result.success) {
+        console.log('Categorias carregadas com sucesso:', result.data.length);
+        this.renderCategories();
       } else {
-        console.log('Nenhuma categoria encontrada no Firebase, usando dados locais');
-        this.renderCategories(); // Carrega do localStorage se não houver no Firebase
+        console.warn('Falha ao carregar categorias:', result.message);
+        this.renderCategories(); // Carrega o que estiver no localStorage como fallback
       }
     } catch (error) {
-      console.error('Erro ao carregar categorias do Firebase:', error);
+      console.error('Erro ao carregar categorias:', error);
       throw error; // Propaga o erro para ser tratado no initialize()
     }
   }
 
   getCategories() {
+    // Obtém categorias do localStorage (CategoryManager já armazena lá)
     const savedCategories = JSON.parse(localStorage.getItem('animuCategories')) || [];
     
     // Inicializa com categorias padrão se não houver dados salvos
@@ -84,7 +84,13 @@ class CategoryDisplay {
         }
       ];
       
+      // Salvar localmente as categorias padrão
       localStorage.setItem('animuCategories', JSON.stringify(defaultCategories));
+      
+      // Também salvamos no Firestore através do CategoryManager
+      this.categoryManager.saveCategories(defaultCategories)
+        .catch(err => console.error('Erro ao salvar categorias padrão:', err));
+        
       return defaultCategories;
     }
     
