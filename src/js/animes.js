@@ -1,3 +1,6 @@
+// Inicializa o gerenciador de animes
+const animeManager = new AnimeManager();
+
 // Extrai parâmetros da URL de forma segura
 function getUrlParameter(name) {
   const urlParams = new URLSearchParams(window.location.search);
@@ -5,12 +8,24 @@ function getUrlParameter(name) {
 }
 
 // Busca anime por título principal ou alternativos
-function findAnimeByTitle(title) {
-  const animes = JSON.parse(localStorage.getItem('animeData')) || [];
-  return animes.find(anime =>
-    anime.primaryTitle.toLowerCase() === title.toLowerCase() ||
-    anime.alternativeTitles.some(alt => alt.title.toLowerCase() === title.toLowerCase())
-  );
+async function findAnimeByTitle(title) {
+  try {
+    // Tenta primeiro obter animes do cache para performance
+    let animes = animeManager.getAnimesFromCache();
+    
+    // Se o cache estiver vazio, carrega do Firestore
+    if (!animes || animes.length === 0) {
+      animes = await animeManager.getAnimes();
+    }
+    
+    return animes.find(anime =>
+      anime.primaryTitle.toLowerCase() === title.toLowerCase() ||
+      anime.alternativeTitles.some(alt => alt.title.toLowerCase() === title.toLowerCase())
+    );
+  } catch (error) {
+    console.error('Erro ao buscar anime por título:', error);
+    return null;
+  }
 }
 
 // Converte URLs do YouTube para formato embed, suportando múltiplos formatos
@@ -284,103 +299,120 @@ function normalizeCategory(category) {
 }
 
 // Exibe lista de animes com filtro opcional por categoria
-function renderAllAnimes() {
+async function renderAllAnimes() {
   const container = document.getElementById('anime-content');
   const commentsSection = document.getElementById('comments-section');
-  const animes = JSON.parse(localStorage.getItem('animeData')) || [];
-  const urlParams = new URLSearchParams(window.location.search);
-  const categoryFilter = urlParams.get('category');
-  const statusFilter = urlParams.get('status');
-  const seasonPeriod = urlParams.get('season');
-  const seasonYear = urlParams.get('year');
-  const currentUser = JSON.parse(localStorage.getItem('userSession'));
+  
+  try {
+    // Tenta primeiro obter animes do cache para performance
+    let animes = animeManager.getAnimesFromCache();
+    
+    // Se o cache estiver vazio, carrega do Firestore
+    if (!animes || animes.length === 0) {
+      animes = await animeManager.getAnimes();
+    }
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const categoryFilter = urlParams.get('category');
+    const statusFilter = urlParams.get('status');
+    const seasonPeriod = urlParams.get('season');
+    const seasonYear = urlParams.get('year');
+    const currentUser = JSON.parse(localStorage.getItem('userSession'));
 
-  if (commentsSection) commentsSection.style.display = 'none';
+    if (commentsSection) commentsSection.style.display = 'none';
 
-  if (!container) return;
+    if (!container) return;
 
-  let filteredAnimes = animes;
-  let pageTitle = 'Todos os Animes';
-  let headerContent = '';
+    let filteredAnimes = animes;
+    let pageTitle = 'Todos os Animes';
+    let headerContent = '';
 
-  // Aplica os filtros existentes
-  if (seasonPeriod && seasonYear) {
-    filteredAnimes = getSeasonalAnimes(seasonPeriod, seasonYear);
-    pageTitle = `Melhores Animes - ${formatSeason({ period: seasonPeriod, year: seasonYear })}`;
-  } else if (statusFilter?.toLowerCase() === 'anunciado') {
-    filteredAnimes = animes.filter(anime => anime.status?.toLowerCase() === 'anunciado')
-      .sort((a, b) => new Date(a.releaseDate) - new Date(b.releaseDate));
-  } else if (categoryFilter) {
-    filteredAnimes = animes.filter(anime =>
-      anime.genres.some(genre => normalizeCategory(genre) === normalizeCategory(categoryFilter))
-    );
-  }
+    // Aplica os filtros existentes
+    if (seasonPeriod && seasonYear) {
+      filteredAnimes = getSeasonalAnimes(seasonPeriod, seasonYear, animes);
+      pageTitle = `Melhores Animes - ${formatSeason({ period: seasonPeriod, year: seasonYear })}`;
+    } else if (statusFilter?.toLowerCase() === 'anunciado') {
+      filteredAnimes = animes.filter(anime => anime.status?.toLowerCase() === 'anunciado')
+        .sort((a, b) => new Date(a.releaseDate) - new Date(b.releaseDate));
+    } else if (categoryFilter) {
+      filteredAnimes = animes.filter(anime =>
+        anime.genres.some(genre => normalizeCategory(genre) === normalizeCategory(categoryFilter))
+      );
+    }
 
-  if (filteredAnimes.length === 0) {
+    if (filteredAnimes.length === 0) {
+      container.innerHTML = `
+        <div class="no-anime-found">
+          <h2>Nenhum anime encontrado</h2>
+          <p>Não encontramos animes ${seasonPeriod ? 
+            `para a temporada ${formatSeason({ period: seasonPeriod, year: seasonYear })}` :
+            statusFilter ? 'com o status: ' + statusFilter :
+            categoryFilter ? 'na categoria: ' + categoryFilter : ''
+          }</p>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = `
+      ${headerContent || `<h1 class="text-3xl font-bold mb-6">${pageTitle}</h1>`}
+      <div class="anime-grid">
+        ${filteredAnimes.map(anime => `
+          <div class="anime-card">
+            <a href="animes.html?anime=${encodeURIComponent(anime.primaryTitle)}" class="anime-card-link">
+              <div class="image-wrapper">
+                <img 
+                  src="${anime.coverImage}" 
+                  alt="${anime.primaryTitle}" 
+                  class="anime-image"
+                  onerror="this.src='https://ui-avatars.com/api/?name=Anime&background=8B5CF6&color=fff'">
+              
+                <div class="quick-info">
+                  <span class="info-pill">⭐ ${Number(anime.score).toFixed(1)}</span>
+                  <span class="info-pill">
+                    <svg class="meta-icon" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-4h2v2h-2v-2zm0-2h2V7h-2v7z"/>
+                    </svg>
+                    ${anime.episodes > 0 ? anime.episodes : '?'} eps
+                  </span>
+                </div>
+              </div>
+
+              <div class="anime-info">
+                <h3 class="anime-title line-clamp-2">${anime.primaryTitle}</h3>
+                <div class="anime-meta">
+                  <span class="meta-item">
+                    <svg class="meta-icon" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18z"/>
+                    </svg>
+                    ${(JSON.parse(localStorage.getItem('animeComments')) || {})[anime.primaryTitle]?.length || 0}
+                  </span>
+                  <button 
+                    class="meta-item favorite-count ${isAnimeFavorited(anime.primaryTitle) ? 'is-favorited' : ''}"
+                    onclick="event.preventDefault(); toggleFavoriteFromCard('${anime.primaryTitle}')"
+                    ${!currentUser ? 'title="Faça login para favoritar"' : ''}
+                  >
+                    <svg class="meta-icon heart-icon" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                    <span class="favorite-number">${countAnimeFavorites(anime.primaryTitle)}</span>
+                  </button>
+                </div>
+              </div>
+            </a>
+          </div>
+        `).join('')}
+      </div>
+    `;
+
+    document.title = pageTitle;
+  } catch (error) {
+    console.error('Erro ao renderizar animes:', error);
     container.innerHTML = `
       <div class="no-anime-found">
-        <h2>Nenhum anime encontrado</h2>
-        <p>Não encontramos animes ${seasonPeriod ? 
-          `para a temporada ${formatSeason({ period: seasonPeriod, year: seasonYear })}` :
-          statusFilter ? 'com o status: ' + statusFilter :
-          categoryFilter ? 'na categoria: ' + categoryFilter : ''
-        }</p>
+        <h2>Erro ao carregar animes</h2>
+        <p>Ocorreu um erro ao carregar os animes. Por favor, tente novamente mais tarde.</p>
       </div>`;
-    return;
   }
-
-  container.innerHTML = `
-    ${headerContent || `<h1 class="text-3xl font-bold mb-6">${pageTitle}</h1>`}
-    <div class="anime-grid">
-      ${filteredAnimes.map(anime => `
-        <div class="anime-card">
-          <a href="animes.html?anime=${encodeURIComponent(anime.primaryTitle)}" class="anime-card-link">
-            <div class="image-wrapper">
-              <img 
-                src="${anime.coverImage}" 
-                alt="${anime.primaryTitle}" 
-                class="anime-image"
-                onerror="this.src='https://ui-avatars.com/api/?name=Anime&background=8B5CF6&color=fff'">
-              
-              <div class="quick-info">
-                <span class="info-pill">⭐ ${Number(anime.score).toFixed(1)}</span>
-                <span class="info-pill">
-                  <svg class="meta-icon" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-4h2v2h-2v-2zm0-2h2V7h-2v7z"/>
-                  </svg>
-                  ${anime.episodes > 0 ? anime.episodes : '?'} eps
-                </span>
-              </div>
-            </div>
-
-            <div class="anime-info">
-              <h3 class="anime-title line-clamp-2">${anime.primaryTitle}</h3>
-              <div class="anime-meta">
-                <span class="meta-item">
-                  <svg class="meta-icon" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18z"/>
-                  </svg>
-                  ${(JSON.parse(localStorage.getItem('animeComments')) || {})[anime.primaryTitle]?.length || 0}
-                </span>
-                <button 
-                  class="meta-item favorite-count ${isAnimeFavorited(anime.primaryTitle) ? 'is-favorited' : ''}"
-                  onclick="event.preventDefault(); toggleFavoriteFromCard('${anime.primaryTitle}')"
-                  ${!currentUser ? 'title="Faça login para favoritar"' : ''}
-                >
-                  <svg class="meta-icon heart-icon" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                  </svg>
-                  <span class="favorite-number">${countAnimeFavorites(anime.primaryTitle)}</span>
-                </button>
-              </div>
-            </div>
-          </a>
-        </div>
-      `).join('')}
-    </div>
-  `;
-
-  document.title = pageTitle;
 }
 
 // Formata temporada para exibição
@@ -391,8 +423,9 @@ function formatSeason(season) {
 }
 
 // Filtra animes por temporada e ordena por pontuação
-function getSeasonalAnimes(period, year) {
-  const animes = JSON.parse(localStorage.getItem('animeData')) || [];
+function getSeasonalAnimes(period, year, animesData) {
+  // Recebe animes como parâmetro em vez de usar localStorage
+  const animes = animesData || animeManager.getAnimesFromCache();
 
   const normalizedPeriod = period.toLowerCase().trim();
   const normalizedYear = parseInt(year);
@@ -407,24 +440,34 @@ function getSeasonalAnimes(period, year) {
 }
 
 // Retorna temporadas disponíveis
-function getAvailableSeasons() {
-  const animes = JSON.parse(localStorage.getItem('animeData')) || [];
-  const seasons = new Set();
+async function getAvailableSeasons() {
+  try {
+    // Tenta primeiro obter animes do cache
+    let animes = animeManager.getAnimesFromCache();
+    
+    // Se o cache estiver vazio, carrega do Firestore
+    if (!animes || animes.length === 0) animes = await animeManager.getAnimes();
+    
+    const seasons = new Set();
 
-  animes.forEach(anime => {
-    if (anime.season?.period && anime.season?.year) seasons.add(`${anime.season.period}-${anime.season.year}`);
-  });
-
-  return Array.from(seasons)
-    .map(s => {
-      const [period, year] = s.split('-');
-      return { period, year: parseInt(year) };
-    })
-    .sort((a, b) => {
-      if (a.year !== b.year) return b.year - a.year;
-      const periods = ['inverno', 'primavera', 'verão', 'outono'];
-      return periods.indexOf(b.period.toLowerCase()) - periods.indexOf(a.period.toLowerCase());
+    animes.forEach(anime => {
+      if (anime.season?.period && anime.season?.year) seasons.add(`${anime.season.period}-${anime.season.year}`);
     });
+
+    return Array.from(seasons)
+      .map(s => {
+        const [period, year] = s.split('-');
+        return { period, year: parseInt(year) };
+      })
+      .sort((a, b) => {
+        if (a.year !== b.year) return b.year - a.year;
+        const periods = ['inverno', 'primavera', 'verão', 'outono'];
+        return periods.indexOf(b.period.toLowerCase()) - periods.indexOf(a.period.toLowerCase());
+      });
+  } catch (error) {
+    console.error('Erro ao obter temporadas disponíveis:', error);
+    return [];
+  }
 }
 
 // Gerencia sistema de comentários
@@ -519,7 +562,7 @@ async function saveComment(animeTitle, comment, rating) {
 }
 
 // Atualiza score médio do anime baseado nos comentários
-function updateAnimeRating(animeTitle) {
+async function updateAnimeRating(animeTitle) {
   try {
     const comments = JSON.parse(localStorage.getItem('animeComments')) || {};
     const animeComments = comments[animeTitle] || [];
@@ -530,7 +573,7 @@ function updateAnimeRating(animeTitle) {
     const averageRating = totalRating / animeComments.length;
 
     // Atualiza a avaliação no objeto do anime
-    const animes = JSON.parse(localStorage.getItem('animeData')) || [];
+    let animes = animeManager.getAnimesFromCache();
     const animeIndex = animes.findIndex(a => a.primaryTitle === animeTitle);
 
     if (animeIndex !== -1) {
@@ -1093,7 +1136,7 @@ function isAnimeFavorited(animeTitle) {
 }
 
 // Alterna estado de favorito do anime
-function toggleFavorite(animeTitle) {
+async function toggleFavorite(animeTitle) {
   const sessionData = JSON.parse(localStorage.getItem('userSession'));
   if (!sessionData) {
     alert('Você precisa estar logado para favoritar animes!');
@@ -1110,31 +1153,58 @@ function toggleFavorite(animeTitle) {
   if (!users[userIndex].favoriteAnimes) users[userIndex].favoriteAnimes = [];
 
   const isFavorited = users[userIndex].favoriteAnimes.includes(animeTitle);
+  let incrementValue = 0;
 
-  // Remove do favoritos se já estiver favoritado ou adiciona se não estiver
-  if (isFavorited) users[userIndex].favoriteAnimes = users[userIndex].favoriteAnimes.filter(title => title !== animeTitle);
-  else users[userIndex].favoriteAnimes.push(animeTitle);
-  
-  // Atualiza o localStorage
-  localStorage.setItem('animuUsers', JSON.stringify(users));
+  try {
+    // Remove dos favoritos se já estiver favoritado ou adiciona se não estiver
+    if (isFavorited) {
+      users[userIndex].favoriteAnimes = users[userIndex].favoriteAnimes.filter(title => title !== animeTitle);
+      incrementValue = -1; // Decrementa contador no Firestore
+    } else {
+      users[userIndex].favoriteAnimes.push(animeTitle);
+      incrementValue = 1; // Incrementa contador no Firestore
+    }
+    
+    // Atualiza o localStorage
+    localStorage.setItem('animuUsers', JSON.stringify(users));
 
-  // Atualiza o botão
-  updateFavoriteButton(animeTitle);
-  
-  // Atualiza as estatísticas em tempo real
-  updateAnimeStats(animeTitle);
+    // Atualiza o botão
+    updateFavoriteButton(animeTitle);
+    
+    // Atualiza as estatísticas em tempo real na UI
+    updateAnimeStats(animeTitle);
+    
+    // Encontra o ID do anime para atualizar no Firestore
+    const animes = animeManager.getAnimesFromCache();
+    const animeToUpdate = animes.find(anime => anime.primaryTitle === animeTitle);
+    
+    if (animeToUpdate && animeToUpdate.id) {
+      // Atualiza o contador de favoritos no Firestore
+      await animeManager.updateFavoriteCount(animeToUpdate.id, incrementValue);
+      console.log(`Favorito atualizado com sucesso no Firestore: ${animeTitle} (${incrementValue > 0 ? 'adicionado' : 'removido'})`);
+    } else console.warn(`Não foi possível atualizar o Firestore: ID do anime não encontrado (${animeTitle})`);
+  } catch (error) {
+    console.error('Erro ao atualizar favorito no Firestore:', error);
+    alert('Houve um problema ao salvar seu favorito no servidor. A alteração foi salva localmente.');
+  }
 }
 
-// Atualiza interface do botão de favoritos
-function updateFavoriteButton(animeTitle) {
-  const favoriteButton = document.getElementById('favorite-button');
-  const isFavorited = isAnimeFavorited(animeTitle);
-
-  if (favoriteButton) {
-    favoriteButton.innerHTML = isFavorited ?
-      '❤️ Remover dos Favoritos' :
-      '🤍 Adicionar aos Favoritos';
-    favoriteButton.classList.toggle('favorited', isFavorited);
+// Conta o número de usuários que favoritaram um anime específico
+function countAnimeFavorites(animeTitle) {
+  try {
+    const users = JSON.parse(localStorage.getItem('animuUsers')) || [];
+    
+    // Conta quantos usuários têm este anime em seus favoritos
+    const count = users.reduce((total, user) => {
+      // Verifica se o usuário tem o array de favoritos e se o anime está nele
+      if (user.favoriteAnimes && user.favoriteAnimes.includes(animeTitle)) return total + 1;
+      return total;
+    }, 0);
+    
+    return count;
+  } catch (error) {
+    console.error('Erro ao contar favoritos:', error);
+    return 0;
   }
 }
 
@@ -1188,47 +1258,57 @@ function updateAllAnimesPopularity() {
 }
 
 // Encontra animes relacionados baseado em gêneros similares
-function findRelatedAnimes(currentAnime, limit = 10) {
+async function findRelatedAnimes(currentAnime, limit = 10) {
   if (!currentAnime) return [];
 
-  const animes = JSON.parse(localStorage.getItem('animeData')) || [];
-  const relatedAnimes = [];
-  
-  // Remove o anime atual da lista
-  const otherAnimes = animes.filter(anime => anime.primaryTitle !== currentAnime.primaryTitle);
-  
-  // Calcula pontuação de similaridade para cada anime
-  otherAnimes.forEach(anime => {
-    let similarityScore = 0;
+  try {
+    // Tenta primeiro obter animes do cache
+    let animes = animeManager.getAnimesFromCache();
     
-    // Pontos por gêneros em comum
-    currentAnime.genres.forEach(genre => {
-      if (anime.genres.includes(genre)) similarityScore += 2;
-    });
+    // Se o cache estiver vazio, carrega do Firestore
+    if (!animes || animes.length === 0) animes = await animeManager.getAnimes();
     
-    // Pontos por estúdio em comum
-    if (currentAnime.studio && anime.studio === currentAnime.studio) similarityScore += 1;
+    const relatedAnimes = [];
     
-    // Pontos por fonte similar
-    if (currentAnime.source && anime.source === currentAnime.source) similarityScore += 1;
+    // Remove o anime atual da lista
+    const otherAnimes = animes.filter(anime => anime.primaryTitle !== currentAnime.primaryTitle);
     
-    // Pontos por temporada similar
-    if (currentAnime.season && anime.season &&
-        currentAnime.season.period === anime.season.period &&
-        Math.abs(currentAnime.season.year - anime.season.year) <= 1) similarityScore += 1;
-
-    if (similarityScore > 0) {
-      relatedAnimes.push({
-        ...anime,
-        similarityScore
+    // Calcula pontuação de similaridade para cada anime
+    otherAnimes.forEach(anime => {
+      let similarityScore = 0;
+      
+      // Pontos por gêneros em comum
+      currentAnime.genres.forEach(genre => {
+        if (anime.genres.includes(genre)) similarityScore += 2;
       });
-    }
-  });
+      
+      // Pontos por estúdio em comum
+      if (currentAnime.studio && anime.studio === currentAnime.studio) similarityScore += 1;
+      
+      // Pontos por fonte similar
+      if (currentAnime.source && anime.source === currentAnime.source) similarityScore += 1;
+      
+      // Pontos por temporada similar
+      if (currentAnime.season && anime.season &&
+          currentAnime.season.period === anime.season.period &&
+          Math.abs(currentAnime.season.year - anime.season.year) <= 1) similarityScore += 1;
 
-  // Ordena por pontuação de similaridade e retorna os top N
-  return relatedAnimes
-    .sort((a, b) => b.similarityScore - a.similarityScore)
-    .slice(0, limit);
+      if (similarityScore > 0) {
+        relatedAnimes.push({
+          ...anime,
+          similarityScore
+        });
+      }
+    });
+
+    // Ordena por pontuação de similaridade e retorna os top N
+    return relatedAnimes
+      .sort((a, b) => b.similarityScore - a.similarityScore)
+      .slice(0, limit);
+  } catch (error) {
+    console.error('Erro ao encontrar animes relacionados:', error);
+    return [];
+  }
 }
 
 // Renderiza carrossel de animes relacionados com Swiper
@@ -1334,77 +1414,97 @@ function renderRelatedAnimes(currentAnime) {
 }
 
 // Inicialização da página
-window.addEventListener('DOMContentLoaded', () => {
-  updateAllAnimesPopularity(); // Atualiza popularidade ao carregar
+window.addEventListener('DOMContentLoaded', async () => {
+  try {
+    // Aguarda a inicialização do AnimeManager
+    await animeManager.initCheck();
+    
+    // Atualiza popularidade ao carregar
+    updateAllAnimesPopularity(); 
 
-  const animeTitle = getUrlParameter('anime');
-  const searchQuery = getUrlParameter('search');
-  const nocache = getUrlParameter('nocache'); // Novo parâmetro para detectar limpeza de filtros
+    const animeTitle = getUrlParameter('anime');
+    const searchQuery = getUrlParameter('search');
+    const nocache = getUrlParameter('nocache'); // Novo parâmetro para detectar limpeza de filtros
 
-  // Executa uma nova busca sem filtros ou usa os resultados salvos anteriormente
-  if (searchQuery) {
-    if (nocache || !localStorage.getItem('searchResults')) searchWithoutFilters(decodeURIComponent(searchQuery));
-    else renderSearchResults(decodeURIComponent(searchQuery));
-  } else if (animeTitle) {
-    const anime = findAnimeByTitle(decodeURIComponent(animeTitle));
-    renderAnimeDetails(anime);
+    // Executa uma nova busca sem filtros ou usa os resultados salvos anteriormente
+    if (searchQuery) {
+      if (nocache || !localStorage.getItem('searchResults')) {
+        await searchWithoutFilters(decodeURIComponent(searchQuery));
+      } else {
+        renderSearchResults(decodeURIComponent(searchQuery));
+      }
+    } else if (animeTitle) {
+      const anime = await findAnimeByTitle(decodeURIComponent(animeTitle));
+      renderAnimeDetails(anime);
 
-    // Adiciona handler para o formulário de comentários
-    const commentForm = document.getElementById('comment-form');
-    if (commentForm) {
-      commentForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
+      // Adiciona handler para o formulário de comentários
+      const commentForm = document.getElementById('comment-form');
+      if (commentForm) {
+        commentForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
 
-        // Verifica se usuário está logado
-        const session = localStorage.getItem('userSession');
-        if (!session) {
-          alert('Você precisa estar logado para comentar!');
-          window.location.href = 'signin.html';
-          return;
-        }
-
-        const commentText = document.getElementById('comment-text').value.trim();
-        const ratingValue = document.getElementById('rating-slider').value;
-
-        if (!commentText) {
-          alert('Por favor, escreva um comentário.');
-          return;
-        }
-
-        if (ratingValue === '0') {
-          alert('Por favor, dê uma avaliação usando o slider.');
-          return;
-        }
-
-        // Desabilita o botão de enviar durante a submissão
-        const submitButton = commentForm.querySelector('button[type="submit"]');
-        const originalText = submitButton.innerHTML;
-        submitButton.disabled = true;
-        submitButton.innerHTML = '<span class="animate-spin mr-2">⏳</span> Enviando...';
-
-        try {
-          const animeTitle = new URLSearchParams(window.location.search).get('anime');
-          const result = await saveComment(decodeURIComponent(animeTitle), commentText, ratingValue);
-          
-          if (result) {
-            document.getElementById('comment-text').value = '';
-            document.getElementById('rating-slider').value = '0';
-            updateRatingEmoji(0); // Reseta o emoji
-            updateCommentsList(decodeURIComponent(animeTitle));
+          // Verifica se usuário está logado
+          const session = localStorage.getItem('userSession');
+          if (!session) {
+            alert('Você precisa estar logado para comentar!');
+            window.location.href = 'signin.html';
+            return;
           }
-        } catch (error) {
-          console.error('Erro ao enviar comentário:', error);
-        } finally {
-          // Reabilita o botão com o texto original
-          submitButton.disabled = false;
-          submitButton.innerHTML = originalText;
-        }
-      });
-    }
 
-    // Carrega comentários existentes
-    updateCommentsList(decodeURIComponent(animeTitle));
-  } else renderAllAnimes(); // Se não houver parâmetros, mostra lista de todos os animes
+          const commentText = document.getElementById('comment-text').value.trim();
+          const ratingValue = document.getElementById('rating-slider').value;
+
+          if (!commentText) {
+            alert('Por favor, escreva um comentário.');
+            return;
+          }
+
+          if (ratingValue === '0') {
+            alert('Por favor, dê uma avaliação usando o slider.');
+            return;
+          }
+
+          // Desabilita o botão de enviar durante a submissão
+          const submitButton = commentForm.querySelector('button[type="submit"]');
+          const originalText = submitButton.innerHTML;
+          submitButton.disabled = true;
+          submitButton.innerHTML = '<span class="animate-spin mr-2">⏳</span> Enviando...';
+
+          try {
+            const animeTitle = new URLSearchParams(window.location.search).get('anime');
+            const result = await saveComment(decodeURIComponent(animeTitle), commentText, ratingValue);
+            
+            if (result) {
+              document.getElementById('comment-text').value = '';
+              document.getElementById('rating-slider').value = '0';
+              updateRatingEmoji(0); // Reseta o emoji
+              updateCommentsList(decodeURIComponent(animeTitle));
+            }
+          } catch (error) {
+            console.error('Erro ao enviar comentário:', error);
+          } finally {
+            // Reabilita o botão com o texto original
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalText;
+          }
+        });
+      }
+
+      // Carrega comentários existentes
+      updateCommentsList(decodeURIComponent(animeTitle));
+    } else {
+      await renderAllAnimes(); // Se não houver parâmetros, mostra lista de todos os animes
+    }
+  } catch (error) {
+    console.error('Erro na inicialização da página:', error);
+    document.getElementById('anime-content').innerHTML = `
+      <div class="error-message">
+        <h2>Erro ao carregar dados</h2>
+        <p>Ocorreu um problema ao carregar os dados. Por favor, tente novamente mais tarde.</p>
+        <p class="error-details">${error.message}</p>
+      </div>
+    `;
+  }
 });
 
 // Evento para inicializar o slider de avaliação
@@ -1519,7 +1619,7 @@ function updateAnimeStats(animeTitle) {
 }
 
 // Função para alternar favoritos a partir do card do anime
-function toggleFavoriteFromCard(animeTitle) {
+async function toggleFavoriteFromCard(animeTitle) {
   const sessionData = JSON.parse(localStorage.getItem('userSession'));
   if (!sessionData) {
     alert('Você precisa estar logado para favoritar animes!');
@@ -1536,33 +1636,66 @@ function toggleFavoriteFromCard(animeTitle) {
   if (!users[userIndex].favoriteAnimes) users[userIndex].favoriteAnimes = [];
 
   const isFavorited = users[userIndex].favoriteAnimes.includes(animeTitle);
+  let incrementValue = 0;
 
-  if (isFavorited) {
-    // Remove dos favoritos
-    users[userIndex].favoriteAnimes = users[userIndex].favoriteAnimes.filter(title => title !== animeTitle);
-  } else {
-    // Adiciona aos favoritos
-    users[userIndex].favoriteAnimes.push(animeTitle);
-  }
-
-  // Atualiza o localStorage
-  localStorage.setItem('animuUsers', JSON.stringify(users));
-
-  // Atualiza os botões de favoritos em todos os cards
-  const favoriteButtons = document.querySelectorAll(`.favorite-count`);
-  favoriteButtons.forEach(button => {
-    if (button.closest('a')?.href.includes(encodeURIComponent(animeTitle))) {
-      button.classList.toggle('is-favorited', !isFavorited);
-      button.querySelector('.favorite-number').textContent = countAnimeFavorites(animeTitle);
+  try {
+    if (isFavorited) {
+      // Remove dos favoritos
+      users[userIndex].favoriteAnimes = users[userIndex].favoriteAnimes.filter(title => title !== animeTitle);
+      incrementValue = -1; // Decrementa contador no Firestore
+    } else {
+      // Adiciona aos favoritos
+      users[userIndex].favoriteAnimes.push(animeTitle);
+      incrementValue = 1; // Incrementa contador no Firestore
     }
-  });
 
-  // Atualiza o botão principal de favoritos se estiver na página de detalhes
-  if (window.location.search.includes(`anime=${encodeURIComponent(animeTitle)}`)) {
-    updateFavoriteButton(animeTitle);
+    // Atualiza o localStorage
+    localStorage.setItem('animuUsers', JSON.stringify(users));
+
+    // Atualiza os botões de favoritos em todos os cards
+    const favoriteButtons = document.querySelectorAll(`.favorite-count`);
+    favoriteButtons.forEach(button => {
+      if (button.closest('a')?.href.includes(encodeURIComponent(animeTitle))) {
+        button.classList.toggle('is-favorited', !isFavorited);
+        button.querySelector('.favorite-number').textContent = countAnimeFavorites(animeTitle);
+      }
+    });
+
+    // Atualiza o botão principal de favoritos se estiver na página de detalhes
+    if (window.location.search.includes(`anime=${encodeURIComponent(animeTitle)}`)) {
+      updateFavoriteButton(animeTitle);
+      
+      // Atualiza as estatísticas em tempo real
+      updateAnimeStats(animeTitle);
+    }
     
-    // Atualiza as estatísticas em tempo real
-    updateAnimeStats(animeTitle);
+    // Encontra o ID do anime para atualizar no Firestore
+    const animes = animeManager.getAnimesFromCache();
+    const animeToUpdate = animes.find(anime => anime.primaryTitle === animeTitle);
+    
+    if (animeToUpdate && animeToUpdate.id) {
+      // Atualiza o contador de favoritos no Firestore
+      await animeManager.updateFavoriteCount(animeToUpdate.id, incrementValue);
+      console.log(`Favorito atualizado com sucesso no Firestore: ${animeTitle} (${incrementValue > 0 ? 'adicionado' : 'removido'})`);
+    } else {
+      console.warn(`Não foi possível atualizar o Firestore: ID do anime não encontrado (${animeTitle})`);
+    }
+  } catch (error) {
+    console.error('Erro ao atualizar favorito no Firestore:', error);
+    alert('Houve um problema ao salvar seu favorito no servidor. A alteração foi salva localmente.');
+  }
+}
+
+// Atualiza interface do botão de favoritos
+function updateFavoriteButton(animeTitle) {
+  const favoriteButton = document.getElementById('favorite-button');
+  const isFavorited = isAnimeFavorited(animeTitle);
+
+  if (favoriteButton) {
+    favoriteButton.innerHTML = isFavorited ?
+      '❤️ Remover dos Favoritos' :
+      '🤍 Adicionar aos Favoritos';
+    favoriteButton.classList.toggle('favorited', isFavorited);
   }
 }
 
@@ -1724,23 +1857,37 @@ function clearSearchFilters() {
 }
 
 // Realiza busca sem filtros
-function searchWithoutFilters(query) {
-  const animes = JSON.parse(localStorage.getItem('animeData')) || [];
-  
-  // Sistema de pontuação similar ao usado no AnimeSearchBar
-  const results = animes
-    .filter(anime => {
-      // Busca simples que verifica se o título principal ou alternativo contém a consulta
-      const matchesTitle = anime.primaryTitle.toLowerCase().includes(query.toLowerCase());
-      const matchesAltTitle = anime.alternativeTitles.some(alt => alt.title.toLowerCase().includes(query.toLowerCase()));
-      return matchesTitle || matchesAltTitle;
-    })
-    .sort((a, b) => {
-      // Ordenação básica por pontuação
-      return (parseFloat(b.score) || 0) - (parseFloat(a.score) || 0);
-    });
-  
-  // Salva resultados e renderiza
-  localStorage.setItem('searchResults', JSON.stringify(results));
-  renderSearchResults(query);
+async function searchWithoutFilters(query) {
+  try {
+    // Tenta primeiro obter animes do cache
+    let animes = animeManager.getAnimesFromCache();
+    
+    // Se o cache estiver vazio, carrega do Firestore
+    if (!animes || animes.length === 0) animes = await animeManager.getAnimes();
+    
+    // Sistema de pontuação similar ao usado no AnimeSearchBar
+    const results = animes
+      .filter(anime => {
+        // Busca simples que verifica se o título principal ou alternativo contém a consulta
+        const matchesTitle = anime.primaryTitle.toLowerCase().includes(query.toLowerCase());
+        const matchesAltTitle = anime.alternativeTitles.some(alt => alt.title.toLowerCase().includes(query.toLowerCase()));
+        return matchesTitle || matchesAltTitle;
+      })
+      .sort((a, b) => {
+        // Ordenação básica por pontuação
+        return (parseFloat(b.score) || 0) - (parseFloat(a.score) || 0);
+      });
+    
+    // Salva resultados e renderiza
+    localStorage.setItem('searchResults', JSON.stringify(results));
+    renderSearchResults(query);
+  } catch (error) {
+    console.error('Erro na busca de animes:', error);
+    document.getElementById('anime-content').innerHTML = `
+      <div class="error-message">
+        <h2>Erro na busca</h2>
+        <p>Ocorreu um problema ao realizar a busca. Por favor, tente novamente mais tarde.</p>
+      </div>
+    `;
+  }
 }

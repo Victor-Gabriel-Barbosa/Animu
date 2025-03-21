@@ -12,6 +12,9 @@ let staffMembers = [];
 // Armazena os valores iniciais dos campos quando o formulário é aberto
 let initialFormState = null;
 
+// Instância do gerenciador de animes
+let animeManager = null;
+
 // Verifica se o usuário é admin ao carregar a página
 document.addEventListener('DOMContentLoaded', () => {
   const session = JSON.parse(localStorage.getItem('userSession'));
@@ -20,18 +23,17 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
   
-  // Verifica a conexão com o Firebase antes de carregar os animes
-  checkFirebaseConnection().then(isConnected => {
-    if (isConnected) {
-      loadAnimesList();
-      setupDropZone('coverImageDropzone', 'coverImageInput', 'coverImage', 'coverImagePreview', handleImageDrop);
-      setupDropZone('trailerDropzone', 'trailerInput', 'trailerUrl', 'trailerPreview', handleVideoDrop);
-      setupMediaRemoval();
-      initializeCategorySelector();
-      setupDateInput();
-      updateFormProgress();
-    }
-  });
+  // Inicializa o gerenciador de animes
+  animeManager = new AnimeManager();
+  
+  // Carrega a lista de animes
+  loadAnimesList();
+  setupDropZone('coverImageDropzone', 'coverImageInput', 'coverImage', 'coverImagePreview', handleImageDrop);
+  setupDropZone('trailerDropzone', 'trailerInput', 'trailerUrl', 'trailerPreview', handleVideoDrop);
+  setupMediaRemoval();
+  initializeCategorySelector();
+  setupDateInput();
+  updateFormProgress();
 
   // Adiciona alerta ao tentar sair da página
   window.addEventListener('beforeunload', function (e) {
@@ -44,75 +46,20 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// Carrega lista de animes do Firebase
+// Carrega lista de animes do Firebase usando o AnimeManager
 async function loadAnimesList() {
   try {
-    const animesSnapshot = await db.collection('animes').orderBy('primaryTitle').get();
-    const animes = [];
-    
-    animesSnapshot.forEach(doc => {
-      animes.push({
-        id: doc.id,
-        ...doc.data()
-      });
-    });
-    
-    const tbody = document.getElementById('animesList');
-    
-    if (animes.length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="5" class="text-center py-4">
-            Nenhum anime cadastrado. Adicione seu primeiro anime!
-          </td>
-        </tr>
-      `;
-      return;
-    }
-
-    tbody.innerHTML = animes.map((anime, index) => `
-      <tr>
-        <td>
-          <img src="${anime.coverImage}" alt="${anime.primaryTitle}" class="h-20 w-14 object-cover rounded">
-        </td>
-        <td>
-          <div class="text-sm font-medium">${anime.primaryTitle}</div>
-          <div class="text-sm text-gray-500">${anime.alternativeTitles[0]?.title || ''}</div>
-        </td>
-        <td>
-          ${anime.episodes || 'N/A'}
-        </td>
-        <td>
-          <span class="px-2 py-1 rounded-full ${getStatusClass(anime.status)}">
-            ${anime.status || 'N/A'}
-          </span>
-        </td>
-        <td>
-          <div class="action-buttons">
-            <button class="btn-action btn-edit" title="Editar" onclick="editAnime('${anime.id}')">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-              </svg>
-            </button>
-            <button class="btn-action btn-delete" title="Remover" onclick="deleteAnime('${anime.id}')">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M3 6h18"></path>
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                <line x1="10" y1="11" x2="10" y2="17"></line>
-                <line x1="14" y1="11" x2="14" y2="17"></line>
-              </svg>
-            </button>
-          </div>
-        </td>
-      </tr>
-    `).join('');
+    document.body.classList.add('loading');
+    const animes = await animeManager.getAnimes('primaryTitle');
+    renderAnimesList(animes);
+    document.body.classList.remove('loading');
   } catch (error) {
     console.error('Erro ao carregar animes:', error);
     alert('Erro ao carregar a lista de animes. Verifique sua conexão com a internet.');
+    document.body.classList.remove('loading');
     
-    // Fallback para dados locais em caso de erro
-    const localAnimes = JSON.parse(localStorage.getItem('animeData')) || [];
+    // Tenta carregar do cache como fallback
+    const localAnimes = animeManager.getAnimesFromCache();
     if (localAnimes.length > 0) {
       alert('Carregando dados de cache local...');
       renderAnimesList(localAnimes);
@@ -123,6 +70,17 @@ async function loadAnimesList() {
 // Função auxiliar para renderizar a lista de animes
 function renderAnimesList(animes) {
   const tbody = document.getElementById('animesList');
+  
+  if (animes.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" class="text-center py-4">
+          Nenhum anime cadastrado. Adicione seu primeiro anime!
+        </td>
+      </tr>
+    `;
+    return;
+  }
   
   tbody.innerHTML = animes.map((anime, index) => `
     <tr>
@@ -143,13 +101,13 @@ function renderAnimesList(animes) {
       </td>
       <td>
         <div class="action-buttons">
-          <button class="btn-action btn-edit" title="Editar" onclick="editAnime('${anime.id || index}')">
+          <button class="btn-action btn-edit" title="Editar" onclick="editAnime('${anime.id}')">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
             </svg>
           </button>
-          <button class="btn-action btn-delete" title="Remover" onclick="deleteAnime('${anime.id || index}')">
+          <button class="btn-action btn-delete" title="Remover" onclick="deleteAnime('${anime.id}')">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M3 6h18"></path>
               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -411,33 +369,12 @@ async function editAnime(animeId) {
     // Exibir indicador de carregamento
     document.body.classList.add('loading');
     
-    let anime;
+    // Utiliza o AnimeManager para buscar o anime
+    const anime = await animeManager.getAnimeById(animeId);
     
-    // Verifica se o ID é string (do Firebase) ou número (localStorage legado)
-    if (typeof animeId === 'string') {
-      console.log('Buscando anime no Firebase, ID:', animeId);
-      const animeDoc = await db.collection('animes').doc(animeId).get();
-      
-      if (!animeDoc.exists) {
-        console.error('Documento não encontrado no Firebase com ID:', animeId);
-        throw new Error('Anime não encontrado no banco de dados');
-      }
-      
-      anime = {
-        id: animeDoc.id,
-        ...animeDoc.data()
-      };
-      console.log('Anime encontrado no Firebase:', anime.primaryTitle);
-    } else {
-      // Modo legado - busca no localStorage
-      console.log('Modo legado: buscando anime no localStorage, índice:', animeId);
-      const animes = JSON.parse(localStorage.getItem('animeData')) || [];
-      anime = animes[animeId];
-      
-      if (!anime) {
-        console.error('Anime não encontrado no localStorage com índice:', animeId);
-        throw new Error('Anime não encontrado no armazenamento local');
-      }
+    if (!anime) {
+      console.error('Anime não encontrado com ID:', animeId);
+      throw new Error('Anime não encontrado no banco de dados');
     }
 
     currentAnimeId = animeId;
@@ -563,11 +500,11 @@ document.getElementById('animeForm').addEventListener('submit', async function (
       return;
     }
 
-    const now = new Date().toISOString();
-
     // Comprime imagem se existir
     let processedCoverImage = coverImage;
-    if (coverImage.startsWith('data:image')) processedCoverImage = await compressImage(coverImage, 800, 0.7);
+    if (coverImage.startsWith('data:image')) {
+      processedCoverImage = await animeManager.compressImage(coverImage, 800, 0.7);
+    }
 
     // Formata os dados
     const formData = {
@@ -590,73 +527,16 @@ document.getElementById('animeForm').addEventListener('submit', async function (
       producers: [...producers],
       licensors: [...licensors],
       staff: [...staffMembers],
-      trailerUrl: document.getElementById('trailerUrl').value.trim(),
-      updatedAt: now,
-      favoriteCount: 0 // Inicializa o contador de favoritos para novos animes
+      trailerUrl: document.getElementById('trailerUrl').value.trim()
     };
 
-    // Verificar se é edição ou adição de novo anime
+    // Verifica se é edição ou adição de novo anime
     if (currentAnimeId !== null) {
-      if (typeof currentAnimeId === 'string') {
-        // É uma edição em um documento do Firebase
-        const animeRef = db.collection('animes').doc(currentAnimeId);
-        
-        // Obtém o documento atual para preservar dados que não estão no formulário
-        const animeDoc = await animeRef.get();
-        if (!animeDoc.exists) {
-          throw new Error('Anime não encontrado para atualização');
-        }
-        
-        const existingData = animeDoc.data();
-        
-        // Mescla os dados existentes com as atualizações, preservando o contador de favoritos existente
-        await animeRef.update({
-          ...formData,
-          score: existingData.score || 0,
-          popularity: existingData.popularity || 0,
-          comments: existingData.comments || [],
-          createdAt: existingData.createdAt,
-          favoriteCount: existingData.favoriteCount || 0 // Preserva o contador existente ou inicializa com 0
-        });
-      } else {
-        // É uma edição de um item do localStorage (compatibilidade legada)
-        const animes = JSON.parse(localStorage.getItem('animeData')) || [];
-        const existingAnime = animes[currentAnimeId];
-        
-        // Cria um novo documento no Firebase
-        await db.collection('animes').add({
-          ...formData,
-          score: existingAnime?.score || 0,
-          popularity: existingAnime?.popularity || 0,
-          comments: existingAnime?.comments || [],
-          createdAt: existingAnime?.createdAt || now,
-          favoriteCount: existingAnime?.favoriteCount || 0 // Preserva o contador existente ou inicializa com 0
-        });
-        
-        // Remove do localStorage para evitar duplicação
-        animes.splice(currentAnimeId, 1);
-        localStorage.setItem('animeData', JSON.stringify(animes));
-      }
+      // É uma edição
+      await animeManager.updateAnime(currentAnimeId, formData);
     } else {
       // É um novo anime
-      await db.collection('animes').add({
-        ...formData,
-        createdAt: now,
-        comments: [],
-        score: 0,
-        popularity: 0,
-        favoriteCount: 0 // Inicializa contador de favoritos para novos animes
-      });
-    }
-
-    // Backup local (opcional)
-    try {
-      const animeSnapshot = await db.collection('animes').get();
-      const animes = [];
-      animeSnapshot.forEach(doc => animes.push(doc.data()));
-      localStorage.setItem('animeData', JSON.stringify(animes));
-    } catch (backupError) {
-      console.warn('Não foi possível criar backup local:', backupError);
+      await animeManager.saveAnime(formData);
     }
 
     closeAnimeForm();
@@ -681,39 +561,8 @@ async function deleteAnime(animeId) {
       // Adiciona indicador de carregamento
       document.body.classList.add('loading');
       
-      if (typeof animeId === 'string') {
-        // Exclui do Firebase
-        await db.collection('animes').doc(animeId).delete();
-        
-        // Também exclui comentários associados a este anime
-        const commentSnapshot = await db.collection('animeComments')
-          .where('animeId', '==', animeId)
-          .get();
-          
-        const batch = db.batch();
-        commentSnapshot.forEach(doc => batch.delete(doc.ref));
-        
-        if (!commentSnapshot.empty) {
-          await batch.commit();
-        }
-      } else {
-        // Modo legado - remove do localStorage
-        const animes = JSON.parse(localStorage.getItem('animeData')) || [];
-        if (animes[animeId]) {
-          const animeToDelete = animes[animeId];
-          
-          // Remove o anime do array de animes
-          animes.splice(animeId, 1);
-          localStorage.setItem('animeData', JSON.stringify(animes));
-          
-          // Remove os comentários associados ao anime
-          const comments = JSON.parse(localStorage.getItem('animeComments')) || {};
-          if (comments[animeToDelete.primaryTitle]) {
-            delete comments[animeToDelete.primaryTitle];
-            localStorage.setItem('animeComments', JSON.stringify(comments));
-          }
-        }
-      }
+      // Usa o AnimeManager para excluir o anime
+      await animeManager.deleteAnime(animeId);
       
       // Atualiza a interface
       await loadAnimesList();
@@ -731,27 +580,7 @@ async function deleteAnime(animeId) {
 async function exportAnimes() {
   try {
     document.body.classList.add('loading');
-    
-    const animesSnapshot = await db.collection('animes').get();
-    const animes = [];
-    
-    animesSnapshot.forEach(doc => {
-      animes.push({
-        id: doc.id,
-        ...doc.data()
-      });
-    });
-    
-    const blob = new Blob([JSON.stringify(animes, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `animes_backup_${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
+    await animeManager.exportAnimes();
     document.body.classList.remove('loading');
   } catch (error) {
     console.error('Erro ao exportar animes:', error);
@@ -774,39 +603,8 @@ async function importAnimes(event) {
         try {
           const animes = JSON.parse(e.target.result);
           
-          if (!Array.isArray(animes)) {
-            throw new Error('Formato inválido');
-          }
-          
-          // Exclui todos os animes existentes
-          const animesSnapshot = await db.collection('animes').get();
-          const batch = db.batch();
-          animesSnapshot.forEach(doc => batch.delete(doc.ref));
-          
-          if (!animesSnapshot.empty) {
-            await batch.commit();
-          }
-          
-          // Adiciona os novos animes
-          const importBatch = db.batch();
-          for (const anime of animes) {
-            const animeId = anime.id;
-            const animeData = {...anime};
-            
-            // Remove o campo id para não duplicar no documento
-            if (animeData.id) {
-              delete animeData.id;
-            }
-            
-            // Gera um novo ID ou usa o existente
-            const docRef = animeId ? 
-              db.collection('animes').doc(animeId) : 
-              db.collection('animes').doc();
-              
-            importBatch.set(docRef, animeData);
-          }
-          
-          await importBatch.commit();
+          // Utiliza o AnimeManager para importar os animes
+          await animeManager.importAnimes(animes);
           
           // Atualiza a lista
           await loadAnimesList();
@@ -1213,6 +1011,7 @@ function clearAnimeForm() {
     genres = [];
     producers = [];
     licensors = [];
+    staffMembers = []; // Também limpa a staff
 
     // Limpa previews e valores dos campos de imagem e trailer
     const coverPreview = document.getElementById('coverImagePreview');
@@ -1240,6 +1039,10 @@ function clearAnimeForm() {
     updateGenresList();
     updateProducersList();
     updateLicensorsList();
+    updateStaffList();
+    
+    // Atualiza o progresso do formulário
+    updateFormProgress();
   }
 }
 
