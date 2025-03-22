@@ -15,8 +15,8 @@ document.addEventListener('DOMContentLoaded', function () {
   let editingId = null; // Armazena ID da notícia em edição
   let updateFormProgress;
 
-  // Referência à coleção de notícias no Firestore
-  const newsCollection = db.collection('news');
+  // Inicializa o gerenciador de notícias
+  const newsManager = new NewsManager();
 
   // Carrega notícias existentes ao iniciar
   loadNews();
@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  // Carrega notícias do Firestore e gera tabela com opções de gerenciamento
+  // Carrega notícias usando o NewsManager e gera tabela com opções de gerenciamento
   async function loadNews() {
     try {
       const newsListElement = document.querySelector('.admin-news-list');
@@ -128,11 +128,11 @@ document.addEventListener('DOMContentLoaded', function () {
         </div>
       `;
 
-      // Busca todas as notícias ordenadas por data (decrescente)
-      const snapshot = await newsCollection.orderBy('date', 'desc').get();
+      // Busca todas as notícias usando o NewsManager
+      const news = await newsManager.getAllNews();
       
       // Exibe mensagem quando não há notícias
-      if (snapshot.empty) {
+      if (!news || news.length === 0) {
         newsListElement.innerHTML = `
           <div class="text-center py-8">
             <p class="text-gray-500 dark:text-gray-400">Nenhuma notícia cadastrada</p>
@@ -140,15 +140,6 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
         return;
       }
-      
-      // Converte documentos do Firestore em array de notícias
-      const news = [];
-      snapshot.forEach(doc => {
-        news.push({
-          id: doc.id,
-          ...doc.data()
-        });
-      });
       
       // Gera tabela de notícias com imagens e ações
       newsListElement.innerHTML = `
@@ -325,19 +316,17 @@ document.addEventListener('DOMContentLoaded', function () {
         tags: document.getElementById('tags').value.split(',').map(tag => tag.trim()).filter(tag => tag),
         image: document.getElementById('image').value,
         summary: document.getElementById('summary').value,
-        content: content,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        content: content
       };
 
-      // Se é um novo documento, adiciona a data de criação
-      if (!editingId) {
-        newsData.date = new Date().toISOString();
-        newsData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-      }
-
-      await saveNews(newsData);
+      // Usa o NewsManager para salvar a notícia
+      await newsManager.saveNews(newsData, editingId);
+      
       closeModal();
       loadNews();
+      
+      // Notifica outras páginas sobre a atualização (opcional)
+      window.dispatchEvent(new Event('newsUpdated'));
     } catch (error) {
       console.error('Erro ao salvar notícia:', error);
       alert('Erro ao salvar notícia. Por favor, tente novamente.');
@@ -347,48 +336,17 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  // Recupera data original de uma notícia existente
-  async function getExistingDate(id) {
-    try {
-      const doc = await newsCollection.doc(id).get();
-      if (doc.exists) return doc.data().date;
-    } catch (error) {
-      console.error('Erro ao recuperar data original:', error);
-    }
-    return new Date().toISOString();
-  }
-
-  // Salva notícia no Firestore (nova ou atualizada)
-  async function saveNews(newsData) {
-    try {
-      if (editingId) {
-        // Atualiza documento existente
-        await newsCollection.doc(editingId).update(newsData);
-        console.log('Notícia atualizada com sucesso!');
-      } else {
-        // Cria novo documento
-        await newsCollection.add(newsData);
-        console.log('Notícia criada com sucesso!');
-      }
-      // Notifica outras páginas sobre a atualização (opcional)
-      window.dispatchEvent(new Event('newsUpdated'));
-    } catch (error) {
-      console.error('Erro ao salvar no Firestore:', error);
-      throw error; // Propaga o erro para tratamento superior
-    }
-  }
-
   // Abre modal com dados de uma notícia para edição
   async function editNews(id) {
     try {
-      const doc = await newsCollection.doc(id).get();
-      if (doc.exists) {
-        const newsData = {
-          id: doc.id,
-          ...doc.data()
-        };
+      // Busca notícia pelo ID usando o NewsManager
+      const newsData = await newsManager.getNewsById(id);
+      
+      if (newsData) {
         openModal(newsData);
-      } else alert('Notícia não encontrada');
+      } else {
+        alert('Notícia não encontrada');
+      }
     } catch (error) {
       console.error('Erro ao recuperar notícia para edição:', error);
       alert('Erro ao carregar os dados da notícia');
@@ -399,7 +357,8 @@ document.addEventListener('DOMContentLoaded', function () {
   async function deleteNews(id) {
     if (confirm('Tem certeza que deseja excluir esta notícia?')) {
       try {
-        await newsCollection.doc(id).delete();
+        // Exclui notícia usando o NewsManager
+        await newsManager.deleteNews(id);
         console.log('Notícia excluída com sucesso!');
         loadNews(); // Recarrega a lista
       } catch (error) {

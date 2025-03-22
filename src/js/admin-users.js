@@ -6,6 +6,9 @@ document.addEventListener('DOMContentLoaded', function () {
     return;
   }
 
+  // Instancia o gerenciador de usuários
+  const userManager = new UserManager();
+
   // Referências DOM para elementos da interface
   const searchInput = document.getElementById('search-user');
   const filterType = document.getElementById('filter-type');
@@ -14,63 +17,10 @@ document.addEventListener('DOMContentLoaded', function () {
   const totalAdmins = document.getElementById('total-admins');
   const novosUsuarios = document.getElementById('novos-usuarios');
 
-  // Referência à coleção de usuários no Firestore
-  const usersCollection = db.collection('users');
-
-  // Carrega dados de usuários do Firestore
-  async function loadUsers() {
-    try {
-      const snapshot = await usersCollection.get();
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-    } catch (e) {
-      console.error('Erro ao carregar usuários do Firebase:', e);
-      // Fallback para localStorage em caso de erro
-      return JSON.parse(localStorage.getItem('animuUsers')) || [];
-    }
-  }
-
-  // Salva alterações de um usuário no Firestore
-  async function saveUser(user) {
-    try {
-      await usersCollection.doc(user.id).set(user);
-      return true;
-    } catch (e) {
-      console.error('Erro ao salvar usuário:', e);
-      return false;
-    }
-  }
-
-  // Remove um usuário do Firestore
-  async function deleteUserFromFirestore(userId) {
-    try {
-      await usersCollection.doc(userId).delete();
-      return true;
-    } catch (e) {
-      console.error('Erro ao excluir usuário:', e);
-      return false;
-    }
-  }
-
-  // Formata data para padrão brasileiro
-  function formatDate(timestamp) {
-    if (!timestamp) return 'Data desconhecida';
-    
-    // Verifica se é um timestamp do Firestore
-    if (timestamp.toDate && typeof timestamp.toDate === 'function') {
-      return timestamp.toDate().toLocaleDateString('pt-BR');
-    }
-    
-    // Caso contrário, tenta converter a string para Date
-    return new Date(timestamp).toLocaleDateString('pt-BR');
-  }
-
   // Atualiza estatísticas do painel administrativo
   async function updateStats() {
     try {
-      const users = await loadUsers();
+      const users = await userManager.loadUsers();
       const admins = users.filter(user => user.isAdmin);
       
       // Calcula novos usuários nos últimos 7 dias
@@ -115,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function () {
               ${user.isAdmin ? 'Admin' : 'Usuário'}
         </span>
       </td>
-      <td>${formatDate(user.createdAt)}</td>
+      <td>${userManager.formatFirestoreDate(user.createdAt)}</td>
       <td>
         <div class="flex justify-center gap-2">
           <button onclick="toggleAdminStatus('${user.id}')"
@@ -135,7 +85,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // Aplica filtros e popula tabela com usuários correspondentes
   async function updateTable(filterValue = '', userType = 'all') {
     try {
-      const users = await loadUsers();
+      const users = await userManager.loadUsers();
       tableBody.innerHTML = '';
 
       users
@@ -159,28 +109,24 @@ document.addEventListener('DOMContentLoaded', function () {
   // Alterna privilégios de administrador para um usuário
   window.toggleAdminStatus = async function (userId) {
     try {
-      // Busca usuário atual do Firestore
-      const userDoc = await usersCollection.doc(userId).get();
-      if (!userDoc.exists) {
+      // Busca usuário atual
+      const user = await userManager.getUserById(userId);
+      if (!user) {
         alert('Usuário não encontrado!');
         return;
       }
       
-      const userData = userDoc.data();
-      
       // Altera status de admin
-      userData.isAdmin = !userData.isAdmin;
+      user.isAdmin = !user.isAdmin;
       
-      // Salva alterações
-      await usersCollection.doc(userId).update({
-        isAdmin: userData.isAdmin
-      });
+      // Salva alterações usando userManager
+      await userManager.saveUser(user);
       
       // Atualiza interface
       updateTable(searchInput.value, filterType.value);
       updateStats();
       
-      alert(`Usuário ${userData.username} agora ${userData.isAdmin ? 'é' : 'não é'} administrador.`);
+      alert(`Usuário ${user.username} agora ${user.isAdmin ? 'é' : 'não é'} administrador.`);
     } catch (e) {
       console.error('Erro ao alterar status de admin:', e);
       alert('Erro ao alterar status. Tente novamente.');
@@ -192,17 +138,13 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!confirm('Tem certeza que deseja excluir este usuário?')) return;
     
     try {
-      // Exclui do Firestore
-      const success = await deleteUserFromFirestore(userId);
+      // Busca referência à coleção de usuários para excluir (não existe método de exclusão no UserManager)
+      await db.collection('users').doc(userId).delete();
       
-      if (success) {
-        // Atualiza interface
-        updateTable(searchInput.value, filterType.value);
-        updateStats();
-        alert('Usuário excluído com sucesso!');
-      } else {
-        alert('Erro ao excluir usuário. Tente novamente.');
-      }
+      // Atualiza interface
+      updateTable(searchInput.value, filterType.value);
+      updateStats();
+      alert('Usuário excluído com sucesso!');
     } catch (e) {
       console.error('Erro ao excluir usuário:', e);
       alert('Erro ao excluir usuário. Tente novamente.');
