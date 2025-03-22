@@ -99,18 +99,23 @@ newTopicModal?.querySelector('.new-topic-modal')?.addEventListener('click', (e) 
 
 newTopicForm?.addEventListener('submit', addTopic);
 
-// Renderiza as discussões
+// Renderiza as discussões com melhorias de responsividade
 function renderTopics() {
   if (!forumTopicsContainer) return;
 
   const userId = isUserLoggedIn() ? JSON.parse(localStorage.getItem('userSession')).userId : null;
 
-  // Adiciona filtros de categoria
+  // Adiciona filtros de categoria com melhor scroll horizontal em dispositivos móveis
   const categoryFilters = `
-    <div class="category-filters mb-6 flex gap-2 overflow-x-auto p-2">
+    <div class="category-filters mb-6 flex gap-2 overflow-x-auto pb-2 px-1 -mx-1 snap-x snap-mandatory scrollbar-hide">
+      <button class="category-filter px-4 py-2 rounded-full border transition-colors hover:bg-purple-700 whitespace-nowrap flex-shrink-0 snap-start"
+              onclick="filterTopicsByCategory()">
+        🔍 Todas
+      </button>
       ${FORUM_CONFIG.categories.map(cat => `
-        <button class="category-filter px-4 py-2 rounded-full border transition-colors hover:bg-purple-700"
-                data-category="${cat.id}">
+        <button class="category-filter px-4 py-2 rounded-full border transition-colors hover:bg-purple-700 whitespace-nowrap flex-shrink-0 snap-start"
+                data-category="${cat.id}"
+                onclick="filterTopicsByCategory('${cat.id}')">
           ${cat.icon} ${cat.name}
         </button>
       `).join('')}
@@ -128,7 +133,7 @@ function renderTopics() {
       const category = FORUM_CONFIG.categories.find(c => c.id === catId);
       return topics.length ? `
         <div class="category-section mb-8">
-          <h3 class="text-2xl font-bold mb-4">${category.icon} ${category.name}</h3>
+          <h3 class="text-2xl font-bold mb-4 px-1">${category.icon} ${category.name}</h3>
           ${topics.map(topic => renderTopicCard(topic, userId)).join('')}
         </div>
       ` : '';
@@ -151,57 +156,57 @@ function getUserAvatar(username) {
 function renderReplies(replies, topicId, userId) {
   return replies.map(reply => `
     <div class="mb-3 overflow-hidden" id="reply-${reply.id}">
-      <div class="flex items-start gap-3">
-        <img class="h-8 w-8 rounded-full object-cover"
+      <div class="flex items-start gap-2 sm:gap-3">
+        <img class="h-6 w-6 sm:h-8 sm:w-8 rounded-full object-cover"
              src="${getUserAvatar(reply.author)}"
              alt="${reply.author}">
-        <div class="flex-1">
-          <div class="flex justify-between items-start">
-            <p class="text-sm">
+        <div class="flex-1 min-w-0">
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start">
+            <p class="text-xs sm:text-sm">
               <span class="font-semibold">${reply.author}</span>
               em ${formatDate(reply.date)}
               ${reply.editedAt ? `<span class="text-xs">(editado)</span>` : ''}
             </p>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-1 sm:gap-2 mt-1 sm:mt-0">
               ${(isAuthor(reply.author) || isAdmin()) ? `
-                <button onclick="editReply(${topicId}, ${reply.id})" 
-                        class="text-blue-600 hover:text-blue-800">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <button onclick="editReply(${topicId}, ${reply.id}); event.stopPropagation();" 
+                        class="text-blue-600 hover:text-blue-800 p-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
                   </svg>
                 </button>
-                <button onclick="deleteReply(${topicId}, ${reply.id})"
-                        class="text-red-600 hover:text-red-800">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <button onclick="deleteReply(${topicId}, ${reply.id}); event.stopPropagation();"
+                        class="text-red-600 hover:text-red-800 p-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
                   </svg>
                 </button>
               ` : ''}
-              <button onclick="likeReply(${topicId}, ${reply.id})"
-                      class="text-sm ${reply.likedBy && reply.likedBy.includes(userId) ? 'text-purple-600' : 'text-gray-400'} transition-colors">
+              <button onclick="likeReply(${topicId}, ${reply.id}); event.stopPropagation();"
+                      class="text-xs sm:text-sm ${reply.likedBy && reply.likedBy.includes(userId) ? 'text-purple-600' : 'text-gray-400'} transition-colors p-1">
                 ${reply.likes || 0} ❤️
               </button>
             </div>
           </div>
           <div class="reply-content overflow-hidden mt-1">
-            <p class="break-words">${reply.content}</p>
+            <p class="break-words text-sm sm:text-base">${reply.content}</p>
           </div>
           <div class="reply-edit-form hidden">
             <form onsubmit="saveReplyEdit(event, ${topicId}, ${reply.id})" 
-                  class="flex gap-2 mt-2">
+                  class="flex flex-col sm:flex-row gap-2 mt-2">
               <div class="flex-1">
-                <textarea class="w-full p-2 border rounded-lg"
+                <textarea class="w-full p-2 border rounded-lg text-sm"
                           maxlength="${FORUM_CONFIG.maxReplyLength}"
                           oninput="updateCharCount(this, 'reply-edit-count-${reply.id}')">${reply.content}</textarea>
                 <small id="reply-edit-count-${reply.id}" 
-                       class="text-right block mt-1">0/${FORUM_CONFIG.maxReplyLength}</small>
+                       class="text-right block mt-1 text-xs">0/${FORUM_CONFIG.maxReplyLength}</small>
               </div>
-              <div class="flex flex-col gap-2">
+              <div class="flex sm:flex-col gap-2">
                 <button type="submit" 
-                        class="btn btn-primary">Salvar</button>
+                        class="btn btn-primary text-sm py-1 px-3 flex-1">Salvar</button>
                 <button type="button"
                         onclick="cancelReplyEdit(${reply.id})" 
-                        class="btn btn-cancel">Cancelar</button>
+                        class="btn btn-cancel text-sm py-1 px-3 flex-1">Cancelar</button>
               </div>
             </form>
           </div>
@@ -225,16 +230,17 @@ function renderTopicCard(topic, userId) {
   const category = FORUM_CONFIG.categories.find(c => c.id === topic.category) || { icon: '💬', name: 'Geral' };
 
   return `
-    <div class="card p-6 mb-4 transform transition-all overflow-hidden" 
+    <div class="card p-4 sm:p-6 mb-4 transform transition-all overflow-hidden rounded-lg shadow-sm hover:shadow-md" 
          id="topic-${topic.id}"
          onclick="incrementTopicViews(${topic.id})">
       <div class="topic-content overflow-hidden">
-        <div class="flex items-center gap-4">
-          <img class="h-12 w-12 rounded-full object-cover flex-shrink-0"
+        <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+          <!-- Avatar com tamanho adaptável -->
+          <img class="h-10 w-10 sm:h-12 sm:w-12 rounded-full object-cover flex-shrink-0"
                src="${getUserAvatar(topic.author)}"
                alt="${topic.author}">
           <div class="flex-1 min-w-0">
-            <div class="flex flex-col gap-2">
+            <div class="flex flex-col gap-1 sm:gap-2">
               <div class="flex items-center gap-2">
                 <span class="text-lg flex-shrink-0">${category.icon}</span>
                 <h3 class="text-xl font-bold truncate">${topic.title}</h3>
@@ -246,21 +252,24 @@ function renderTopicCard(topic, userId) {
               </p>
             </div>
           </div>
-          <div class="flex items-center gap-2 flex-shrink-0">
+          <!-- Botões de ação otimizados para mobile -->
+          <div class="flex items-center justify-end gap-2 flex-shrink-0 mt-2 sm:mt-0">
             ${(isAuthor(topic.author) || isAdmin()) ? `
-              <button onclick="editTopic(${topic.id})" class="edit-topic-btn text-blue-600 hover:text-blue-800">
+              <button onclick="editTopic(${topic.id}); event.stopPropagation();" 
+                      class="edit-topic-btn text-blue-600 hover:text-blue-800 p-1">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
                 </svg>
               </button>
-              <button onclick="deleteTopic(${topic.id})" class="text-red-600 hover:text-red-800">
+              <button onclick="deleteTopic(${topic.id}); event.stopPropagation();" 
+                      class="text-red-600 hover:text-red-800 p-1">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
                 </svg>
               </button>
             ` : ''}
-            <button onclick="likeTopic(${topic.id})" 
-                    class="flex items-center gap-2 ${topic.likedBy && topic.likedBy.includes(userId) ? 'text-purple-600' : 'text-gray-400'} transition-colors">
+            <button onclick="likeTopic(${topic.id}); event.stopPropagation();" 
+                    class="flex items-center gap-1 p-1 rounded-full ${topic.likedBy && topic.likedBy.includes(userId) ? 'text-purple-600' : 'text-gray-400'} transition-colors">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z"/>
               </svg>
@@ -268,12 +277,12 @@ function renderTopicCard(topic, userId) {
             </button>
           </div>
         </div>
-        <p class="mt-4 mb-4 break-words topic-content">
-          ${topic.content} <!-- O conteúdo agora já contém HTML formatado -->
+        <p class="mt-3 mb-4 break-words topic-content">
+          ${topic.content}
         </p>
       </div>
 
-      <!-- Formulário de edição do tópico -->
+      <!-- Formulário de edição do tópico com melhoria de responsividade -->
       <div class="topic-edit-form hidden">
         <form onsubmit="saveTopicEdit(event, ${topic.id})" class="space-y-4">
           <div>
@@ -293,20 +302,21 @@ function renderTopicCard(topic, userId) {
               ${topic.content.length}/${FORUM_CONFIG.maxContentLength}
             </small>
           </div>
-          <div class="flex justify-end gap-2">
+          <div class="flex flex-col sm:flex-row justify-end gap-2">
             <button type="button" onclick="cancelTopicEdit(${topic.id})" 
-                    class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg">Cancelar</button>
+                    class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg order-2 sm:order-1">Cancelar</button>
             <button type="submit" 
-                    class="btn btn-primary">Salvar</button>
+                    class="btn btn-primary order-1 sm:order-2">Salvar</button>
           </div>
         </form>
       </div>
       
-      <!-- Seção de respostas -->
-      <div class="ml-6 border-l-2 border-purple-200 pl-4">
+      <!-- Seção de respostas com melhor espaçamento para mobile -->
+      <div class="ml-3 sm:ml-6 border-l-2 border-purple-200 pl-2 sm:pl-4 mt-4">
         ${renderReplies(topic.replies, topic.id, userId)}
       </div>
       
+      <!-- Formulário de resposta responsivo -->
       ${isUserLoggedIn() ? `
         <div class="mt-4">
           <form onsubmit="addReply(event, ${topic.id})" class="space-y-2">
@@ -318,30 +328,32 @@ function renderTopicCard(topic, userId) {
                      class="w-full p-2 border rounded-lg">
               <small id="reply-count-${topic.id}" class="text-right block mt-1">0/${FORUM_CONFIG.maxReplyLength}</small>
             </div>
-            <button type="submit" class="btn">
-              Responder
-            </button>
+            <div class="flex justify-end">
+              <button type="submit" class="btn px-4 py-2">
+                Responder
+              </button>
+            </div>
           </form>
         </div>
       ` : `
-        <div class="mt-4 text-center">
-          <a href="signin.html" class="text-purple-600 hover:text-purple-700">
+        <div class="mt-4 text-center py-2">
+          <a href="signin.html" class="text-purple-600 hover:text-purple-700 font-medium">
             Faça login para participar da discussão
           </a>
         </div>
       `}
       
-      <!-- Adiciona badges e estatísticas -->
-      <div class="flex gap-2 mt-4 text-sm text-gray-600">
+      <!-- Estatísticas do tópico com melhor layout mobile -->
+      <div class="flex flex-wrap gap-2 mt-4 text-sm text-gray-600">
         <span class="badge">${topic.views || 0} 👀</span>
         <span class="badge">${topic.replies.length} 💬</span>
         <span class="badge">${topic.likes} 👍</span>
       </div>
 
-      <!-- Sistema de tags -->
-      <div class="flex gap-2 mt-2">
+      <!-- Sistema de tags com layout flexível -->
+      <div class="flex flex-wrap gap-2 mt-2">
         ${(topic.tags || []).map(tag => `
-          <span class="tag">
+          <span class="tag text-xs sm:text-sm">
             #${tag}
           </span>
         `).join('')}
@@ -875,17 +887,25 @@ function loadForumData() {
   }
 }
 
-// Filtra tópicos por categoria
+// Filtra tópicos por categoria com melhor UI responsiva
 function filterTopicsByCategory(categoryId) {
   // Remove a classe ativa de todos os botões
   document.querySelectorAll('.category-filter').forEach(btn => {
-    btn.classList.remove('active');
+    btn.classList.remove('bg-purple-700', 'text-white');
   });
 
   // Adiciona classe ativa ao botão selecionado
   if (categoryId) {
     const selectedButton = document.querySelector(`[data-category="${categoryId}"]`);
-    if (selectedButton) selectedButton.classList.add('active');
+    if (selectedButton) {
+      selectedButton.classList.add('bg-purple-700', 'text-white');
+      // Garante que o botão selecionado fique visível (scroll)
+      selectedButton.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+  } else {
+    // Se não houver categoria selecionada, seleciona o botão "Todas"
+    const allButton = document.querySelector('.category-filter:not([data-category])');
+    if (allButton) allButton.classList.add('bg-purple-700', 'text-white');
   }
 
   // Se não houver categoria selecionada, mostra todos os tópicos
@@ -896,17 +916,18 @@ function filterTopicsByCategory(categoryId) {
 
   // Filtra os tópicos pela categoria
   const filteredTopics = forumTopics.filter(topic => topic.category === categoryId);
+  const userId = isUserLoggedIn() ? JSON.parse(localStorage.getItem('userSession')).userId : null;
 
   // Atualiza a exibição mantendo os filtros de categoria
   if (forumTopicsContainer) {
     const categoryFilters = `
-      <div class="category-filters mb-6 flex gap-2 overflow-x-auto p-2">
-        <button class="category-filter px-4 py-2 rounded-full border"
+      <div class="category-filters mb-6 flex gap-2 overflow-x-auto pb-2 px-1 -mx-1 snap-x snap-mandatory scrollbar-hide">
+        <button class="category-filter px-4 py-2 rounded-full border transition-colors hover:bg-purple-700 whitespace-nowrap flex-shrink-0 snap-start"
                 onclick="filterTopicsByCategory()">
           🔍 Todas
         </button>
         ${FORUM_CONFIG.categories.map(cat => `
-          <button class="category-filter px-4 py-2 rounded-full border ${cat.id === categoryId ? 'active' : ''}"
+          <button class="category-filter px-4 py-2 rounded-full border transition-colors hover:bg-purple-700 whitespace-nowrap flex-shrink-0 snap-start ${cat.id === categoryId ? 'bg-purple-700 text-white' : ''}"
                   data-category="${cat.id}"
                   onclick="filterTopicsByCategory('${cat.id}')">
             ${cat.icon} ${cat.name}
@@ -918,10 +939,11 @@ function filterTopicsByCategory(categoryId) {
     const category = FORUM_CONFIG.categories.find(c => c.id === categoryId);
     forumTopicsContainer.innerHTML = categoryFilters + `
       <div class="category-section mb-8">
-        <h3 class="text-2xl font-bold mb-4">${category.icon} ${category.name}</h3>
-        ${filteredTopics.map(topic => renderTopicCard(topic,
-      isUserLoggedIn() ? JSON.parse(localStorage.getItem('userSession')).userId : null
-    )).join('')}
+        <h3 class="text-2xl font-bold mb-4 px-1">${category.icon} ${category.name}</h3>
+        ${filteredTopics.length > 0 
+          ? filteredTopics.map(topic => renderTopicCard(topic, userId)).join('')
+          : `<p class="text-center py-8 text-gray-500">Nenhum tópico encontrado nesta categoria</p>`
+        }
       </div>
     `;
   }
