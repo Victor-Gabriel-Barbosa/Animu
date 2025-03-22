@@ -392,57 +392,70 @@ function loadFavoriteAnimes(user) {
   }).join('');
 }
 
-function shareAnime(event, animeTitle, coverImage) {
+async function shareAnime(event, animeTitle, coverImage) {
   event.preventDefault();
   event.stopPropagation();
 
-  const sessionData = JSON.parse(localStorage.getItem('userSession'));
-  const users = JSON.parse(localStorage.getItem('animuUsers')) || [];
-  const currentUser = users.find(u => u.id === sessionData.userId);
+  try {
+    const sessionData = JSON.parse(localStorage.getItem('userSession'));
+    
+    // Usa userManager para obter o usuário atual e seus amigos
+    const users = await userManager.loadUsers();
+    const currentUser = users.find(u => u.id === sessionData.userId);
 
-  if (!currentUser || !currentUser.friends || currentUser.friends.length === 0) {
-    alert('Você precisa ter amigos para compartilhar animes!');
-    return;
-  }
+    if (!currentUser || !currentUser.friends || currentUser.friends.length === 0) {
+      alert('Você precisa ter amigos para compartilhar animes!');
+      return;
+    }
 
-  // Cria modal de seleção de amigos
-  const modalHtml = `
-    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" id="share-modal">
-      <div class="rounded-lg p-6 max-w-md w-full mx-4" style="background:var(--background)">
-        <h3 class="text-lg font-semibold mb-4">Compartilhar "${animeTitle}"</h3>
-        <div class="mb-4">
-          <label class="text-sm text-gray-500">Selecione os amigos:</label>
-          <div class="mt-2 max-h-48 overflow-y-auto space-y-2">
-            ${currentUser.friends.map(friendId => {
-              const friend = users.find(u => u.id === friendId);
-              if (!friend) return '';
-              return `
-                <label class="flex items-center gap-3 p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg">
+    // Filtra apenas amigos válidos
+    const friendsList = currentUser.friends
+      .map(friendId => users.find(u => u.id === friendId))
+      .filter(friend => friend); // remove undefined/null
+
+    if (friendsList.length === 0) {
+      alert('Não foi possível encontrar seus amigos. Tente novamente mais tarde.');
+      return;
+    }
+
+    // Cria modal de seleção de amigos
+    const modalHtml = `
+      <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" id="share-modal">
+        <div class="rounded-lg p-6 max-w-md w-full mx-4" style="background:var(--background)">
+          <h3 class="text-lg font-semibold mb-4">Compartilhar "${animeTitle}"</h3>
+          <div class="mb-4">
+            <label class="text-sm text-gray-500">Selecione os amigos:</label>
+            <div class="mt-2 max-h-48 overflow-y-auto space-y-2">
+              ${friendsList.map(friend => `
+                <label class="flex items-center gap-3 p-2 hover:bg-purple-600 hover:text-white rounded-lg">
                   <input type="checkbox" value="${friend.id}" 
                         class="w-4 h-4 text-purple-600 rounded border-gray-300">
                   <img src="${friend.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(friend.username)}`}" 
                       class="w-8 h-8 rounded-full">
                   <span>${friend.displayName || friend.username}</span>
                 </label>
-              `;
-            }).join('')}
+              `).join('')}
+            </div>
+          </div>
+          <div class="flex justify-end gap-3">
+            <button onclick="closeShareModal()" 
+                    class="px-4 py-2 text-gray-500 hover:text-gray-700">
+              Cancelar
+            </button>
+            <button onclick="confirmShare('${animeTitle}', '${coverImage}')" 
+                    class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+              Compartilhar
+            </button>
           </div>
         </div>
-        <div class="flex justify-end gap-3">
-          <button onclick="closeShareModal()" 
-                  class="px-4 py-2 text-gray-500 hover:text-gray-700">
-            Cancelar
-          </button>
-          <button onclick="confirmShare('${animeTitle}', '${coverImage}')" 
-                  class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
-            Compartilhar
-          </button>
-        </div>
       </div>
-    </div>
-  `;
+    `;
 
-  document.body.insertAdjacentHTML('beforeend', modalHtml);
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+  } catch (error) {
+    console.error("Erro ao compartilhar anime:", error);
+    alert("Ocorreu um erro ao compartilhar o anime. Tente novamente mais tarde.");
+  }
 }
 
 // Remove o modal de compartilhamento da página
@@ -456,137 +469,43 @@ function closeShareModal() {
  * @param {string} animeTitle - O título do anime a ser compartilhado
  * @param {string} coverImage - A URL da imagem de capa do anime
  */
-function confirmShare(animeTitle, coverImage) {
-  const selectedFriends = Array.from(document.querySelectorAll('#share-modal input[type="checkbox"]:checked')).map(cb => cb.value);
+async function confirmShare(animeTitle, coverImage) {
+  try {
+    const selectedFriends = Array.from(document.querySelectorAll('#share-modal input[type="checkbox"]:checked')).map(cb => cb.value);
 
-  if (selectedFriends.length === 0) {
-    alert('Selecione pelo menos um amigo para compartilhar!');
-    return;
-  }
-
-  const chat = new Chat();
-  const sessionData = JSON.parse(localStorage.getItem('userSession'));
-
-  // Cria mensagem especial para compartilhamento de anime
-  const message = {
-    type: 'anime_share',
-    animeTitle,
-    coverImage,
-    message: `Olha só este anime que legal: ${animeTitle}`
-  };
-
-  // Envia para cada amigo selecionado
-  selectedFriends.forEach(friendId => { 
-    chat.sendMessage(sessionData.userId, friendId, JSON.stringify(message)); 
-  });
-
-  closeShareModal();
-
-  // Mostra notificação de sucesso
-  const notification = document.createElement('div');
-  notification.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
-  notification.textContent = `Anime compartilhado com ${selectedFriends.length} amigo(s)!`;
-  document.body.appendChild(notification);
-  setTimeout(() => notification.remove(), 3000);
-}
-
-// Gera linha do tempo com atividades recentes do usuário
-function loadActivityTimeline(user) {
-  // Agrupa diferentes tipos de atividades
-  const comments = JSON.parse(localStorage.getItem('animeComments')) || {};
-  const forumTopics = JSON.parse(localStorage.getItem('forumTopics')) || [];
-  const activities = [];
-
-  // Adiciona comentários ao histórico
-  Object.entries(comments).forEach(([animeTitle, animeComments]) => {
-    animeComments.forEach(comment => {
-      if (comment.username === user.username) {
-        activities.push({
-          type: 'comment',
-          animeTitle,
-          timestamp: comment.timestamp,
-          content: comment.text
-        });
-      }
-    });
-  });
-
-  // Adiciona tópicos do fórum ao histórico
-  forumTopics.forEach(topic => {
-    if (topic.author === user.username) {
-      activities.push({
-        type: 'forum_topic',
-        title: topic.title,
-        timestamp: topic.date,
-        content: topic.content.substring(0, 100) + '...'
-      });
+    if (selectedFriends.length === 0) {
+      alert('Selecione pelo menos um amigo para compartilhar!');
+      return;
     }
-  });
 
-  // Adiciona respostas do fórum ao histórico
-  forumTopics.forEach(topic => {
-    topic.replies.forEach(reply => {
-      if (reply.author === user.username) {
-        activities.push({
-          type: 'forum_reply',
-          topicTitle: topic.title,
-          timestamp: reply.date,
-          content: reply.content.substring(0, 100) + '...'
-        });
-      }
-    });
-  });
+    const chat = new Chat();
+    const sessionData = JSON.parse(localStorage.getItem('userSession'));
 
-  // Adiciona animes favoritados ao histórico
-  user.favoriteAnimes?.forEach(favoriteAnime => {
-    activities.push({
-      type: 'favorite',
-      animeTitle: favoriteAnime,
-      timestamp: new Date().toISOString()
-    });
-  });
+    // Cria mensagem especial para compartilhamento de anime
+    const message = {
+      type: 'anime_share',
+      animeTitle,
+      coverImage,
+      message: `Olha só este anime que legal: ${animeTitle}`
+    };
 
-  // Ordena atividades por data
-  activities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    // Envia para cada amigo selecionado
+    for (const friendId of selectedFriends) {
+      chat.sendMessage(sessionData.userId, friendId, JSON.stringify(message));
+    }
 
-  const container = document.getElementById('activity-timeline');
-  container.innerHTML = activities.map(activity => `
-    <div class="activity-item border-l-2 border-purple-500 pl-4 pb-4">
-      <div class="text-sm text-white">
-        ${new Date(activity.timestamp).toLocaleDateString('pt-BR')}
-      </div>
-      <div class="mt-1">
-        ${getActivityContent(activity)}
-      </div>
-    </div>
-  `).join('');
-}
+    closeShareModal();
 
-/**
- * Formata o texto da atividade baseado no seu tipo
- * @param {Object} activity - Dados da atividade
- * @returns {string} HTML formatado da atividade
- */
-function getActivityContent(activity) {
-  switch (activity.type) {
-    case 'comment':
-      return `<span class="text-white">Comentou em </span><a href="animes.html?anime=${encodeURIComponent(activity.animeTitle)}" 
-              class="text-purple-600 hover:underline">${activity.animeTitle}</a>: 
-              <span class="text-gray-600 dark:text-gray-300">${activity.content}</span>`;
-
-    case 'forum_topic':
-      return `<span class="text-white">Criou um tópico no fórum: </span><span class="text-purple-600 hover:underline">${activity.title}</span>
-              <span class="text-gray-600 dark:text-gray-300">${activity.content}</span>`;
-
-    case 'forum_reply':
-      return `<span class="text-white">Respondeu ao tópico </span><span class="text-purple-600 hover:underline">${activity.topicTitle}</span>: 
-              <span class="text-gray-600 dark:text-gray-300">${activity.content}</span>`;
-
-    case 'favorite':
-      return `<span class="text-white">Adicionou </span><a href="animes.html?anime=${encodeURIComponent(activity.animeTitle)}" 
-              class="text-purple-600 hover:underline">${activity.animeTitle}</a> <span class="text-white">aos favoritos</span>`;
-
-    default: return '';
+    // Mostra notificação de sucesso
+    const notification = document.createElement('div');
+    notification.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+    notification.textContent = `Anime compartilhado com ${selectedFriends.length} amigo(s)!`;
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 3000);
+  } catch (error) {
+    console.error("Erro ao confirmar compartilhamento:", error);
+    alert("Ocorreu um erro ao compartilhar o anime. Tente novamente mais tarde.");
+    closeShareModal();
   }
 }
 
@@ -1210,64 +1129,65 @@ function debounce(func, wait) {
 }
 
 // Abre uma janela de chat com um amigo específico
-function openChat(friendId) {
-  const users = JSON.parse(localStorage.getItem('animuUsers')) || [];
-  const currentUser = JSON.parse(localStorage.getItem('userSession'));
-  const friend = users.find(u => u.id === friendId);
-
-  if (!friend) return;
-
-  // Verifica se já existe uma janela de chat aberta
-  const existingChat = document.querySelector(`#chat-${friendId}`);
-  if (existingChat) {
-    existingChat.querySelector('input').focus();
-    return;
-  }
-
-  const chatWindow = document.createElement('div');
-  chatWindow.id = `chat-${friendId}`;
-  chatWindow.className = 'w-80 rounded-lg shadow-lg overflow-hidden';
-  chatWindow.style.background = 'var(--background)';
-  chatWindow.innerHTML = `
-    <div class="flex items-center justify-between p-3 bg-purple-500 text-white">
-      <div class="flex items-center gap-2">
-        <img src="${friend.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(friend.username)}`}" 
-             alt="${friend.username}" 
-             class="w-8 h-8 rounded-full">
-        <span class="font-medium">${friend.displayName || friend.username}</span>
-      </div>
-      <button onclick="closeChat('${friendId}')" class="text-white hover:text-gray-200 transition-colors">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-    </div>
-    <div class="h-80 overflow-y-auto p-4 space-y-3 scrollbar-thin" id="chat-messages-${friendId}">
-      <!-- Mensagens serão inseridas aqui -->
-    </div>
-    <div class="p-3 border-t dark:border-gray-700">
-      <form onsubmit="sendMessage(event, '${currentUser.userId}', '${friendId}')" class="flex gap-2">
-        <input type="text" placeholder="Digite sua mensagem..." 
-               class="flex-1 p-2 rounded-lg border border-gray-300 dark:border-gray-600">
-        <button type="submit" 
-                class="p-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors">
+async function openChat(friendId) {
+  try {
+    // Usar userManager para buscar os usuários em vez do localStorage
+    const users = await userManager.loadUsers();
+    const sessionData = JSON.parse(localStorage.getItem('userSession'));
+    const friend = users.find(u => u.id === friendId);
+    
+    if (!friend) {
+      console.error('Amigo não encontrado');
+      return;
+    }
+    
+    // Verifica se já existe uma janela de chat aberta
+    const existingChat = document.querySelector(`#chat-${friendId}`);
+    if (existingChat) {
+      existingChat.querySelector('input').focus();
+      return;
+    }
+    
+    const chatWindow = document.createElement('div');
+    chatWindow.id = `chat-${friendId}`;
+    chatWindow.className = 'w-80 rounded-lg shadow-lg overflow-hidden';
+    chatWindow.style.background = 'var(--background)';
+    chatWindow.innerHTML = `
+      <div class="flex items-center justify-between p-3 bg-purple-500 text-white">
+        <div class="flex items-center gap-2">
+          <img src="${friend.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(friend.username)}`}" 
+               alt="${friend.username}" 
+               class="w-8 h-8 rounded-full">
+          <span class="font-medium">${friend.displayName || friend.username}</span>
+        </div>
+        <button onclick="closeChat('${friendId}')" class="text-white hover:text-gray-200 transition-colors">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-      </form>
-    </div>
-  `;
+      </div>
+      <div class="h-80 overflow-y-auto p-4 space-y-3 scrollbar-thin" id="chat-messages-${friendId}">
+        <!-- Mensagens serão inseridas aqui -->
+      </div>
+      <div class="p-3 border-t dark:border-gray-700">
+        <form onsubmit="sendMessage(event, '${sessionData.userId}', '${friendId}')" class="flex gap-2">
+          <input type="text" placeholder="Digite sua mensagem..." 
+                 class="flex-1 p-2 rounded-lg border border-gray-300 dark:border-gray-600">
+          <button type="submit" 
+                  class="p-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            </svg>
+          </button>
+        </form>
+      </div>
+    `;
 
-  document.getElementById('chat-windows').appendChild(chatWindow);
-  loadChatMessages(currentUser.userId, friendId);
-}
-
-
-// Remove a janela de chat com um amigo específico
-function closeChat(friendId) {
-  const chatWindow = document.getElementById(`chat-${friendId}`);
-  if (chatWindow) chatWindow.remove();
+    document.getElementById('chat-windows').appendChild(chatWindow);
+    loadChatMessages(sessionData.userId, friendId);
+  } catch (error) {
+    console.error("Erro ao abrir chat:", error);
+  }
 }
 
 /**
@@ -1275,84 +1195,89 @@ function closeChat(friendId) {
  * @param {string|number} senderId - ID do usuário que está enviando as mensagens
  * @param {string|number} receiverId - ID do usuário que está recebendo as mensagens
  */
-function loadChatMessages(senderId, receiverId) {
-  const chat = new Chat();
-  const messages = chat.getMessages(senderId, receiverId);
-  const container = document.getElementById(`chat-messages-${receiverId}`);
-  const users = JSON.parse(localStorage.getItem('animuUsers')) || [];
+async function loadChatMessages(senderId, receiverId) {
+  try {
+    const chat = new Chat();
+    const messages = chat.getMessages(senderId, receiverId);
+    const container = document.getElementById(`chat-messages-${receiverId}`);
+    
+    // Usa userManager para obter usuários
+    const users = await userManager.loadUsers();
+    
+    // Busca os dados dos usuários para os avatares
+    const sender = users.find(u => u.id === senderId);
+    const receiver = users.find(u => u.id === receiverId);
 
-  // Busca os dados dos usuários para os avatares
-  const sender = users.find(u => u.id === senderId);
-  const receiver = users.find(u => u.id === receiverId);
+    container.innerHTML = messages.map(msg => {
+      const isMine = msg.senderId === senderId;
+      const user = isMine ? sender : receiver;
+      const messageClasses = isMine ? 'ml-auto' : 'mr-auto';
 
-  container.innerHTML = messages.map(msg => {
-    const isMine = msg.senderId === senderId;
-    const user = isMine ? sender : receiver;
-    const messageClasses = isMine ? 'ml-auto' : 'mr-auto';
+      const avatar = user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.username || 'User')}`;
 
-    const avatar = user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.username || 'User')}`;
-
-    try {
-      // Tenta passar mensagem como JSON para verificar se é compartilhamento de anime
-      const parsedMessage = JSON.parse(msg.message);
-      if (parsedMessage.type === 'anime_share') {
-        return `
-          <div class="flex ${isMine ? 'justify-end' : 'justify-start'} items-end gap-2 mb-4">
-            ${!isMine ? `<img src="${avatar}" alt="${user?.username}" class="w-6 h-6 rounded-full object-cover">` : ''}
-            <div class="max-w-[80%] ${messageClasses} bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg overflow-hidden">
-              <div class="flex items-center gap-3 p-3">
-                <img src="${parsedMessage.coverImage}" 
-                     alt="${parsedMessage.animeTitle}" 
-                     class="w-12 h-16 object-cover rounded">
-                <div class="flex-1 text-white">
-                  <p class="text-sm font-medium">${parsedMessage.message}</p>
-                  <a href="animes.html?anime=${encodeURIComponent(parsedMessage.animeTitle)}" 
-                     class="text-xs text-purple-100 hover:text-white mt-1 inline-block
-                            transition-colors duration-200">
-                    Ver anime →
-                  </a>
+      try {
+        // Tenta passar mensagem como JSON para verificar se é compartilhamento de anime
+        const parsedMessage = JSON.parse(msg.message);
+        if (parsedMessage.type === 'anime_share') {
+          return `
+            <div class="flex ${isMine ? 'justify-end' : 'justify-start'} items-end gap-2 mb-4">
+              ${!isMine ? `<img src="${avatar}" alt="${user?.username}" class="w-6 h-6 rounded-full object-cover">` : ''}
+              <div class="max-w-[80%] ${messageClasses} bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg overflow-hidden">
+                <div class="flex items-center gap-3 p-3">
+                  <img src="${parsedMessage.coverImage}" 
+                       alt="${parsedMessage.animeTitle}" 
+                       class="w-12 h-16 object-cover rounded">
+                  <div class="flex-1 text-white">
+                    <p class="text-sm font-medium">${parsedMessage.message}</p>
+                    <a href="animes.html?anime=${encodeURIComponent(parsedMessage.animeTitle)}" 
+                       class="text-xs text-purple-100 hover:text-white mt-1 inline-block
+                              transition-colors duration-200">
+                      Ver anime →
+                    </a>
+                  </div>
+                </div>
+                <div class="px-3 py-1 bg-black/20">
+                  <span class="text-xs text-purple-100">
+                    ${new Date(msg.timestamp).toLocaleTimeString()}
+                  </span>
                 </div>
               </div>
-              <div class="px-3 py-1 bg-black/20">
-                <span class="text-xs text-purple-100">
-                  ${new Date(msg.timestamp).toLocaleTimeString()}
-                </span>
-              </div>
+              ${isMine ? `<img src="${avatar}" alt="${user?.username}" class="w-6 h-6 rounded-full object-cover">` : ''}
             </div>
-            ${isMine ? `<img src="${avatar}" alt="${user?.username}" class="w-6 h-6 rounded-full object-cover">` : ''}
-          </div>
-        `;
+          `;
+        }
+      } catch (e) {
+        // Ignora erro, não é uma mensagem JSON
       }
-    } catch (e) {
-      console.error(e);
-    }
 
-    // Mensagem normal de texto
-    return `
-      <div class="flex ${isMine ? 'justify-end' : 'justify-start'} items-end gap-2">
-        ${!isMine ? `
-          <img src="${avatar}" 
-               alt="${user?.username || 'User'}" 
-               class="w-6 h-6 rounded-full object-cover">
-        ` : ''}
-        <div class="max-w-[70%] ${messageClasses} bg-purple-500 text-white rounded-lg p-2 break-words">
-          <p class="text-sm">${msg.message}</p>
-          <span class="text-xs text-purple-100 block mt-1">
-            ${new Date(msg.timestamp).toLocaleTimeString()}
-          </span>
+      // Mensagem normal de texto
+      return `
+        <div class="flex ${isMine ? 'justify-end' : 'justify-start'} items-end gap-2">
+          ${!isMine ? `
+            <img src="${avatar}" 
+                 alt="${user?.username || 'User'}" 
+                 class="w-6 h-6 rounded-full object-cover">
+          ` : ''}
+          <div class="max-w-[70%] ${messageClasses} bg-purple-500 text-white rounded-lg p-2 break-words">
+            <p class="text-sm">${msg.message}</p>
+            <span class="text-xs text-purple-100 block mt-1">
+              ${new Date(msg.timestamp).toLocaleTimeString()}
+            </span>
+          </div>
+          ${isMine ? `
+            <img src="${avatar}" 
+                 alt="${user?.username || 'User'}" 
+                 class="w-6 h-6 rounded-full object-cover">
+          ` : ''}
         </div>
-        ${isMine ? `
-          <img src="${avatar}" 
-               alt="${user?.username || 'User'}" 
-               class="w-6 h-6 rounded-full object-cover">
-        ` : ''}
-      </div>
-    `;
-  }).join('');
+      `;
+    }).join('');
 
-  container.scrollTop = container.scrollHeight;
+    container.scrollTop = container.scrollHeight;
+  } catch (error) {
+    console.error("Erro ao carregar mensagens:", error);
+  }
 }
-
 
 /**
  * Envia uma mensagem do remetente para o destinatário no chat.
@@ -1360,7 +1285,7 @@ function loadChatMessages(senderId, receiverId) {
  * @param {string} senderId - ID do usuário que envia a mensagem
  * @param {string} receiverId - ID do usuário que recebe a mensagem
  */
-function sendMessage(event, senderId, receiverId) {
+async function sendMessage(event, senderId, receiverId) {
   event.preventDefault();
   const input = event.target.querySelector('input');
   const message = input.value.trim();
@@ -1370,6 +1295,112 @@ function sendMessage(event, senderId, receiverId) {
   const chat = new Chat();
   chat.sendMessage(senderId, receiverId, message);
 
-  loadChatMessages(senderId, receiverId);
+  await loadChatMessages(senderId, receiverId);
   input.value = '';
+}
+
+// Remove a janela de chat com um amigo específico
+function closeChat(friendId) {
+  const chatWindow = document.getElementById(`chat-${friendId}`);
+  if (chatWindow) chatWindow.remove();
+}
+
+// Gera linha do tempo com atividades recentes do usuário
+function loadActivityTimeline(user) {
+  // Agrupa diferentes tipos de atividades
+  const comments = JSON.parse(localStorage.getItem('animeComments')) || {};
+  const forumTopics = JSON.parse(localStorage.getItem('forumTopics')) || [];
+  const activities = [];
+
+  // Adiciona comentários ao histórico
+  Object.entries(comments).forEach(([animeTitle, animeComments]) => {
+    animeComments.forEach(comment => {
+      if (comment.username === user.username) {
+        activities.push({
+          type: 'comment',
+          animeTitle,
+          timestamp: comment.timestamp,
+          content: comment.text
+        });
+      }
+    });
+  });
+
+  // Adiciona tópicos do fórum ao histórico
+  forumTopics.forEach(topic => {
+    if (topic.author === user.username) {
+      activities.push({
+        type: 'forum_topic',
+        title: topic.title,
+        timestamp: topic.date,
+        content: topic.content.substring(0, 100) + '...'
+      });
+    }
+  });
+
+  // Adiciona respostas do fórum ao histórico
+  forumTopics.forEach(topic => {
+    topic.replies.forEach(reply => {
+      if (reply.author === user.username) {
+        activities.push({
+          type: 'forum_reply',
+          topicTitle: topic.title,
+          timestamp: reply.date,
+          content: reply.content.substring(0, 100) + '...'
+        });
+      }
+    });
+  });
+
+  // Adiciona animes favoritados ao histórico
+  user.favoriteAnimes?.forEach(favoriteAnime => {
+    activities.push({
+      type: 'favorite',
+      animeTitle: favoriteAnime,
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  // Ordena atividades por data
+  activities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+  const container = document.getElementById('activity-timeline');
+  container.innerHTML = activities.map(activity => `
+    <div class="activity-item border-l-2 border-purple-500 pl-4 pb-4">
+      <div class="text-sm text-white">
+        ${new Date(activity.timestamp).toLocaleDateString('pt-BR')}
+      </div>
+      <div class="mt-1">
+        ${getActivityContent(activity)}
+      </div>
+    </div>
+  `).join('');
+}
+
+/**
+ * Formata o texto da atividade baseado no seu tipo
+ * @param {Object} activity - Dados da atividade
+ * @returns {string} HTML formatado da atividade
+ */
+function getActivityContent(activity) {
+  switch (activity.type) {
+    case 'comment':
+      return `<span class="text-white">Comentou em </span><a href="animes.html?anime=${encodeURIComponent(activity.animeTitle)}" 
+              class="text-purple-600 hover:underline">${activity.animeTitle}</a>: 
+              <span class="text-gray-600 dark:text-gray-300">${activity.content}</span>`;
+
+    case 'forum_topic':
+      return `<span class="text-white">Criou um tópico no fórum: </span><span class="text-purple-600 hover:underline">${activity.title}</span>
+              <span class="text-gray-600 dark:text-gray-300">${activity.content}</span>`;
+
+    case 'forum_reply':
+      return `<span class="text-white">Respondeu ao tópico </span><span class="text-purple-600 hover:underline">${activity.topicTitle}</span>: 
+              <span class="text-gray-600 dark:text-gray-300">${activity.content}</span>`;
+
+    case 'favorite':
+      return `<span class="text-white">Adicionou </span><a href="animes.html?anime=${encodeURIComponent(activity.animeTitle)}" 
+              class="text-purple-600 hover:underline">${activity.animeTitle}</a> <span class="text-white">aos favoritos</span>`;
+
+    default: return '';
+  }
 }
