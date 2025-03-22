@@ -141,21 +141,10 @@ class UserManager {
     let date;
     
     // Verifica se é um timestamp do Firestore
-    if (firestoreDate.toDate && typeof firestoreDate.toDate === 'function') {
-      date = firestoreDate.toDate();
-    } 
-    // Verifica se é um objeto timestamp com segundos/nanossegundos
-    else if (firestoreDate.seconds) {
-      date = new Date(firestoreDate.seconds * 1000);
-    } 
-    // Verifica se é uma string ISO
-    else if (typeof firestoreDate === 'string') {
-      date = new Date(firestoreDate);
-    }
-    // Fallback para data atual
-    else {
-      date = new Date();
-    }
+    if (firestoreDate.toDate && typeof firestoreDate.toDate === 'function') date = firestoreDate.toDate();
+    else if (firestoreDate.seconds) date = new Date(firestoreDate.seconds * 1000); // Verifica se é um objeto timestamp com segundos/nanossegundos
+    else if (typeof firestoreDate === 'string') date = new Date(firestoreDate); // Verifica se é uma string ISO
+    else date = new Date(); // Fallback para data atual
     
     // Formata para exibição
     return date.toLocaleDateString(format, {
@@ -172,9 +161,7 @@ class UserManager {
       const userRef = this.usersCollection.doc(userId);
       const userDoc = await userRef.get();
       
-      if (!userDoc.exists) {
-        throw new Error(`Usuário com ID ${userId} não encontrado`);
-      }
+      if (!userDoc.exists) throw new Error(`Usuário com ID ${userId} não encontrado`);
       
       const userData = userDoc.data();
       let favoriteAnimes = userData.favoriteAnimes || [];
@@ -183,11 +170,8 @@ class UserManager {
       const isFavorited = favoriteAnimes.includes(animeTitle);
       
       // Atualiza a lista de favoritos
-      if (isFavorited) {
-        favoriteAnimes = favoriteAnimes.filter(title => title !== animeTitle);
-      } else {
-        favoriteAnimes.push(animeTitle);
-      }
+      if (isFavorited) favoriteAnimes = favoriteAnimes.filter(title => title !== animeTitle);
+      else favoriteAnimes.push(animeTitle);
       
       // Atualiza o documento do usuário no Firestore
       await userRef.update({

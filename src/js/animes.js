@@ -1127,7 +1127,7 @@ function updateRatingEmoji(value, updateInput = true) {
 
 // Sistema de favoritos
 function isAnimeFavorited(animeTitle) {
-  const sessionData = JSON.parse(localStorage.getItem('userSession'));
+  const sessionData = userManager.getSessionData();
   if (!sessionData) return false;
 
   // Primeiro tenta obter dados do usuário atualizados no cache
@@ -1135,9 +1135,7 @@ function isAnimeFavorited(animeTitle) {
   const currentUser = users.find(user => user.id === sessionData.userId);
   
   // Verifica se o usuário tem favoritos e se o anime está entre eles
-  return currentUser && 
-         Array.isArray(currentUser.favoriteAnimes) && 
-         currentUser.favoriteAnimes.includes(animeTitle);
+  return currentUser && Array.isArray(currentUser.favoriteAnimes) && currentUser.favoriteAnimes.includes(animeTitle);
 }
 
 // Alterna estado de favorito do anime
@@ -1181,9 +1179,7 @@ async function toggleFavorite(animeTitle) {
       // Atualiza o contador no cache local também para consistência imediata
       animeToUpdate.favoriteCount = (animeToUpdate.favoriteCount || 0) + incrementValue;
       localStorage.setItem('animeData', JSON.stringify(animes));
-    } else {
-      console.warn(`Não foi possível atualizar o Firestore: ID do anime não encontrado (${animeTitle})`);
-    }
+    } else console.warn(`Não foi possível atualizar o Firestore: ID do anime não encontrado (${animeTitle})`);
   } catch (error) {
     console.error('Erro ao atualizar favorito no Firestore:', error);
     alert('Houve um problema ao salvar seu favorito no servidor. Por favor, tente novamente.');
@@ -1198,16 +1194,12 @@ function countAnimeFavorites(animeTitle) {
     const anime = animes.find(a => a.primaryTitle === animeTitle);
     
     // Se tiver o valor favoriteCount no objeto do anime, usa esse valor 
-    if (anime && typeof anime.favoriteCount === 'number') {
-      return anime.favoriteCount;
-    }
+    if (anime && typeof anime.favoriteCount === 'number') return anime.favoriteCount;
     
     // Fallback para contagem local caso o valor do Firestore não esteja disponível
     const users = JSON.parse(localStorage.getItem('animuUsers')) || [];
     return users.reduce((total, user) => {
-      if (Array.isArray(user.favoriteAnimes) && user.favoriteAnimes.includes(animeTitle)) {
-        return total + 1;
-      }
+      if (Array.isArray(user.favoriteAnimes) && user.favoriteAnimes.includes(animeTitle)) return total + 1;
       return total;
     }, 0);
   } catch (error) {
