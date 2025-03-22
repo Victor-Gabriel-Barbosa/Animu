@@ -292,7 +292,7 @@ tbody tr:nth-child(5) { animation-delay: 0.5s; }
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: var(--parallax-bg-image, url('../data/anime-background.png'));
+  background-image: var(--parallax-bg-image, url('../data/images/anime-background.png'));
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
