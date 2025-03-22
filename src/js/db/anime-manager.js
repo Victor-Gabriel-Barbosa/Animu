@@ -324,13 +324,6 @@ class AnimeManager {
       
       const animeRef = this.db.collection(this.animeCollection).doc(animeId);
       
-      // Verificar se o documento existe antes de tentar a transação
-      const animeDoc = await animeRef.get();
-      if (!animeDoc.exists) {
-        console.error(`Anime com ID ${animeId} não encontrado`);
-        return false;
-      }
-      
       // Usar uma transação para garantir a integridade dos dados
       await this.db.runTransaction(async (transaction) => {
         const docSnapshot = await transaction.get(animeRef);
@@ -340,7 +333,7 @@ class AnimeManager {
         }
         
         const currentData = docSnapshot.data();
-        const currentCount = currentData.favoriteCount || 0;
+        const currentCount = typeof currentData.favoriteCount === 'number' ? currentData.favoriteCount : 0;
         const newCount = Math.max(0, currentCount + incrementBy);
         
         transaction.update(animeRef, { 
@@ -357,6 +350,22 @@ class AnimeManager {
       return true;
     } catch (error) {
       console.error('Erro ao atualizar contador de favoritos:', error);
+      
+      // Tenta falhar de maneira segura atualizando o cache local se possível
+      try {
+        const animeDoc = await this.db.collection(this.animeCollection).doc(animeId).get();
+        if (animeDoc.exists) {
+          const animes = this.getAnimesFromCache();
+          const index = animes.findIndex(a => a.id === animeId);
+          if (index >= 0) {
+            animes[index] = { id: animeId, ...animeDoc.data() };
+            localStorage.setItem(this.localStorageKey, JSON.stringify(animes));
+          }
+        }
+      } catch (e) {
+        console.warn('Não foi possível fazer a recuperação do cache:', e);
+      }
+      
       return false;
     }
   }

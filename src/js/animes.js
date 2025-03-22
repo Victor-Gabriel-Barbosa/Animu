@@ -1130,10 +1130,14 @@ function isAnimeFavorited(animeTitle) {
   const sessionData = JSON.parse(localStorage.getItem('userSession'));
   if (!sessionData) return false;
 
+  // Primeiro tenta obter dados do usuário atualizados no cache
   const users = JSON.parse(localStorage.getItem('animuUsers')) || [];
   const currentUser = users.find(user => user.id === sessionData.userId);
-
-  return currentUser?.favoriteAnimes?.includes(animeTitle) || false;
+  
+  // Verifica se o usuário tem favoritos e se o anime está entre eles
+  return currentUser && 
+         Array.isArray(currentUser.favoriteAnimes) && 
+         currentUser.favoriteAnimes.includes(animeTitle);
 }
 
 // Alterna estado de favorito do anime
@@ -1146,7 +1150,7 @@ async function toggleFavorite(animeTitle) {
   }
 
   try {
-    // Usa o método toggleAnimeFavorite do UserManager em vez de manipular diretamente
+    // Usa o método toggleAnimeFavorite do UserManager
     const result = await userManager.toggleAnimeFavorite(sessionData.userId, animeTitle);
     
     // Verifica o resultado da operação
@@ -1173,8 +1177,13 @@ async function toggleFavorite(animeTitle) {
     if (animeToUpdate && animeToUpdate.id) {
       // Atualiza o contador de favoritos no Firestore
       await animeManager.updateFavoriteCount(animeToUpdate.id, incrementValue);
-      console.log(`Favorito atualizado com sucesso no Firestore: ${animeTitle} (${incrementValue > 0 ? 'adicionado' : 'removido'})`);
-    } else console.warn(`Não foi possível atualizar o Firestore: ID do anime não encontrado (${animeTitle})`);
+      
+      // Atualiza o contador no cache local também para consistência imediata
+      animeToUpdate.favoriteCount = (animeToUpdate.favoriteCount || 0) + incrementValue;
+      localStorage.setItem('animeData', JSON.stringify(animes));
+    } else {
+      console.warn(`Não foi possível atualizar o Firestore: ID do anime não encontrado (${animeTitle})`);
+    }
   } catch (error) {
     console.error('Erro ao atualizar favorito no Firestore:', error);
     alert('Houve um problema ao salvar seu favorito no servidor. Por favor, tente novamente.');
@@ -1188,19 +1197,19 @@ function countAnimeFavorites(animeTitle) {
     const animes = animeManager.getAnimesFromCache();
     const anime = animes.find(a => a.primaryTitle === animeTitle);
     
-    // Se tiver o valor favoriteCount no objeto do anime, usa esse valor como fonte mais confiável
+    // Se tiver o valor favoriteCount no objeto do anime, usa esse valor 
     if (anime && typeof anime.favoriteCount === 'number') {
       return anime.favoriteCount;
     }
     
     // Fallback para contagem local caso o valor do Firestore não esteja disponível
     const users = JSON.parse(localStorage.getItem('animuUsers')) || [];
-    const count = users.reduce((total, user) => {
-      if (user.favoriteAnimes && user.favoriteAnimes.includes(animeTitle)) return total + 1;
+    return users.reduce((total, user) => {
+      if (Array.isArray(user.favoriteAnimes) && user.favoriteAnimes.includes(animeTitle)) {
+        return total + 1;
+      }
       return total;
     }, 0);
-    
-    return count;
   } catch (error) {
     console.error('Erro ao contar favoritos:', error);
     return 0;
@@ -1634,24 +1643,7 @@ async function toggleFavoriteFromCard(animeTitle) {
   }
 
   try {
-    // Busca o usuário atualizado do Firestore
-    const currentUser = await userManager.getUserById(sessionData.userId);
-    
-    if (!currentUser) {
-      console.error('Usuário não encontrado no banco de dados');
-      return;
-    }
-
-    // Garante que o array de favoritos existe
-    if (!currentUser.favoriteAnimes) currentUser.favoriteAnimes = [];
-
-    // Verifica se o anime já está favoritado
-    const isFavorited = currentUser.favoriteAnimes.includes(animeTitle);
-    let incrementValue = 0;
-
-    // Atualiza a lista de favoritos do usuário
-    // Em vez de manipular manualmente o array de favoritos, vamos usar o método 
-    // específico do UserManager que já faz toda essa lógica
+    // Usa diretamente o método do UserManager sem redundâncias
     const result = await userManager.toggleAnimeFavorite(sessionData.userId, animeTitle);
     
     // Verifica o resultado da operação
@@ -1663,7 +1655,7 @@ async function toggleFavoriteFromCard(animeTitle) {
     
     // Define se o anime foi adicionado ou removido dos favoritos
     const wasAdded = result.isFavorited;
-    incrementValue = wasAdded ? 1 : -1;
+    const incrementValue = wasAdded ? 1 : -1;
 
     // Encontra o ID do anime para atualizar o contador no Firestore
     const animes = animeManager.getAnimesFromCache();
@@ -1676,14 +1668,12 @@ async function toggleFavoriteFromCard(animeTitle) {
       // Atualiza o contador no cache local também para consistência imediata
       animeToUpdate.favoriteCount = (animeToUpdate.favoriteCount || 0) + incrementValue;
       localStorage.setItem('animeData', JSON.stringify(animes));
-      
-      console.log(`Favorito atualizado com sucesso no Firestore: ${animeTitle} (${incrementValue > 0 ? 'adicionado' : 'removido'})`);
     } else {
       console.warn(`Não foi possível atualizar o Firestore: ID do anime não encontrado (${animeTitle})`);
     }
 
     // O novo estado é o oposto do anterior
-    const newState = !isFavorited;
+    const newState = !isAnimeFavorited(animeTitle);
     const updatedCount = countAnimeFavorites(animeTitle);
     
     // Atualiza a UI - todos os botões relacionados a este anime em toda a página
