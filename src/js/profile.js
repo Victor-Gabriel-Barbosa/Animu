@@ -948,7 +948,7 @@ async function loadFriendRequests(user) {
               <button onclick="rejectFriendRequest('${requester.id}')" 
                       class="text-red-500 hover:text-red-600 transition-colors"
                       title="Recusar solicitação">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 24 24">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                         d="M6 18L18 6M6 6l12 12"/>
                 </svg>
@@ -1016,7 +1016,7 @@ function setupFriendSearchListener() {
               '<span class="text-sm text-gray-500">Já é amigo</span>' :
               hasPendingRequest ?
                 '<span class="text-sm text-gray-500">Solicitação pendente</span>' :
-                `<button onclick="sendFriendRequest('${user.id}')" 
+                `<button onclick="sendFriendRequest(event, '${user.id}')" 
                         class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded-lg transition-colors">
                   Adicionar
                 </button>`
@@ -1038,7 +1038,7 @@ function setupFriendSearchListener() {
 }
 
 // Envia pedido de amizade
-async function sendFriendRequest(targetUserId) {
+async function sendFriendRequest(event, targetUserId) {
   try {
     // Carrega todos os usuários
     const users = await userManager.loadUsers();
