@@ -28,33 +28,34 @@
         <h2 class="gradient-text text-2xl mb-6">Nossa Missão</h2>
         <div class="flex flex-col md:flex-row gap-8 items-center">
           <!-- Texto da missão -->
-          <div class="flex-1">
-            <p class="text-lg leading-relaxed">
+          <div class="flex-1 px-4 sm:px-6">
+            <p class="text-base sm:text-lg leading-relaxed">
               O Animu é uma plataforma dedicada aos fãs de anime, criada com o objetivo de fornecer
               informações detalhadas e organizadas sobre as mais diversas séries de animação japonesa.
             </p>
-            <p class="text-lg leading-relaxed mt-4">
+            <p class="text-base sm:text-lg leading-relaxed mt-3 sm:mt-4">
               Nossa missão é criar um ambiente acolhedor onde os fãs possam descobrir, explorar e
               compartilhar sua paixão por animes.
             </p>
           </div>
           <!-- Logo da plataforma -->
-          <div class="flex-1 text-center">
-            <img src="src/data/images/favicon/web-app-manifest-512x512.png" alt="Animu Logo" class="max-w-[200px] mx-auto">
+          <div class="flex-1 text-center mt-6 md:mt-0">
+            <img src="src/data/images/favicon/web-app-manifest-512x512.png" alt="Animu Logo" 
+                 class="max-w-[150px] sm:max-w-[200px] mx-auto transition-transform hover:scale-105 duration-300">
           </div>
         </div>
       </section>
 
       <!-- Seção: Recursos da plataforma -->
       <section>
-        <h2 class="gradient-text text-2xl mb-6">Recursos</h2>
-        <ul class="resource-list">
-          <li>Banco de dados extensivo de animes</li>
-          <li>Informações detalhadas sobre cada série</li>
-          <li>Sistema de classificação e avaliação</li>
-          <li>Interface intuitiva e responsiva</li>
-          <li>Suporte a temas claro e escuro</li>
-          <li>Atualizações regulares</li>
+        <h2 class="gradient-text text-xl sm:text-2xl mb-4 sm:mb-6">Recursos</h2>
+        <ul class="resource-list grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+          <li class="p-2 sm:p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Banco de dados extensivo de animes</li>
+          <li class="p-2 sm:p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Informações detalhadas sobre cada série</li>
+          <li class="p-2 sm:p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Sistema de classificação e avaliação</li>
+          <li class="p-2 sm:p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Interface intuitiva e responsiva</li>
+          <li class="p-2 sm:p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Suporte a temas claro e escuro</li>
+          <li class="p-2 sm:p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Atualizações regulares</li>
         </ul>
       </section>
 
@@ -88,19 +89,19 @@
 
       <!-- Seção: Contatos e links externos -->
       <section>
-        <h2 class="gradient-text text-2xl mb-6">Entre em Contato</h2>
-        <div class="contact-section">
-          <a href="mailto:victorgabrielbarbosa88@gmail.com" class="contact-link">
-            <i class="fas fa-envelope"></i>
-            victorgabrielbarbosa88@gmail.com
+        <h2 class="gradient-text text-xl sm:text-2xl mb-4 sm:mb-6">Entre em Contato</h2>
+        <div class="contact-section flex flex-col space-y-4 sm:space-y-3">
+          <a href="mailto:victorgabrielbarbosa88@gmail.com" class="contact-link flex items-center p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+            <i class="fas fa-envelope mr-2 text-lg"></i>
+            <span class="text-sm sm:text-base truncate">victorgabrielbarbosa88@gmail.com</span>
           </a>
-          <a href="mailto:guilhermeepifanio14@gmail.com" class="contact-link">
-            <i class="fas fa-envelope"></i>
-            guilhermeepifanio14@gmail.com
+          <a href="mailto:guilhermeepifanio14@gmail.com" class="contact-link flex items-center p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+            <i class="fas fa-envelope mr-2 text-lg"></i>
+            <span class="text-sm sm:text-base truncate">guilhermeepifanio14@gmail.com</span>
           </a>
-          <a href="https://github.com/animu" target="_blank" class="contact-link">
-            <i class="fab fa-github"></i>
-            GitHub
+          <a href="https://github.com/animu" target="_blank" class="contact-link flex items-center p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+            <i class="fab fa-github mr-2 text-lg"></i>
+            <span class="text-sm sm:text-base">GitHub</span>
           </a>
         </div>
       </section>

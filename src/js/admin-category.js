@@ -179,18 +179,33 @@ class CategoryAdmin {
         </div>
 
         <!-- Botões -->
-        <div class="flex flex-col sm:flex-row justify-end gap-2 sm:gap-4 mt-6 pt-4 border-t">
+        <div class="flex flex-col md:flex-row gap-3 mt-6">
           <button type="button" onclick="categoryManager.clearForm()" 
-            class="w-full sm:w-auto btn btn-secondary order-3 sm:order-1">
-            Limpar
+            class="btn btn-secondary order-3 md:order-1 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
+            <span class="flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              Limpar
+            </span>
           </button>
           <button type="button" onclick="categoryManager.closeModal()" 
-            class="w-full sm:w-auto btn btn-cancel order-2">
-            Cancelar
+            class="btn btn-cancel order-2 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
+            <span class="flex items-center justify-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Cancelar
+            </span>
           </button>
           <button type="submit" 
-            class="w-full sm:w-auto btn btn-primary order-1 sm:order-3">
-            Adicionar Categoria
+            class="btn btn-primary order-1 md:order-3 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
+            <span class="flex items-center justify-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              Adicionar Categoria
+            </span>
           </button>
         </div>
       </form>

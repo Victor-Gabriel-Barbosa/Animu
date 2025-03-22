@@ -126,13 +126,14 @@
         <div class="forum-container">
           <h2 class="section-title">Fórum da Comunidade</h2>
           <div class="flex justify-center items-center mb-8">
-            <button id="new-topic-btn" class="btn">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd"
-                  d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                  clip-rule="evenodd" />
-              </svg>
-              Nova Discussão
+            <button id="new-topic-btn" class="btn btn-primary group">
+              <span class="flex items-center gap-2">
+                <svg class="w-5 h-5 transition-transform group-hover:rotate-90 duration-300" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Nova Discussão
+              </span>
             </button>
           </div>
 
@@ -248,17 +249,22 @@
         </div>
 
         <!-- Botões de ação -->
-        <div class="modal-footer">
-          <button type="button" id="cancel-topic-btn" class="btn btn-cancel">
-            Cancelar
+        <div class="flex flex-col md:flex-row gap-3 mt-6">
+          <button type="button" id="cancel-topic-btn" class="btn btn-cancel order-2 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
+            <span class="flex items-center justify-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Cancelar
+            </span>
           </button>
-          <button type="submit" class="btn btn-primary">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 6v6m0 0v6m0-6h6m-6 0H6">
-              </path>
-            </svg>
-            Publicar Discussão
+          <button type="submit" class="btn btn-primary order-1 md:order-3 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
+            <span class="flex items-center justify-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              Publicar Discussão
+            </span>
           </button>
         </div>
       </form>

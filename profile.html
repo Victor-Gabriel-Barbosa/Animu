@@ -321,12 +321,22 @@
             </div>
           </div>
           <!-- Botões de ação do formulário -->
-          <div class="flex gap-4 mt-8 pt-4 border-t border-gray-200 dark:border-gray-600">
-            <button type="submit" class="btn btn-primary">
-              Salvar Alterações
+          <div class="flex flex-col md:flex-row gap-3 mt-6">
+            <button type="submit" class="btn btn-primary order-1 md:order-3 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
+              <span class="flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                Salvar Alterações
+              </span>
             </button>
-            <button type="button" id="cancel-edit" class="btn btn-cancel">
-              Cancelar
+            <button type="button" id="cancel-edit" class="btn btn-cancel order-2 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
+              <span class="flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Cancelar
+              </span>
             </button>
           </div>
         </form>

@@ -537,15 +537,6 @@ input, button, textarea, select {
   resize: vertical;
 }
 
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 24px;
-  padding-top: 16px;
-  border-top: 2px solid var(--card-shadow);
-}
-
 .btn {
   display: inline-flex;
   align-items: center;

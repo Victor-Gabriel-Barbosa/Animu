@@ -114,11 +114,11 @@
           <!-- Auto-preenchimento via MyAnimeList -->
           <div class="mb-4">
             <label class="block text-sm font-medium mb-1">URL do MyAnimeList (opcional)</label>
-            <div class="flex gap-2">
+            <div class="flex flex-col sm:flex-row gap-2">
               <input type="text" id="malUrl" placeholder="https://myanimelist.net/anime/... ou ID"
-                class="flex-1 p-2 border rounded">
+                class="flex-1 p-2 border rounded mb-2 sm:mb-0">
               <button type="button" onclick="autoFillFromMal()"
-                class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
+                class="w-full sm:w-auto px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
                 Preencher
               </button>
             </div>
@@ -192,11 +192,11 @@
               <!-- Gerenciamento de produtores -->
               <div>
                 <label class="block text-sm font-medium mb-1">Produtores</label>
-                <div class="flex gap-2 mb-2">
+                <div class="flex flex-col sm:flex-row gap-2">
                   <input type="text" id="producerInput" placeholder="Nome do produtor"
-                    class="flex-1 p-2 border rounded">
+                    class="flex-1 p-2 border rounded mb-2 sm:mb-0">
                   <button type="button" onclick="addProducer()"
-                    class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
+                    class="w-full sm:w-auto px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
                     +
                   </button>
                 </div>
@@ -211,15 +211,15 @@
               <!-- Seção de títulos alternativos -->
               <div>
                 <label class="block text-sm font-medium mb-1">Títulos Alternativos</label>
-                <div class="flex gap-2 mb-2">
-                  <input type="text" id="altTitle" placeholder="Título" class="flex-1 p-2 border rounded">
-                  <select id="altTitleType" class="p-2 border rounded">
+                <div class="flex flex-col sm:flex-row gap-2">
+                  <input type="text" id="altTitle" placeholder="Título" class="flex-1 p-2 border rounded mb-2 sm:mb-0">
+                  <select id="altTitleType" class="p-2 border rounded mb-2 sm:mb-0 w-full sm:w-auto">
                     <option value="japonês">Japonês</option>
                     <option value="inglês">Inglês</option>
                     <option value="português">Português</option>
                   </select>
                   <button type="button" onclick="addAlternativeTitle()"
-                    class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
+                    class="w-full sm:w-auto px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
                     +
                   </button>
                 </div>
@@ -300,11 +300,11 @@
                 <label class="block text-sm font-medium mb-1">
                   Gêneros <span class="text-red-500">*</span>
                 </label>
-                <div class="flex gap-2 mb-2">
-                  <input type="text" id="genreInput" placeholder="Digite um gênero" class="flex-1 p-2 border rounded"
+                <div class="flex flex-col sm:flex-row gap-2">
+                  <input type="text" id="genreInput" placeholder="Digite um gênero" class="flex-1 p-2 border rounded mb-2 sm:mb-0"
                     list="genresSuggestions">
                   <button type="button" onclick="addGenre()"
-                    class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
+                    class="w-full sm:w-auto px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
                     +
                   </button>
                 </div>
@@ -340,11 +340,11 @@
               <!-- Gerenciamento de licenciadores -->
               <div>
                 <label class="block text-sm font-medium mb-1">Licenciadores</label>
-                <div class="flex gap-2 mb-2">
+                <div class="flex flex-col sm:flex-row gap-2">
                   <input type="text" id="licensorInput" placeholder="Nome do licenciador"
-                    class="flex-1 p-2 border rounded">
+                    class="flex-1 p-2 border rounded mb-2 sm:mb-0">
                   <button type="button" onclick="addLicensor()"
-                    class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
+                    class="w-full sm:w-auto px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
                     +
                   </button>
                 </div>
@@ -358,9 +358,9 @@
           <!-- Gerenciamento de staff -->
           <div>
             <label class="block text-sm font-medium mb-1">Staff</label>
-            <div class="flex gap-2 mb-2">
-              <input type="text" id="staffInput" placeholder="Nome do membro" class="flex-1 p-2 border rounded">
-              <select id="staffRole" class="p-2 border rounded min-w-[140px]">
+            <div class="flex flex-col sm:flex-row gap-2">
+              <input type="text" id="staffInput" placeholder="Nome do membro" class="flex-1 p-2 border rounded mb-2 sm:mb-0">
+              <select id="staffRole" class="p-2 border rounded min-w-[140px] mb-2 sm:mb-0 w-full sm:w-auto">
                 <option value="director">Diretor</option>
                 <option value="writer">Roteirista</option>
                 <option value="composer">Compositor</option>
@@ -369,7 +369,7 @@
                 <option value="producer">Produtor</option>
                 <option value="other">Outro</option>
               </select>
-              <button type="button" onclick="addStaffMember()" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
+              <button type="button" onclick="addStaffMember()" class="w-full sm:w-auto px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
                 +
               </button>
             </div>
@@ -399,16 +399,33 @@
           </div>
 
           <!-- Botões de controle do formulário -->
-          <div class="flex flex-col sm:flex-row justify-end gap-2 sm:gap-4 mt-6">
+          <div class="flex flex-col md:flex-row gap-3 mt-6">
             <button type="button" onclick="clearAnimeForm()"
-              class="w-full sm:w-auto btn btn-secondary order-3 sm:order-1">
-              Limpar
+              class="btn btn-secondary order-3 md:order-1 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
+              <span class="flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Limpar
+              </span>
             </button>
-            <button type="button" onclick="closeAnimeForm()" class="w-full sm:w-auto btn btn-cancel order-2">
-              Cancelar
+            <button type="button" onclick="closeAnimeForm()" 
+              class="btn btn-cancel order-2 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
+              <span class="flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Cancelar
+              </span>
             </button>
-            <button type="submit" class="w-full sm:w-auto btn btn-primary order-1 sm:order-3">
-              Salvar
+            <button type="submit" 
+              class="btn btn-primary order-1 md:order-3 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
+              <span class="flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                Salvar
+              </span>
             </button>
           </div>
         </form>
