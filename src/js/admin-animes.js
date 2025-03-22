@@ -991,11 +991,10 @@ function checkStorageQuota(data) {
 }
 
 
-// Configura o campo de entrada de data com a data atual como máxima e padrão
+// Configura o campo de entrada de data com a data atual como padrão (sem limite máximo)
 function setupDateInput() {
   const dateInput = document.getElementById('releaseDate');
   const today = new Date().toISOString().split('T')[0];
-  dateInput.max = today; // Impede seleção de datas futuras
 
   // Define a data padrão para hoje se não houver data selecionada
   if (!dateInput.value) dateInput.value = today;
