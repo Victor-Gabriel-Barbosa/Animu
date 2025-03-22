@@ -548,21 +548,6 @@
   margin-bottom: 1.5rem;
 }
 
-.modal-close {
-  background: transparent;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: var(--text-color);
-  opacity: 0.7;
-  transition: opacity 0.2s;
-  padding: 0.5rem;
-}
-
-.modal-close:hover {
-  opacity: 1;
-}
-
 /* Responsividade */
 @media (max-width: 768px) {
   .admin-news-item {
@@ -748,18 +733,6 @@
 
 .remove-media-btn:hover {
   background: rgb(239, 68, 68);
-  transform: scale(1.1);
-}
-
-.close-btn {
-  padding: 0.5rem;
-  border-radius: 50%;
-  transition: all 0.2s ease;
-  line-height: 0;
-}
-
-.close-btn:hover {
-  background: rgba(0, 0, 0, 0.1);
   transform: scale(1.1);
 }
 

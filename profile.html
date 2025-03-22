@@ -175,10 +175,10 @@
                       </div>
                     </div>
                     <!-- Botão para fechar o modal -->
-                    <button id="close-friend-modal" class="p-2 hover:bg-shadow rounded-lg transition-colors">
-                      <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M6 18L18 6M6 6l12 12" />
+                    <button id="close-friend-modal" class="modal-close hover:rotate-90 transition-transform">
+                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
                       </svg>
                     </button>
                   </div>
@@ -266,12 +266,11 @@
                 max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600
                 scrollbar-track-gray-100 dark:scrollbar-track-gray-800 relative" style="background:var(--background)">
         <!-- Botão para fechar o modal -->
-        <button type="button" id="close-modal" class="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300
-               transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        <button type="button" id="close-modal" class="modal-close hover:rotate-90 transition-transform absolute top-4 right-4 p-2">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+            </path>
           </svg>
-          <span class="sr-only">Fechar modal</span>
         </button>
         <h2 class="text-2xl font-bold mb-6">Editar Perfil</h2>
         <!-- Formulário de edição de perfil -->
