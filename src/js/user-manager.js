@@ -164,4 +164,74 @@ class UserManager {
       year: 'numeric'
     });
   }
+
+  // Gerencia os favoritos de um usuário
+  async toggleAnimeFavorite(userId, animeTitle) {
+    try {
+      // Busca o documento do usuário
+      const userRef = this.usersCollection.doc(userId);
+      const userDoc = await userRef.get();
+      
+      if (!userDoc.exists) {
+        throw new Error(`Usuário com ID ${userId} não encontrado`);
+      }
+      
+      const userData = userDoc.data();
+      let favoriteAnimes = userData.favoriteAnimes || [];
+      
+      // Verifica se o anime já está nos favoritos
+      const isFavorited = favoriteAnimes.includes(animeTitle);
+      
+      // Atualiza a lista de favoritos
+      if (isFavorited) {
+        favoriteAnimes = favoriteAnimes.filter(title => title !== animeTitle);
+      } else {
+        favoriteAnimes.push(animeTitle);
+      }
+      
+      // Atualiza o documento do usuário no Firestore
+      await userRef.update({
+        favoriteAnimes,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      
+      // Atualiza o localStorage para manter consistência
+      const localUsers = JSON.parse(localStorage.getItem('animuUsers') || '[]');
+      const userIndex = localUsers.findIndex(user => user.id === userId);
+      
+      if (userIndex !== -1) {
+        localUsers[userIndex].favoriteAnimes = favoriteAnimes;
+        localStorage.setItem('animuUsers', JSON.stringify(localUsers));
+      }
+      
+      console.log(`Anime ${animeTitle} ${!isFavorited ? 'adicionado aos' : 'removido dos'} favoritos do usuário ${userId}`);
+      
+      return {
+        success: true,
+        isFavorited: !isFavorited,
+        favoriteAnimes
+      };
+    } catch (error) {
+      console.error("Erro ao atualizar favoritos do usuário:", error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Verifica se um anime está na lista de favoritos do usuário
+  async isAnimeFavorited(userId, animeTitle) {
+    try {
+      const userDoc = await this.usersCollection.doc(userId).get();
+      if (!userDoc.exists) return false;
+      
+      const userData = userDoc.data();
+      return userData.favoriteAnimes?.includes(animeTitle) || false;
+    } catch (error) {
+      console.error("Erro ao verificar anime favorito:", error);
+      
+      // Fallback para localStorage
+      const localUsers = JSON.parse(localStorage.getItem('animuUsers') || '[]');
+      const user = localUsers.find(u => u.id === userId);
+      return user?.favoriteAnimes?.includes(animeTitle) || false;
+    }
+  }
 }

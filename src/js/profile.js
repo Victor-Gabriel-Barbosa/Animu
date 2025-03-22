@@ -1,5 +1,7 @@
 // Inicializa o gerenciador de usuários para operações de usuário
 const userManager = new UserManager();
+// Inicializa o gerenciador de categorias
+const categoryManager = new CategoryManager();
 
 document.addEventListener('DOMContentLoaded', async function () {
   // Obtém ID do usuário da URL se existir
@@ -14,6 +16,9 @@ document.addEventListener('DOMContentLoaded', async function () {
   }
 
   try {
+    // Inicializa o gerenciador de categorias
+    await categoryManager.initialize();
+    
     // Carrega todos os usuários para referência
     const users = await userManager.loadUsers();
     let currentUser;
@@ -617,27 +622,40 @@ async function changeAvatar(avatar, userId) {
 }
 
 // Inicializa seletor de gêneros para edição do perfil
-function setupGenreSelection() {
-  // Obtém todas as categorias do CategoryDisplay
-  const categoryDisplay = new CategoryDisplay();
-  const categories = categoryDisplay.getCategories();
+async function setupGenreSelection() {
+  try {
+    // Carrega categorias usando o CategoryManager
+    const categoriesResult = await categoryManager.loadCategories();
+    let genres = [];
+    
+    if (categoriesResult.success && categoriesResult.data) {
+      // Extrai os nomes das categorias
+      genres = categoriesResult.data.map(category => category.name);
+    } else {
+      console.warn('Não foi possível carregar as categorias:', categoriesResult.message);
+      // Tenta buscar do localStorage como fallback
+      const localCategories = JSON.parse(localStorage.getItem('animuCategories')) || [];
+      genres = localCategories.map(category => category.name);
+    }
 
-  // Extrai os nomes das categorias
-  const genres = categories.map(category => category.name);
-
-  const genreContainer = document.getElementById('edit-genres');
-  genreContainer.innerHTML = genres.map(genre => `
-    <label class="inline-flex items-center p-2.5 border border-gray-200 dark:border-gray-600 
+    const genreContainer = document.getElementById('edit-genres');
+    genreContainer.innerHTML = genres.map(genre => `
+      <label class="inline-flex items-center p-2.5 border border-gray-200 dark:border-gray-600 
                   rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/30 cursor-pointer
                   transition-colors duration-200">
-      <input type="checkbox" name="genres" value="${genre}" 
-             class="w-4 h-4 text-purple-600 dark:text-purple-400 
-                    border-gray-300 dark:border-gray-600 
-                    rounded focus:ring-purple-500 dark:focus:ring-purple-400
-                    bg-white dark:bg-gray-700">
-      <span class="ml-2 text-sm">${genre}</span>
-    </label>
-  `).join('');
+        <input type="checkbox" name="genres" value="${genre}" 
+               class="w-4 h-4 text-purple-600 dark:text-purple-400 
+                      border-gray-300 dark:border-gray-600 
+                      rounded focus:ring-purple-500 dark:focus:ring-purple-400
+                      bg-white dark:bg-gray-700">
+        <span class="ml-2 text-sm">${genre}</span>
+      </label>
+    `).join('');
+  } catch (error) {
+    console.error('Erro ao carregar categorias para seleção de gêneros:', error);
+    const genreContainer = document.getElementById('edit-genres');
+    genreContainer.innerHTML = '<p class="text-red-500">Erro ao carregar categorias</p>';
+  }
 }
 
 /**
@@ -654,7 +672,7 @@ function setupEventListeners(user, isOwnProfile) {
     const closeButton = document.getElementById('close-modal');
 
     // Botão de editar perfil
-    editButton.addEventListener('click', () => {
+    editButton.addEventListener('click', async () => {
       editModal.classList.remove('hidden');
       editModal.classList.add('flex');
 
@@ -663,7 +681,7 @@ function setupEventListeners(user, isOwnProfile) {
       document.getElementById('edit-email').value = user.email;
 
       // Configura e marca os gêneros favoritos
-      setupGenreSelection();
+      await setupGenreSelection();
       const checkboxes = document.querySelectorAll('input[name="genres"]');
       checkboxes.forEach(checkbox => { 
         checkbox.checked = user.favoriteGenres?.includes(checkbox.value) || false; 

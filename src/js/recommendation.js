@@ -1,5 +1,9 @@
+// Inicializa os gerenciadores
+const userManager = new UserManager();
+const animeManager = new AnimeManager();
+
 // Redireciona para login se não houver sessão ativa
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
   // Verifica se o usuário está logado
   const sessionData = JSON.parse(localStorage.getItem('userSession'));
   if (!sessionData) {
@@ -8,24 +12,33 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // Inicializa recomendações
-  initializeRecommendations();
+  await initializeRecommendations();
 
   // Atualiza avatar e nome do usuário
-  updateUserInfo();
+  await updateUserInfo();
 });
 
 // Inicializa sistema de recomendações e configurações da página
-function initializeRecommendations() {
-  const user = getCurrentUser();
+async function initializeRecommendations() {
+  const user = await getCurrentUser();
   if (!user) {
     console.error('Usuário não encontrado');
     return;
   }
 
-  const animes = JSON.parse(localStorage.getItem('animeData'));
+  // Usa AnimeManager para carregar os animes do cache
+  const animes = animeManager.getAnimesFromCache();
   if (!animes || animes.length === 0) {
-    console.error('Nenhum anime encontrado no localStorage');
-    return;
+    console.error('Nenhum anime encontrado no cache');
+    // Tenta carregar animes do Firestore
+    try {
+      await animeManager.getAnimes();
+      initializeRecommendations(); // Tenta inicializar novamente após carregar
+      return;
+    } catch (error) {
+      console.error('Erro ao carregar animes:', error);
+      return;
+    }
   }
 
   // Atualiza estatísticas
@@ -40,16 +53,24 @@ function initializeRecommendations() {
   setupFilters();
 }
 
-// Retorna dados do usuário atual baseado na sessão
-function getCurrentUser() {
+// Retorna dados do usuário atual baseado na sessão usando UserManager
+async function getCurrentUser() {
   const sessionData = JSON.parse(localStorage.getItem('userSession'));
-  const users = JSON.parse(localStorage.getItem('animuUsers')) || [];
-  return users.find(user => user.id === sessionData.userId);
+  if (!sessionData || !sessionData.userId) return null;
+  
+  try {
+    // Usa o método getUserById do UserManager
+    const user = await userManager.getUserById(sessionData.userId);
+    return user;
+  } catch (error) {
+    console.error('Erro ao obter dados do usuário:', error);
+    return null;
+  }
 }
 
 // Gera recomendações baseadas nos gêneros favoritos do usuário
 function loadGenreBasedRecommendations(user) {
-  const animes = JSON.parse(localStorage.getItem('animeData')) || [];
+  const animes = animeManager.getAnimesFromCache();
   const favoriteGenres = user.favoriteGenres || [];
   const watchedAnimes = user.watchedAnimes || [];
   const comments = JSON.parse(localStorage.getItem('animeComments')) || {};
@@ -81,7 +102,7 @@ function loadGenreBasedRecommendations(user) {
 
 // Recomenda animes similares aos já assistidos pelo usuário
 function loadSimilarAnimeRecommendations(user) {
-  const animes = JSON.parse(localStorage.getItem('animeData')) || [];
+  const animes = animeManager.getAnimesFromCache();
   const watchedAnimes = user.watchedAnimes || [];
 
   // Encontra animes similares baseado nos já assistidos
@@ -99,11 +120,11 @@ function loadSimilarAnimeRecommendations(user) {
 
 // Lista animes em tendência baseado em comentários e avaliações
 function loadTrendingRecommendations() {
-  const animes = JSON.parse(localStorage.getItem('animeData')) || [];
+  const animes = animeManager.getAnimesFromCache();
   const comments = JSON.parse(localStorage.getItem('animeComments')) || {};
 
   if (animes.length === 0) {
-    console.warn('Nenhum anime encontrado no localStorage');
+    console.warn('Nenhum anime encontrado no cache');
     return;
   }
 
@@ -166,7 +187,7 @@ function calculateWatchHistoryScore(anime, user, comments) {
 
   // Análise mais profunda do histórico
   user.watchedAnimes?.forEach(watchedTitle => {
-    const watchedAnime = JSON.parse(localStorage.getItem('animeData')).find(a => a.primaryTitle === watchedTitle);
+    const watchedAnime = animeManager.getAnimesFromCache().find(a => a.primaryTitle === watchedTitle);
 
     if (watchedAnime) {
       // Contagem ponderada de gêneros
@@ -210,7 +231,7 @@ function calculateRecentActivityScore(user, animeGenres) {
 
   // Analisa comentários recentes
   recentComments.forEach(comment => {
-    const commentedAnime = JSON.parse(localStorage.getItem('animeData')).find(a => a.primaryTitle === comment.animeTitle);
+    const commentedAnime = animeManager.getAnimesFromCache().find(a => a.primaryTitle === comment.animeTitle);
 
     if (commentedAnime) {
       const matchingGenres = commentedAnime.genres.filter(genre => animeGenres.includes(genre));
@@ -220,7 +241,7 @@ function calculateRecentActivityScore(user, animeGenres) {
 
   // Analisa favoritos recentes
   recentFavorites.forEach(favorite => {
-    const favoriteAnime = JSON.parse(localStorage.getItem('animeData')).find(a => a.primaryTitle === favorite);
+    const favoriteAnime = animeManager.getAnimesFromCache().find(a => a.primaryTitle === favorite);
 
     if (favoriteAnime) {
       const matchingGenres = favoriteAnime.genres.filter(genre => animeGenres.includes(genre));
@@ -277,8 +298,81 @@ function calculateRatingScore(anime, comments) {
   return isNaN(normalizedScore) ? 50 : Math.min(normalizedScore, 100);
 }
 
+// Verifica se um anime está nos favoritos do usuário atual
+async function isAnimeFavorited(animeTitle) {
+  const user = await getCurrentUser();
+  if (!user || !user.favoriteAnimes) return false;
+  return user.favoriteAnimes.includes(animeTitle);
+}
+
+// Conta quantos usuários têm o anime como favorito
+async function countAnimeFavorites(animeTitle) {
+  try {
+    const users = await userManager.loadUsers();
+    return users.filter(user => 
+      user.favoriteAnimes && user.favoriteAnimes.includes(animeTitle)
+    ).length;
+  } catch (error) {
+    console.error("Erro ao contar favoritos:", error);
+    return 0;
+  }
+}
+
+// Adiciona ou remove um anime dos favoritos do usuário atual
+async function toggleFavoriteFromCard(animeTitle, event) {
+  // Impede propagação do evento para não abrir a página do anime
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+  
+  const user = await getCurrentUser();
+  if (!user) {
+    alert("Você precisa estar logado para favoritar animes");
+    return;
+  }
+  
+  if (!user.favoriteAnimes) user.favoriteAnimes = [];
+  
+  // Cria objeto de datas de favoritos se não existir
+  if (!user.favoriteDates) user.favoriteDates = {};
+  
+  const isFavorited = user.favoriteAnimes.includes(animeTitle);
+  
+  // Toggle favorito
+  if (isFavorited) {
+    user.favoriteAnimes = user.favoriteAnimes.filter(anime => anime !== animeTitle);
+    delete user.favoriteDates[animeTitle];
+  } else {
+    user.favoriteAnimes.push(animeTitle);
+    user.favoriteDates[animeTitle] = new Date().toISOString();
+  }
+  
+  // Salva as alterações no usuário
+  try {
+    await userManager.saveUser(user);
+    
+    // Atualiza a UI do botão
+    const button = event ? event.currentTarget : null;
+    if (button) {
+      if (isFavorited) button.classList.remove('is-favorited');
+      else button.classList.add('is-favorited');
+      
+      // Atualiza o contador
+      const countElement = button.querySelector('.favorite-number');
+      if (countElement) {
+        const newCount = await countAnimeFavorites(animeTitle);
+        countElement.textContent = newCount;
+      }
+    }
+  } catch (error) {
+    console.error("Erro ao salvar favorito:", error);
+    alert("Ocorreu um erro ao salvar o favorito. Tente novamente.");
+  }
+}
+
 // Renderiza cards de recomendação com lazy loading de imagens
-function renderRecommendations(recommendations, containerId) {
+async function renderRecommendations(recommendations, containerId) {
   const container = document.querySelector(`#${containerId} .grid-recommendations`);
   if (!container) {
     console.error(`Container não encontrado: ${containerId}`);
@@ -297,6 +391,26 @@ function renderRecommendations(recommendations, containerId) {
   }
 
   const currentUser = JSON.parse(localStorage.getItem('userSession'));
+  const favoritesMap = new Map();
+  const favoritedAnimes = new Set();
+
+  // Verificar favoritos para todos os animes de uma vez para evitar chamadas múltiplas
+  try {
+    const users = await userManager.loadUsers();
+    // Contar favoritos para cada anime
+    for (const anime of recommendations) {
+      const count = users.filter(user => user.favoriteAnimes && user.favoriteAnimes.includes(anime.primaryTitle)).length;
+      favoritesMap.set(anime.primaryTitle, count);
+    }
+    
+    // Verificar quais animes são favoritos do usuário atual
+    if (currentUser) {
+      const user = await getCurrentUser();
+      if (user && user.favoriteAnimes) for (const favorite of user.favoriteAnimes) favoritedAnimes.add(favorite);
+    }
+  } catch (error) {
+    console.error("Erro ao carregar favoritos:", error);
+  }
 
   const recommendationsHTML = recommendations.map(anime => {
     let formattedScore = 'N/A';
@@ -305,6 +419,9 @@ function renderRecommendations(recommendations, containerId) {
 
     const { genreScore = 50, watchHistoryScore = 50, ratingScore = 50 } = anime.matchDetails || {};
     const matchScore = isNaN(anime.matchScore) ? 50 : Math.round(anime.matchScore);
+    
+    const isFavorited = favoritedAnimes.has(anime.primaryTitle);
+    const favoriteCount = favoritesMap.get(anime.primaryTitle) || 0;
 
     return `
       <a href="animes.html?anime=${encodeURIComponent(anime.primaryTitle)}" class="anime-card">
@@ -334,14 +451,14 @@ function renderRecommendations(recommendations, containerId) {
               </span>
             </div>
             <button 
-              class="meta-item favorite-count ${isAnimeFavorited(anime.primaryTitle) ? 'is-favorited' : ''}"
-              onclick="event.preventDefault(); toggleFavoriteFromCard('${anime.primaryTitle}')"
+              class="meta-item favorite-count ${isFavorited ? 'is-favorited' : ''}"
+              onclick="event.preventDefault(); toggleFavoriteFromCard('${anime.primaryTitle}', event)"
               ${!currentUser ? 'title="Faça login para favoritar"' : ''}
             >
               <svg class="meta-icon heart-icon" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
               </svg>
-              <span class="favorite-number">${countAnimeFavorites(anime.primaryTitle)}</span>
+              <span class="favorite-number">${favoriteCount}</span>
             </button>
           </div>
         </div>
@@ -366,7 +483,7 @@ function setupFilters() {
   }
 
   filterButtons.forEach(button => {
-    button.addEventListener('click', () => {
+    button.addEventListener('click', async () => {
       // Remove active de todos os botões
       filterButtons.forEach(btn => btn.classList.remove('active'));
       button.classList.add('active');
@@ -387,7 +504,7 @@ function setupFilters() {
       });
 
       // Timeout para permitir a animação de saída
-      setTimeout(() => {
+      setTimeout(async () => {
         // Atualiza visibilidade das seções
         sections.forEach(section => {
           if (filter === 'all') {
@@ -405,7 +522,7 @@ function setupFilters() {
         });
 
         // Recarrega as recomendações da seção ativa
-        const user = getCurrentUser();
+        const user = await getCurrentUser();
         if (user) {
           if (filter === 'all' || filter === 'genres') loadGenreBasedRecommendations(user);
           if (filter === 'all' || filter === 'similar') loadSimilarAnimeRecommendations(user);
@@ -437,8 +554,8 @@ function updateFilterSlider(activeButton, slider) {
 }
 
 // Atualiza recomendações quando o tema é alterado
-document.addEventListener('themeChanged', function () {
-  const user = getCurrentUser();
+document.addEventListener('themeChanged', async function () {
+  const user = await getCurrentUser();
   if (user) {
     loadGenreBasedRecommendations(user);
     loadSimilarAnimeRecommendations(user);
@@ -448,8 +565,8 @@ document.addEventListener('themeChanged', function () {
 
 // Atualiza recomendações em tendência a cada 5 minutos
 function setupAutoRefresh() {
-  setInterval(() => {
-    const user = getCurrentUser();
+  setInterval(async () => {
+    const user = await getCurrentUser();
     if (user) loadTrendingRecommendations(); // Atualiza apenas as tendências
   }, 300000); // Atualiza a cada 5 minutos
 }
@@ -465,7 +582,7 @@ window.addEventListener('error', function (e) {
 // Atualiza métricas de uso: precisão das recomendações, animes assistidos e média de avaliações
 function updateStats(user) {
   const watchedCount = user.watchedAnimes?.length || 0;
-  const animes = JSON.parse(localStorage.getItem('animeData')) || [];
+  const animes = animeManager.getAnimesFromCache();
   const comments = JSON.parse(localStorage.getItem('animeComments')) || {};
   
   // Calcula porcentagem de perfil completo
@@ -618,8 +735,8 @@ function hasRecentActivity(username) {
 }
 
 // Atualiza informações do usuário na interface
-function updateUserInfo() {
-  const user = getCurrentUser();
+async function updateUserInfo() {
+  const user = await getCurrentUser();
   if (!user) return;
 
   const avatarImg = document.querySelector('#user-panel img');

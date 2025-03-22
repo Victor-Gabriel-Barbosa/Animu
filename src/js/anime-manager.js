@@ -311,26 +311,53 @@ class AnimeManager {
    * Incrementa o contador de favoritos de um anime
    * @param {string} animeId - ID do anime
    * @param {number} incrementBy - Valor a incrementar (1 ou -1)
-   * @returns {Promise<void>}
+   * @returns {Promise<boolean>} - Sucesso da operação
    */
   async updateFavoriteCount(animeId, incrementBy = 1) {
     try {
+      if (!animeId) {
+        console.error('ID do anime é obrigatório para atualizar favoritos');
+        return false;
+      }
+      
+      console.log(`Atualizando contador de favoritos para anime ID: ${animeId}, incremento: ${incrementBy}`);
+      
       const animeRef = this.db.collection(this.animeCollection).doc(animeId);
+      
+      // Verificar se o documento existe antes de tentar a transação
+      const animeDoc = await animeRef.get();
+      if (!animeDoc.exists) {
+        console.error(`Anime com ID ${animeId} não encontrado`);
+        return false;
+      }
+      
+      // Usar uma transação para garantir a integridade dos dados
       await this.db.runTransaction(async (transaction) => {
-        const animeDoc = await transaction.get(animeRef);
-        if (!animeDoc.exists) throw new Error('Anime não encontrado');
+        const docSnapshot = await transaction.get(animeRef);
         
-        const currentCount = animeDoc.data().favoriteCount || 0;
+        if (!docSnapshot.exists) {
+          throw new Error(`Anime com ID ${animeId} não encontrado na transação`);
+        }
+        
+        const currentData = docSnapshot.data();
+        const currentCount = currentData.favoriteCount || 0;
+        const newCount = Math.max(0, currentCount + incrementBy);
+        
         transaction.update(animeRef, { 
-          favoriteCount: Math.max(0, currentCount + incrementBy)
+          favoriteCount: newCount,
+          updatedAt: new Date().toISOString()
         });
+        
+        console.log(`Anime ${animeId}: contador de favoritos atualizado para ${newCount}`);
       });
       
       // Atualiza o cache local
-      this.updateLocalCache();
+      await this.updateLocalCache();
+      
+      return true;
     } catch (error) {
       console.error('Erro ao atualizar contador de favoritos:', error);
-      throw error;
+      return false;
     }
   }
 }
