@@ -235,6 +235,39 @@
   opacity: 0.9;
 }
 
+/* Botão de limpar filtros */
+.clear-filters-btn {
+  width: 100%;
+  padding: 8px 12px;
+  margin-top: 12px;
+  background: var(--primary-color-alpha);
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  font-size: 0.9em;
+}
+
+.clear-filters-btn:hover {
+  background: var(--primary-color);
+  color: white;
+}
+
+.clear-filters-btn svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+.clear-filters-btn.hidden {
+  display: none;
+}
+
 /* Ajustes responsivos */
 @media (max-width: 768px) {
   .search-container {
@@ -349,6 +382,12 @@
   .apply-filters-btn {
     padding: 10px;
     margin-top: 6px; 
+    font-size: 16px;
+  }
+
+  .clear-filters-btn {
+    padding: 10px;
+    margin-top: 16px; 
     font-size: 16px;
   }
 

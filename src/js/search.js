@@ -81,7 +81,10 @@ class AnimeSearchBar {
     this.filters = {
       genre: '',
       date: '',
-      rating: ''
+      rating: '',
+      status: '',
+      season: '',
+      source: ''
     };
 
     this.container = document.getElementById(this.options.containerId);
@@ -192,6 +195,12 @@ class AnimeSearchBar {
             ${Object.keys(this.options.filters)
         .map(filterKey => this.createFilterSelect(filterKey))
         .join('')}
+            <button class="clear-filters-btn hidden" id="clear-filters-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" height="16" viewBox="0 0 24 24" width="16">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+              </svg>
+              Limpar filtros
+            </button>
           </div>
         </div>
 
@@ -209,6 +218,7 @@ class AnimeSearchBar {
     this.searchButton = this.container.querySelector('.search-button');
     this.filterBtn = this.container.querySelector('.filter-btn');
     this.filterMenu = this.container.querySelector('.filter-menu');
+    this.clearFiltersBtn = this.container.querySelector('#clear-filters-btn');
 
     // Adiciona referência ao botão de limpar
     this.clearButton = this.container.querySelector('.clear-input');
@@ -253,13 +263,13 @@ class AnimeSearchBar {
       this.input.focus();
     });
 
-    // Atualizar visibilidade do botão ao digitar
+    // Atualiza visibilidade do botão ao digitar
     this.input.addEventListener('input', () => { 
       this.updateClearButtonVisibility(); 
     });
   }
 
-  // Novo método para controlar a visibilidade do botão de limpar
+  // Controla a visibilidade do botão de limpar
   updateClearButtonVisibility() {
     if (this.input.value.length > 0) this.clearButton.style.display = 'block';
     else this.clearButton.style.display = 'none';
@@ -289,9 +299,20 @@ class AnimeSearchBar {
           season: this.container.querySelector('#season-filter').value,
           source: this.container.querySelector('#source-filter').value
         };
+        
+        // Atualiza visibilidade do botão de limpar filtros
+        this.updateClearFiltersButtonVisibility();
+        
         this.handleSearch();
       });
     });
+
+    // Adiciona evento para o botão de limpar filtros
+    if (this.clearFiltersBtn) {
+      this.clearFiltersBtn.addEventListener('click', () => {
+        this.clearAllFilters();
+      });
+    }
 
     // Adiciona listener específico para o filtro de data
     const dateFilter = this.container.querySelector('#date-filter');
@@ -348,6 +369,49 @@ class AnimeSearchBar {
         else this.results.style.maxHeight = '400px';
       }
     });
+  }
+
+  // Atualiza a visibilidade do botão de limpar filtros
+  updateClearFiltersButtonVisibility() {
+    if (!this.clearFiltersBtn) return;
+    
+    // Verifica se algum filtro está aplicado
+    const hasActiveFilters = Object.values(this.filters).some(value => value !== '');
+    
+    if (hasActiveFilters) this.clearFiltersBtn.classList.remove('hidden');
+    else this.clearFiltersBtn.classList.add('hidden');
+  }
+
+  // Limpa todos os filtros aplicados
+  clearAllFilters() {
+    // Reseta todos os valores dos selects
+    const filterSelects = this.container.querySelectorAll('.filter-group select');
+    filterSelects.forEach(select => {
+      select.value = '';
+    });
+    
+    // Oculta o campo de data personalizada se estiver visível
+    const customDateFilter = this.container.querySelector('#custom-date-filter');
+    if (customDateFilter) {
+      customDateFilter.classList.add('hidden');
+      customDateFilter.value = '';
+    }
+    
+    // Reseta o objeto de filtros
+    this.filters = {
+      genre: '',
+      date: '',
+      rating: '',
+      status: '',
+      season: '',
+      source: ''
+    };
+    
+    // Atualiza visibilidade do botão
+    this.updateClearFiltersButtonVisibility();
+    
+    // Refaz a busca com os filtros limpos
+    this.handleSearch();
   }
 
   /**
