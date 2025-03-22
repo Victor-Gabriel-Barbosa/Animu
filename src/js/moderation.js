@@ -13,6 +13,17 @@ const MODERATION_CONFIG = {
     forbiddenWords: [],
     partialCensoring: true, // Habilita censura parcial
     censorCharacter: '•' // Caractere usado para censura
+  },
+  perspectiveAPI: {
+    apiKey: 'AIzaSyAwCIcLXouCkm9stRAWIZkY0_bp5_sx-O8',
+    endpoint: 'https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze',
+    threshold: {
+      TOXICITY: 0.7,
+      SEVERE_TOXICITY: 0.5,
+      IDENTITY_ATTACK: 0.6,
+      INSULT: 0.6,
+      PROFANITY: 0.6
+    }
   }
 };
 
@@ -23,12 +34,12 @@ const MODERATION_CONFIG = {
 class ContentModerator {
   static async analyzeText(text) {
     try {
-      if (!CONFIG.perspectiveAPI.apiKey || CONFIG.perspectiveAPI.apiKey === 'SUA_CHAVE_API_AQUI') {
+      if (!MODERATION_CONFIG.perspectiveAPI.apiKey || MODERATION_CONFIG.perspectiveAPI.apiKey === 'SUA_CHAVE_API_AQUI') {
         console.warn('Chave da API Perspective não configurada. Usando moderação local.');
         return { success: false, error: 'API_KEY_NOT_CONFIGURED' };
       }
 
-      const response = await fetch(`${CONFIG.perspectiveAPI.endpoint}?key=${CONFIG.perspectiveAPI.apiKey}`, {
+      const response = await fetch(`${MODERATION_CONFIG.perspectiveAPI.endpoint}?key=${MODERATION_CONFIG.perspectiveAPI.apiKey}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -67,12 +78,12 @@ class ContentModerator {
       const spans = [];
       
       // Para cada atributo, verifica os spans anotados
-      Object.keys(CONFIG.perspectiveAPI.threshold).forEach(attribute => {
+      Object.keys(MODERATION_CONFIG.perspectiveAPI.threshold).forEach(attribute => {
         if (!data.attributeScores?.[attribute]?.spanScores) return;
         
         data.attributeScores[attribute].spanScores.forEach(span => {
           const spanScore = span.score?.value || 0;
-          const threshold = CONFIG.perspectiveAPI.threshold[attribute];
+          const threshold = MODERATION_CONFIG.perspectiveAPI.threshold[attribute];
           
           // Se o score do span é maior que o threshold, marca para censura
           if (spanScore >= threshold) {
@@ -99,9 +110,9 @@ class ContentModerator {
   static shouldFlagContent(scores) {
     if (!scores) return false;
     
-    return Object.keys(CONFIG.perspectiveAPI.threshold).some(attribute => {
+    return Object.keys(MODERATION_CONFIG.perspectiveAPI.threshold).some(attribute => {
       const score = scores[attribute];
-      const threshold = CONFIG.perspectiveAPI.threshold[attribute];
+      const threshold = MODERATION_CONFIG.perspectiveAPI.threshold[attribute];
       return score >= threshold;
     });
   }
