@@ -1,6 +1,6 @@
 /**
- * Classe responsável pelo gerenciamento de dados de notícias
- * Encapsula todas as operações com Firebase/Firestore e localStorage
+ * Classe responsável por gerenciar dados de notícias no Firestore,
+ * fornecendo uma camada de abstração para operações de CRUD
  */
 class NewsManager {
   constructor() {
@@ -23,9 +23,7 @@ class NewsManager {
    */
   async getAllNews() {
     try {
-      if (this.useLocalStorage) {
-        return this.getNewsFromLocalStorage();
-      }
+      if (this.useLocalStorage) return this.getNewsFromLocalStorage();
       
       const snapshot = await this.newsCollection.orderBy('date', 'desc').get();
       const news = [];
@@ -127,9 +125,7 @@ class NewsManager {
    */
   async deleteNews(id) {
     try {
-      if (this.useLocalStorage) {
-        return this.deleteNewsFromLocalStorage(id);
-      }
+      if (this.useLocalStorage) return this.deleteNewsFromLocalStorage(id);
       
       await this.newsCollection.doc(id).delete();
       console.log('Notícia excluída com sucesso!');
@@ -174,9 +170,7 @@ class NewsManager {
       if (id) {
         // Atualiza notícia existente
         const index = allNews.findIndex(news => news.id === id);
-        if (index !== -1) {
-          allNews[index] = { ...allNews[index], ...newsData, id };
-        }
+        if (index !== -1) allNews[index] = { ...allNews[index], ...newsData, id };
       } else {
         // Cria nova notícia
         const newId = 'local_' + Date.now();
@@ -216,16 +210,6 @@ class NewsManager {
       console.error('Erro ao excluir notícia do localStorage:', e);
       throw e;
     }
-  }
-
-  /**
-   * Sincroniza dados do localStorage com Firestore quando online
-   * @returns {Promise<boolean>} true se sincronizado com sucesso
-   */
-  async syncLocalDataWithFirestore() {
-    // Implementação futura para sincronizar dados locais com Firestore
-    // quando a conexão for restaurada
-    return false;
   }
 }
 

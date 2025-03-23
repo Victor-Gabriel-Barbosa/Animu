@@ -107,6 +107,7 @@ class ContentModerator {
     }
   }
 
+  // Verifica se o conteúdo deve ser sinalizado para censura
   static shouldFlagContent(scores) {
     if (!scores) return false;
     

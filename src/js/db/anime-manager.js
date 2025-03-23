@@ -1,6 +1,6 @@
 /**
- * Classe responsável por gerenciar animes no Firestore
- * Encapsula todas as operações de leitura/escrita de animes
+ * Classe responsável por gerenciar dados de animes no Firestore,
+ * fornecendo uma camada de abstração para operações de CRUD
  */
 class AnimeManager {
   constructor() {
@@ -41,8 +41,7 @@ class AnimeManager {
    */
   async getAnimes(orderBy = 'primaryTitle') {
     try {
-      const animesSnapshot = await this.db.collection(this.animeCollection)
-        .orderBy(orderBy).get();
+      const animesSnapshot = await this.db.collection(this.animeCollection).orderBy(orderBy).get();
       
       const animes = [];
       animesSnapshot.forEach(doc => {
@@ -80,8 +79,7 @@ class AnimeManager {
    */
   async getAnimeById(animeId) {
     try {
-      const animeDoc = await this.db.collection(this.animeCollection)
-        .doc(animeId).get();
+      const animeDoc = await this.db.collection(this.animeCollection).doc(animeId).get();
       
       if (!animeDoc.exists) return null;
       
@@ -324,13 +322,11 @@ class AnimeManager {
       
       const animeRef = this.db.collection(this.animeCollection).doc(animeId);
       
-      // Usar uma transação para garantir a integridade dos dados
+      // Usa uma transação para garantir a integridade dos dados
       await this.db.runTransaction(async (transaction) => {
         const docSnapshot = await transaction.get(animeRef);
         
-        if (!docSnapshot.exists) {
-          throw new Error(`Anime com ID ${animeId} não encontrado na transação`);
-        }
+        if (!docSnapshot.exists) throw new Error(`Anime com ID ${animeId} não encontrado na transação`);
         
         const currentData = docSnapshot.data();
         const currentCount = typeof currentData.favoriteCount === 'number' ? currentData.favoriteCount : 0;

@@ -366,7 +366,7 @@ function removeLicensor(index) {
 async function editAnime(animeId) {
   try {
     console.log('Iniciando edição do anime com ID:', animeId);
-    // Exibir indicador de carregamento
+    // Exibe indicador de carregamento
     document.body.classList.add('loading');
     
     // Utiliza o AnimeManager para buscar o anime
@@ -502,9 +502,7 @@ document.getElementById('animeForm').addEventListener('submit', async function (
 
     // Comprime imagem se existir
     let processedCoverImage = coverImage;
-    if (coverImage.startsWith('data:image')) {
-      processedCoverImage = await animeManager.compressImage(coverImage, 800, 0.7);
-    }
+    if (coverImage.startsWith('data:image')) processedCoverImage = await animeManager.compressImage(coverImage, 800, 0.7);
 
     // Formata os dados
     const formData = {
@@ -531,13 +529,8 @@ document.getElementById('animeForm').addEventListener('submit', async function (
     };
 
     // Verifica se é edição ou adição de novo anime
-    if (currentAnimeId !== null) {
-      // É uma edição
-      await animeManager.updateAnime(currentAnimeId, formData);
-    } else {
-      // É um novo anime
-      await animeManager.saveAnime(formData);
-    }
+    if (currentAnimeId !== null) await animeManager.updateAnime(currentAnimeId, formData);
+    else await animeManager.saveAnime(formData); 
 
     closeAnimeForm();
     loadAnimesList();

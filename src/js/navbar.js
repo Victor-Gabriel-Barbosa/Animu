@@ -467,9 +467,13 @@ class Navbar {
 
   setupConnectionObserver() {
     // Monitora estado da conexão
-    window.addEventListener('online', () => { this.updateConnectionStatus(true); });
+    window.addEventListener('online', () => { 
+      this.updateConnectionStatus(true); 
+    });
 
-    window.addEventListener('offline', () => { this.updateConnectionStatus(false); });
+    window.addEventListener('offline', () => { 
+      this.updateConnectionStatus(false); 
+    });
   }
 
   // Atualiza o estado da conexão e estiliza links de acordo

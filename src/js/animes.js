@@ -251,7 +251,6 @@ async function renderAnimeDetails(anime) {
     console.error('Erro ao renderizar animes relacionados:', error);
   }
 
-  // Adicione esta linha antes do return
   initParallax();
 }
 
@@ -261,7 +260,7 @@ function initParallax() {
   if (!heroBackdrop) return;
 
   let ticking = false;
-  const PARALLAX_SPEED = 0.4; // Ajuste este valor para mudar a velocidade do efeito
+  const PARALLAX_SPEED = 0.4;
 
   window.addEventListener('scroll', () => {
     if (!ticking) {
@@ -497,7 +496,7 @@ function hasUserAlreadyCommented(animeTitle, username) {
 const MAX_COMMENT_LENGTH = 500; // Limite de 500 caracteres para comentários
 
 // Salva comentário com validação e moderação
-async function saveComment(animeTitle, comment, rating) {
+async function saveComment(animeTitle, comment) {
   try {
     const currentUser = JSON.parse(localStorage.getItem('userSession'));
     if (!currentUser) {
@@ -1122,12 +1121,12 @@ function updateRatingEmoji(value, updateInput = true) {
 
   // Atualiza os valores com precisão de uma casa decimal
   if (updateInput && display) display.value = rating.toFixed(1);
-  if (!updateInput && slider)  slider.value = Math.round(value);
+  if (!updateInput && slider) slider.value = Math.round(value);
 }
 
 // Sistema de favoritos
 function isAnimeFavorited(animeTitle) {
-  const sessionData = userManager.getSessionData();
+  const sessionData = JSON.parse(localStorage.getItem('userSession'));
   if (!sessionData) return false;
 
   // Primeiro tenta obter dados do usuário atualizados no cache
@@ -1430,15 +1429,12 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     const animeTitle = getUrlParameter('anime');
     const searchQuery = getUrlParameter('search');
-    const nocache = getUrlParameter('nocache'); // Novo parâmetro para detectar limpeza de filtros
+    const nocache = getUrlParameter('nocache'); // Parâmetro para detectar limpeza de filtros
 
     // Executa uma nova busca sem filtros ou usa os resultados salvos anteriormente
     if (searchQuery) {
-      if (nocache || !localStorage.getItem('searchResults')) {
-        await searchWithoutFilters(decodeURIComponent(searchQuery));
-      } else {
-        renderSearchResults(decodeURIComponent(searchQuery));
-      }
+      if (nocache || !localStorage.getItem('searchResults')) await searchWithoutFilters(decodeURIComponent(searchQuery));
+      else renderSearchResults(decodeURIComponent(searchQuery));
     } else if (animeTitle) {
       const anime = await findAnimeByTitle(decodeURIComponent(animeTitle));
       await renderAnimeDetails(anime);
@@ -1498,9 +1494,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
       // Carrega comentários existentes
       updateCommentsList(decodeURIComponent(animeTitle));
-    } else {
-      await renderAllAnimes(); // Se não houver parâmetros, mostra lista de todos os animes
-    }
+    } else await renderAllAnimes(); // Se não houver parâmetros, mostra lista de todos os animes
   } catch (error) {
     console.error('Erro na inicialização da página:', error);
     document.getElementById('anime-content').innerHTML = `
@@ -1569,7 +1563,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 });
 
-// Adicione esta função auxiliar para formatar os papéis da staff
+// Função auxiliar para formatar os papéis da staff
 function formatRole(role) {
   const roles = {
     'director': 'Diretor',
@@ -1583,7 +1577,7 @@ function formatRole(role) {
   return roles[role.toLowerCase()] || role;
 }
 
-// Adicione esta nova função para controlar a expansão/contração da grid
+// Controla a expansão/contração da grid da staff
 function toggleStaffGrid() {
   const grid = document.getElementById('staffGrid');
   const btn = document.querySelector('.staff-toggle-btn');
@@ -1603,7 +1597,7 @@ function toggleStaffGrid() {
   }
 }
 
-// Nova função para atualizar as estatísticas do anime em tempo real
+// Atualiza as estatísticas do anime em tempo real
 function updateAnimeStats(animeTitle) {
   // Seleciona os elementos de estatísticas
   const scoreElement = document.querySelector('.stat-item:nth-child(1) .stat-value');
@@ -1624,7 +1618,7 @@ function updateAnimeStats(animeTitle) {
   commentsElement.textContent = comments.length;
 }
 
-// Função para alternar favoritos a partir do card do anime
+// Alterna favoritos a partir do card do anime
 async function toggleFavoriteFromCard(animeTitle) {
   const sessionData = JSON.parse(localStorage.getItem('userSession'));
   
@@ -1635,7 +1629,6 @@ async function toggleFavoriteFromCard(animeTitle) {
   }
 
   try {
-    // Usa diretamente o método do UserManager sem redundâncias
     const result = await userManager.toggleAnimeFavorite(sessionData.userId, animeTitle);
     
     // Verifica o resultado da operação
@@ -1660,9 +1653,7 @@ async function toggleFavoriteFromCard(animeTitle) {
       // Atualiza o contador no cache local também para consistência imediata
       animeToUpdate.favoriteCount = (animeToUpdate.favoriteCount || 0) + incrementValue;
       localStorage.setItem('animeData', JSON.stringify(animes));
-    } else {
-      console.warn(`Não foi possível atualizar o Firestore: ID do anime não encontrado (${animeTitle})`);
-    }
+    } else console.warn(`Não foi possível atualizar o Firestore: ID do anime não encontrado (${animeTitle})`);
 
     // O novo estado é o oposto do anterior
     const newState = !isAnimeFavorited(animeTitle);
@@ -1681,7 +1672,7 @@ async function toggleFavoriteFromCard(animeTitle) {
   }
 }
 
-// Nova função para atualizar todos os botões de favorito para um anime específico
+// Atualiza todos os botões de favorito para um anime específico
 function updateAllFavoriteButtons(animeTitle, isFavorited, count) {
   // Atualiza todos os botões de favorito nos cards
   const favoriteButtons = document.querySelectorAll(`.favorite-count`);
@@ -1696,9 +1687,7 @@ function updateAllFavoriteButtons(animeTitle, isFavorited, count) {
       
       // Atualiza o contador
       const countElement = button.querySelector('.favorite-number');
-      if (countElement) {
-        countElement.textContent = count;
-      }
+      if (countElement) countElement.textContent = count;
     }
   });
   

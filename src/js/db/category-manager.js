@@ -1,5 +1,4 @@
 /**
- * CategoryManager
  * Classe responsável por gerenciar dados de categorias no Firestore,
  * fornecendo uma camada de abstração para operações de CRUD.
  */

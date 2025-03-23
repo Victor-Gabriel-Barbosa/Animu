@@ -342,11 +342,8 @@ document.addEventListener('DOMContentLoaded', function () {
       // Busca notícia pelo ID usando o NewsManager
       const newsData = await newsManager.getNewsById(id);
       
-      if (newsData) {
-        openModal(newsData);
-      } else {
-        alert('Notícia não encontrada');
-      }
+      if (newsData) openModal(newsData);
+      else alert('Notícia não encontrada');
     } catch (error) {
       console.error('Erro ao recuperar notícia para edição:', error);
       alert('Erro ao carregar os dados da notícia');

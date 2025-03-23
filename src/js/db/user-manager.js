@@ -1,3 +1,7 @@
+/**
+ * Classe responsável por gerenciar dados de usuários no Firestore,
+ * fornecendo uma camada de abstração para operações de CRUD
+ */
 class UserManager {
   constructor() {
     this.usersCollection = db.collection('users');
@@ -13,6 +17,7 @@ class UserManager {
       }));
     } catch (error) {
       console.error("Erro ao carregar usuários do Firebase:", error);
+
       // Fallback para localStorage se o Firebase falhar
       return JSON.parse(localStorage.getItem('animuUsers') || '[]');
     }
@@ -34,9 +39,8 @@ class UserManager {
       userToSave.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
       
       // Se o usuário já tem ID, atualiza o documento existente
-      if (userToSave.id && userToSave.id.length > 0) {
-        await this.usersCollection.doc(userToSave.id).set(userToSave);
-      } else {
+      if (userToSave.id && userToSave.id.length > 0) await this.usersCollection.doc(userToSave.id).set(userToSave);
+      else {
         // Caso contrário, cria novo documento com ID gerado pelo Firestore
         const docRef = await this.usersCollection.add(userToSave);
         userToSave.id = docRef.id;
@@ -49,7 +53,7 @@ class UserManager {
     }
   }
 
-  // Encontrar usuário por username ou email no Firestore
+  // Encontra usuário por username ou email no Firestore
   async findUser(identifier) {
     try {
       // Busca por username
@@ -92,7 +96,7 @@ class UserManager {
     }
   }
 
-  // Migração de dados do localStorage para o Firebase
+  // Migra dados do localStorage para o Firebase
   async migrateLocalStorageToFirebase() {
     try {
       const localUsers = JSON.parse(localStorage.getItem('animuUsers') || '[]');
@@ -219,3 +223,6 @@ class UserManager {
     }
   }
 }
+
+// Exporta a classe para uso em outros arquivos
+window.UserManager = UserManager;
