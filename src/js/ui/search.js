@@ -90,6 +90,9 @@ class AnimeSearchBar {
     this.container = document.getElementById(this.options.containerId);
     this.setupSearchBar();
     this.setupEventListeners();
+    
+    // Carrega a busca anterior e filtros salvos
+    this.loadPreviousSearch();
 
     // Adiciona listener para atualização de categorias
     window.addEventListener('categoriesUpdated', () => {
@@ -303,6 +306,9 @@ class AnimeSearchBar {
         // Atualiza visibilidade do botão de limpar filtros
         this.updateClearFiltersButtonVisibility();
         
+        // Salva os filtros no localStorage para persistência
+        localStorage.setItem('searchFilters', JSON.stringify(this.filters));
+        
         this.handleSearch();
       });
     });
@@ -326,6 +332,8 @@ class AnimeSearchBar {
 
       customDateFilter.addEventListener('change', () => {
         this.filters.customDate = customDateFilter.value;
+        // Salva os filtros atualizados no localStorage
+        localStorage.setItem('searchFilters', JSON.stringify(this.filters));
         this.handleSearch();
       });
     }
@@ -407,6 +415,9 @@ class AnimeSearchBar {
       source: ''
     };
     
+    // Remove os filtros do localStorage
+    localStorage.removeItem('searchFilters');
+    
     // Atualiza visibilidade do botão
     this.updateClearFiltersButtonVisibility();
     
@@ -433,6 +444,7 @@ class AnimeSearchBar {
         // Salva resultados e filtros no localStorage
         localStorage.setItem('searchResults', JSON.stringify(results));
         localStorage.setItem('searchFilters', JSON.stringify(this.filters));
+        localStorage.setItem('searchQuery', query); // Salva o termo de busca atual
         window.location.href = `animes.html?search=${encodeURIComponent(query)}`;
       } else this.displayResults(results);
     } catch (error) {
@@ -633,6 +645,57 @@ class AnimeSearchBar {
 
   hideResults() {
     if (this.results) this.results.style.display = 'none';
+  }
+
+  // Função para carregar busca anterior e filtros aplicados
+  loadPreviousSearch() {
+    // Verifica se há filtros salvos
+    const savedFilters = localStorage.getItem('searchFilters');
+    if (savedFilters) {
+      try {
+        this.filters = JSON.parse(savedFilters);
+        this.applyFilterValues();
+      } catch (error) {
+        console.error('Erro ao carregar filtros salvos:', error);
+      }
+    }
+
+    // Tenta carregar termo de busca da URL ou localStorage
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchQuery = urlParams.get('search');
+    
+    if (searchQuery && this.input) {
+      // Aplica o termo de busca da URL
+      this.input.value = decodeURIComponent(searchQuery);
+      this.updateClearButtonVisibility();
+    }
+  }
+
+  // Aplica valores dos filtros aos elementos de interface
+  applyFilterValues() {
+    if (!this.container) return;
+
+    // Aplica cada filtro ao seu respectivo elemento de interface
+    Object.keys(this.filters).forEach(key => {
+      const filterSelect = this.container.querySelector(`#${key}-filter`);
+      if (filterSelect && this.filters[key]) {
+        filterSelect.value = this.filters[key];
+      }
+    });
+
+    // Trata caso especial do filtro de data personalizada
+    if (this.filters.date === 'custom') {
+      const customDateFilter = this.container.querySelector('#custom-date-filter');
+      if (customDateFilter) {
+        customDateFilter.classList.remove('hidden');
+        if (this.filters.customDate) {
+          customDateFilter.value = this.filters.customDate;
+        }
+      }
+    }
+
+    // Atualiza visibilidade do botão de limpar filtros
+    this.updateClearFiltersButtonVisibility();
   }
 }
 
