@@ -1,9 +1,8 @@
-// Classe para gerenciamento das notícias
-class NewsManager {
+// Classe para gerenciamento da interface de notícias
+class NewsUIManager {
   constructor() {
-    // Inicializa Firebase se disponível
-    this.db = window.firebase ? firebase.firestore() : null;
-    this.newsCollection = this.db ? this.db.collection('news') : null;
+    // Inicializa o gerenciador de notícias do Firestore
+    this.newsManagerDB = new window.NewsManager();
     
     // Armazena as notícias
     this.newsData = [];
@@ -103,23 +102,10 @@ class NewsManager {
   }
 
   async fetchFromFirestore() {
-    if (!this.newsCollection) {
-      console.error('Firebase não está disponível');
-      return;
-    }
-
     try {
-      console.log('Carregando notícias do Firestore');
-      const snapshot = await this.newsCollection.orderBy('date', 'desc').get();
-      
-      // Converte documentos do Firestore em array de notícias
-      const news = [];
-      snapshot.forEach(doc => {
-        news.push({
-          id: doc.id,
-          ...doc.data()
-        });
-      });
+      console.log('Carregando notícias usando NewsManager');
+      // Usa o NewsManager para buscar as notícias
+      const news = await this.newsManagerDB.getAllNews();
       
       // Atualiza dados locais
       this.newsData = news;
@@ -127,11 +113,11 @@ class NewsManager {
       // Salva no localStorage para acesso offline
       localStorage.setItem('news', JSON.stringify(news));
       
-      console.log(`${news.length} notícias carregadas do Firestore`);
+      console.log(`${news.length} notícias carregadas`);
       
       return news;
     } catch (error) {
-      console.error('Erro ao carregar do Firestore:', error);
+      console.error('Erro ao carregar notícias:', error);
       throw error;
     }
   }
@@ -443,8 +429,8 @@ class NewsManager {
     // Encontra a notícia pelo ID
     const news = this.newsData.find(item => item.id.toString() === newsId.toString());
 
-    // Tenta buscar do Firestore se não encontrar localmente
-    if (!news && this.newsCollection) {
+    // Tenta buscar do gerenciador de notícias se não encontrar localmente
+    if (!news) {
       // Mostra indicador de carregamento
       const detailView = document.getElementById('news-detail-view');
       if (detailView) {
@@ -459,13 +445,9 @@ class NewsManager {
         }
       }
 
-      // Busca no Firestore
-      this.newsCollection.doc(newsId).get().then(doc => {
-        if (doc.exists) {
-          const newsData = {
-            id: doc.id,
-            ...doc.data()
-          };
+      // Busca usando o NewsManager
+      this.newsManagerDB.getNewsById(newsId).then(newsData => {
+        if (newsData) {
           this.displayNewsDetails(newsData);
         } else this.showGridView();
       }).catch(error => {
@@ -641,8 +623,8 @@ class NewsManager {
   }
 }
 
-// Inicializa gerenciador de notícias
-const newsManager = new NewsManager();
+// Inicializa gerenciador de interface de notícias
+const newsManager = new NewsUIManager();
 
 // Listener para evento de atualização de cache
 window.addEventListener('newsCacheUpdated', () => {
