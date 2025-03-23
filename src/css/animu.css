@@ -16,7 +16,7 @@
   :root {
   /* Cores */
   --background-light: #c3cfe2;
-  --background-dark: #0f0f0f;
+  --background-dark: #101218;
   --text-light: #000000;
   --text-dark: #ffffff;
   --card-shadow-light: rgba(0, 0, 0, 0.1);
@@ -917,45 +917,4 @@ body.dark-mode {
 .swiper-pagination-bullet-active-prev-prev,
 .swiper-pagination-bullet-active-next-next {
   transform: scale(1);
-}
-
-/* Responsividade */
-@media (max-width: 768px) {
-  .swiper-button-next,
-  .swiper-button-prev {
-    width: 35px;
-    height: 35px;
-  }
-  
-  .swiper-button-next::after,
-  .swiper-button-prev::after {
-    font-size: 16px;
-  }
-  
-  .swiper-pagination-bullet {
-    width: 8px;
-    height: 8px;
-  }
-}
-
-@media (max-width: 480px) {
-  .swiper-button-next,
-  .swiper-button-prev {
-    width: 30px;
-    height: 30px;
-  }
-  
-  .swiper-button-next::after,
-  .swiper-button-prev::after {
-    font-size: 14px;
-  }
-  
-  .swiper-pagination {
-    margin-top: 15px;
-  }
-  
-  .swiper-pagination-bullet {
-    width: 6px;
-    height: 6px;
-  }
 }

@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Template da linha com informações e botões de ação
     tr.innerHTML = `
       <td>
-        <div class="flex items-center">
+        <div class="flex flex-col items-center md:flex-row gap-3 mt-6">
           <img class="h-10 w-10 rounded-full object-cover"
                src="${user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}&background=8B5CF6&color=ffffff&size=100`}"
                alt="${user.username}">
@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', function () {
           </div>
         </div>
       </td>
-      <td>${user.email}</td>
+      <td >${user.email}</td>
       <td>
         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
               ${user.isAdmin ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'}">
@@ -67,13 +67,13 @@ document.addEventListener('DOMContentLoaded', function () {
       </td>
       <td>${userManager.formatFirestoreDate(user.createdAt)}</td>
       <td>
-        <div class="flex justify-center gap-2">
+        <div class="class="flex flex-col md:flex-row gap-3 mt-6">
           <button onclick="toggleAdminStatus('${user.id}')"
-                  class="text-sm bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700 transition-colors">
+                  class="order-2 flex-1 w-full py-3 md:py-2 text-sm md:text-base bg-purple-600 text-white px-3 rounded hover:bg-purple-700 transition-colors">
                   ${user.isAdmin ? 'Remover Admin' : 'Tornar Admin'}
           </button>
           <button onclick="deleteUser('${user.id}')"
-                  class="text-sm bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition-colors">
+                  class="mt-2 order-2 flex-1 w-full py-3 md:py-2 text-sm md:text-base bg-red-600 text-white px-3 rounded hover:bg-red-700 transition-colors">
             Excluir
           </button>
         </div>

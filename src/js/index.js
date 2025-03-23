@@ -869,7 +869,7 @@ function renderPopularCategories() {
   popularCategoriesList.innerHTML = popularCategories.map(({ category, desc, icon, count, examples }) => `
     <li class="index-card-item">
       <a href="animes.html?category=${encodeURIComponent(category)}" class="index-card-link">
-        <div class="flex items-center gap-2 mb-1">
+        <div class="items-center gap-2 mb-1">
           <span class="category-icon">${icon}</span>
           <span class="index-card-link-title">${category}</span>
           <span class="text-sm opacity-75">(${count})</span>

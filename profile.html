@@ -21,44 +21,44 @@
     <!-- Seção superior com efeito parallax -->
     <section class="parallax-section"
       style="--parallax-bg-image: url('https://img.freepik.com/fotos-gratis/personagem-de-estilo-anime-no-espaco_23-2151134021.jpg');">
-      <div class="container mx-auto px-4 py-12">
+      <div class="container mx-auto px-3 sm:px-4 py-6 sm:py-12">
         <div class="parallax-content">
           <!-- Cabeçalho do Perfil - Foto e informações básicas -->
-          <div class="rounded-2xl p-8 mb-8">
-            <div class="flex flex-col md:flex-row items-center gap-8">
+          <div class="rounded-2xl p-4 sm:p-6 md:p-8 mb-6 sm:mb-8">
+            <div class="flex flex-col md:flex-row items-center gap-4 sm:gap-6 md:gap-8">
               <!-- Avatar e Informações Básicas do Usuário -->
-              <div class="text-center md:text-left">
+              <div class="text-center md:text-left w-full md:w-auto">
                 <!-- Container da foto de perfil com opção para trocar -->
-                <div class="profile-avatar-container group">
+                <div class="profile-avatar-container group mx-auto md:mx-0">
                   <img id="profile-avatar" src="https://ui-avatars.com/api/?name=User&background=random" alt="Avatar"
-                    class="w-32 h-32 rounded-full object-cover border-4 border-purple-500">
+                    class="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full object-cover border-4 border-purple-500">
                   <!-- Botão para troca de avatar (visível no hover) -->
                   <div
                     class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <button id="change-avatar"
-                      class="bg-black/60 text-white p-3 rounded-full hover:bg-black/80 transition-colors transform hover:scale-110">
-                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      class="bg-black/60 text-white p-2 sm:p-3 rounded-full hover:bg-black/80 transition-colors transform hover:scale-110">
+                      <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                     </button>
                   </div>
                 </div>
-                <h1 id="profile-username" class="text-2xl font-bold mt-4">Carregando...</h1>
-                <p id="profile-joined" class="text-white">Membro desde: ...</p>
+                <h1 id="profile-username" class="text-xl sm:text-2xl font-bold mt-3 sm:mt-4">Carregando...</h1>
+                <p id="profile-joined" class="text-white text-sm sm:text-base">Membro desde: ...</p>
                 <!-- Botões de ação principal -->
-                <div class="flex gap-3 mt-4">
+                <div class="flex flex-wrap justify-center md:justify-start gap-2 sm:gap-3 mt-3 sm:mt-4">
                   <button id="edit-profile"
-                    class="flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all hover:scale-105">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    class="flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-all hover:scale-105">
+                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                     </svg>
                     Editar Perfil
                   </button>
                   <button id="logout-button"
-                    class="flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all hover:scale-105">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    class="flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-all hover:scale-105">
+                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                     </svg>
@@ -68,27 +68,27 @@
               </div>
 
               <!-- Estatísticas do Usuário (Cards coloridos) -->
-              <div class="flex-grow">
-                <div class="stats-container grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 text-center">
+              <div class="flex-grow w-full mt-5 md:mt-0">
+                <div class="stats-container grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 text-center">
                   <!-- Contador de animes assistidos -->
-                  <div class="stat-card bg-purple-50 dark:bg-purple-900">
-                    <h3 class="stat-title text-purple-600 dark:text-purple-300">Animes</h3>
-                    <p id="stats-animes" class="stat-value">0</p>
+                  <div class="stat-card bg-purple-50 dark:bg-purple-900 p-2 sm:p-3">
+                    <h3 class="stat-title text-purple-600 dark:text-purple-300 text-xs sm:text-sm">Animes</h3>
+                    <p id="stats-animes" class="stat-value text-base sm:text-lg md:text-xl">0</p>
                   </div>
                   <!-- Contador de reviews feitas -->
-                  <div class="stat-card bg-blue-50 dark:bg-blue-900">
-                    <h3 class="stat-title text-blue-600 dark:text-blue-300">Reviews</h3>
-                    <p id="stats-reviews" class="stat-value">0</p>
+                  <div class="stat-card bg-blue-50 dark:bg-blue-900 p-2 sm:p-3">
+                    <h3 class="stat-title text-blue-600 dark:text-blue-300 text-xs sm:text-sm">Reviews</h3>
+                    <p id="stats-reviews" class="stat-value text-base sm:text-lg md:text-xl">0</p>
                   </div>
                   <!-- Contador de likes recebidos -->
-                  <div class="stat-card bg-green-50 dark:bg-green-900">
-                    <h3 class="stat-title text-green-600 dark:text-green-300">Likes</h3>
-                    <p id="stats-likes" class="stat-value">0</p>
+                  <div class="stat-card bg-green-50 dark:bg-green-900 p-2 sm:p-3">
+                    <h3 class="stat-title text-green-600 dark:text-green-300 text-xs sm:text-sm">Likes</h3>
+                    <p id="stats-likes" class="stat-value text-base sm:text-lg md:text-xl">0</p>
                   </div>
                   <!-- Contador de animes favoritados -->
-                  <div class="stat-card bg-pink-50 dark:bg-pink-900">
-                    <h3 class="stat-title text-pink-600 dark:text-pink-300">Favoritos</h3>
-                    <p id="stats-favorites" class="stat-value">0</p>
+                  <div class="stat-card bg-pink-50 dark:bg-pink-900 p-2 sm:p-3">
+                    <h3 class="stat-title text-pink-600 dark:text-pink-300 text-xs sm:text-sm">Favoritos</h3>
+                    <p id="stats-favorites" class="stat-value text-base sm:text-lg md:text-xl">0</p>
                   </div>
                 </div>
               </div>
@@ -99,13 +99,13 @@
     </section>
 
     <!-- Conteúdo Principal - Layout de grade com 2 colunas -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 px-3 sm:px-4 md:px-6">
       <!-- Coluna da Esquerda: Informações do Perfil -->
-      <div class="space-y-8">
+      <div class="space-y-4 sm:space-y-6 md:space-y-8">
         <!-- Card de Informações Pessoais -->
-        <div class="rounded-2xl shadow-lg p-6">
-          <h2 class="text-xl font-semibold mb-4">Informações Pessoais</h2>
-          <div class="space-y-4">
+        <div class="rounded-2xl shadow-lg p-4 sm:p-6">
+          <h2 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Informações Pessoais</h2>
+          <div class="space-y-3 sm:space-y-4">
             <!-- Nome de exibição -->
             <div>
               <label class="text-sm text-gray-500 dark:text-gray-400">Nome de Exibição</label>
@@ -125,13 +125,13 @@
             </div>
 
             <!-- Seção de gerenciamento de amigos -->
-            <div class="mt-6">
-              <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 mb-4">
-                <h2 class="text-sm font-semibold">Amigos</h2>
+            <div class="mt-4 sm:mt-6">
+              <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 mb-3 sm:mb-4">
+                <h2 class="text-xs sm:text-sm font-semibold">Amigos</h2>
                 <!-- Botão para abrir modal de adição de amigos -->
-                <button id="add-friend-btn" class="btn btn-primary group text-xs sm:text-sm py-1.5 px-2 sm:px-3">
+                <button id="add-friend-btn" class="btn btn-primary group text-xs sm:text-sm py-1 sm:py-1.5 px-2 sm:px-3">
                   <span class="flex items-center gap-1 sm:gap-2">
-                    <svg class="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-hover:rotate-90 duration-300" fill="none" viewBox="0 0 24 24"
+                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-5 lg:h-5 transition-transform group-hover:rotate-90 duration-300" fill="none" viewBox="0 0 24 24"
                       stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                     </svg>
@@ -219,12 +219,12 @@
         <!-- Seção de Conquistas com fundo parallax -->
         <section class="parallax-section rounded-2xl"
           style="--parallax-bg-image: url('https://img.freepik.com/fotos-gratis/personagem-de-estilo-anime-no-espaco_23-2151134021.jpg?t=st=1740021046~exp=1740024646~hmac=dc49707a68adcba49ad54b29efc2eee8df646e40ea188de91997e0d487082537&w=740');">
-          <div class="container mx-auto px-4 py-12">
+          <div class="container mx-auto px-2 sm:px-4 py-6 sm:py-12">
             <div class="parallax-content">
               <!-- Card de conquistas do usuário -->
-              <div class="rounded-2xl shadow-lg p-6">
-                <h2 class="text-xl font-semibold mb-4">Conquistas</h2>
-                <div id="achievements" class="grid grid-cols-2 gap-4">
+              <div class="rounded-2xl shadow-lg p-4 sm:p-6">
+                <h2 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Conquistas</h2>
+                <div id="achievements" class="grid grid-cols-2 gap-2 sm:gap-4">
                   <!-- Conquistas inseridas via JavaScript -->
                 </div>
               </div>
@@ -234,11 +234,11 @@
       </div>
 
       <!-- Coluna Central/Direita (ocupa 2/3 do espaço) -->
-      <div class="space-y-8 md:col-span-2">
+      <div class="space-y-4 sm:space-y-6 md:space-y-8 md:col-span-2">
         <!-- Card de animes favoritos -->
-        <div class="rounded-2xl shadow-lg p-6">
-          <h2 class="text-xl font-semibold mb-4">Animes Favoritos</h2>
-          <div id="favorite-animes" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="rounded-2xl shadow-lg p-4 sm:p-6">
+          <h2 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Animes Favoritos</h2>
+          <div id="favorite-animes" class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <!-- Lista de animes favoritos inserida via JavaScript -->
           </div>
         </div>
@@ -246,12 +246,12 @@
         <!-- Histórico de atividades com fundo parallax -->
         <section class="parallax-section rounded-2xl"
           style="--parallax-bg-image: url('https://img.freepik.com/fotos-gratis/personagem-de-estilo-anime-no-espaco_23-2151134021.jpg?t=st=1740021046~exp=1740024646~hmac=dc49707a68adcba49ad54b29efc2eee8df646e40ea188de91997e0d487082537&w=740');">
-          <div class="container mx-auto px-4 py-12">
+          <div class="container mx-auto px-2 sm:px-4 py-6 sm:py-12">
             <div class="parallax-content">
               <!-- Timeline de atividades do usuário -->
-              <div class="rounded-2xl p-6">
-                <h2 class="text-xl font-semibold mb-4">Histórico de Atividades</h2>
-                <div id="activity-timeline" class="space-y-4">
+              <div class="rounded-2xl p-4 sm:p-6">
+                <h2 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Histórico de Atividades</h2>
+                <div id="activity-timeline" class="space-y-3 sm:space-y-4">
                   <!-- Atividades inseridas via JavaScript -->
                 </div>
               </div>
@@ -263,32 +263,32 @@
 
     <!-- Modal de Edição de Perfil -->
     <div id="edit-modal"
-      class="fixed inset-0 bg-black/50 dark:bg-black/70 hidden items-center justify-center z-50 overflow-y-auto py-8">
-      <div class="rounded-2xl shadow-xl p-8 max-w-md w-full mx-4 my-auto transform transition-all
+      class="fixed inset-0 bg-black/50 dark:bg-black/70 hidden items-center justify-center z-50 overflow-y-auto py-4 sm:py-8 px-2 sm:px-4">
+      <div class="rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 max-w-md w-full mx-auto my-auto transform transition-all
                 max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600
                 scrollbar-track-gray-100 dark:scrollbar-track-gray-800 relative" style="background:var(--background)">
         <!-- Botão para fechar o modal -->
-        <button type="button" id="close-modal" class="modal-close hover:rotate-90 transition-transform absolute top-4 right-4 p-2">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button type="button" id="close-modal" class="modal-close hover:rotate-90 transition-transform absolute top-3 sm:top-4 right-3 sm:right-4 p-1.5 sm:p-2">
+          <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
             </path>
           </svg>
         </button>
-        <h2 class="text-2xl font-bold mb-6">Editar Perfil</h2>
+        <h2 class="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Editar Perfil</h2>
         <!-- Formulário de edição de perfil -->
-        <form id="edit-profile-form" class="space-y-6">
-          <div class="space-y-4">
+        <form id="edit-profile-form" class="space-y-4 sm:space-y-6">
+          <div class="space-y-3 sm:space-y-4">
             <!-- Upload de avatar -->
             <div>
-              <label class="block text-sm font-medium mb-1">Foto de Perfil</label>
-              <div class="flex items-center gap-4">
+              <label class="block text-xs sm:text-sm font-medium mb-1">Foto de Perfil</label>
+              <div class="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
                 <img id="preview-avatar" src="" alt="Preview"
-                  class="w-20 h-20 rounded-full object-cover border-2 border-purple-500">
-                <div class="flex-1">
+                  class="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-purple-500">
+                <div class="flex-1 w-full sm:w-auto">
                   <input type="file" id="edit-avatar" accept="image/*" class="hidden">
-                  <button type="button" id="avatar-upload-btn" class="w-full p-3 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg
+                  <button type="button" id="avatar-upload-btn" class="w-full p-2 sm:p-3 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg
                          hover:border-purple-500 dark:hover:border-purple-400
-                         transition-colors text-sm text-center cursor-pointer">
+                         transition-colors text-xs sm:text-sm text-center cursor-pointer">
                     Clique para selecionar uma nova foto
                   </button>
                 </div>
@@ -322,18 +322,18 @@
             </div>
           </div>
           <!-- Botões de ação do formulário -->
-          <div class="flex flex-col md:flex-row gap-3 mt-6">
-            <button type="submit" class="btn btn-primary order-1 md:order-3 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
-              <span class="flex items-center justify-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4 sm:mt-6">
+            <button type="submit" class="btn btn-primary order-1 sm:order-3 flex-1 w-full py-2 sm:py-2.5 text-sm">
+              <span class="flex items-center justify-center gap-1.5 sm:gap-2">
+                <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
                 Salvar Alterações
               </span>
             </button>
-            <button type="button" id="cancel-edit" class="btn btn-cancel order-2 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
-              <span class="flex items-center justify-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button type="button" id="cancel-edit" class="btn btn-cancel order-2 flex-1 w-full py-2 sm:py-2.5 text-sm">
+              <span class="flex items-center justify-center gap-1.5 sm:gap-2">
+                <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
                 Cancelar
@@ -345,7 +345,7 @@
     </div>
 
     <!-- Container para janelas de chat -->
-    <div id="chat-windows" class="fixed bottom-0 right-4 flex gap-4 z-50">
+    <div id="chat-windows" class="fixed bottom-0 right-2 sm:right-4 flex gap-2 sm:gap-4 z-50">
       <!-- Janelas de chat dinâmicas inseridas via JavaScript -->
     </div>
   </div>
