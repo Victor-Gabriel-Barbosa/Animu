@@ -365,6 +365,506 @@ class AnimeManager {
       return false;
     }
   }
+
+  /**
+   * Busca os comentários de um anime específico pelo título
+   * @param {string} animeTitle - Título do anime
+   * @returns {Promise<Array>} - Lista de comentários
+   */
+  async getCommentsByAnimeTitle(animeTitle) {
+    try {
+      if (!animeTitle) throw new Error('Título do anime é obrigatório');
+      
+      const commentsSnapshot = await this.db.collection(this.commentsCollection)
+        .where('animeTitle', '==', animeTitle)
+        .orderBy('timestamp', 'desc')
+        .get();
+      
+      const comments = [];
+      commentsSnapshot.forEach(doc => {
+        comments.push({
+          id: doc.id,
+          ...doc.data()
+        });
+      });
+      
+      // Atualiza o cache local
+      const localComments = JSON.parse(localStorage.getItem('animeComments') || '{}');
+      localComments[animeTitle] = comments;
+      localStorage.setItem('animeComments', JSON.stringify(localComments));
+      
+      return comments;
+    } catch (error) {
+      console.error('Erro ao buscar comentários:', error);
+      
+      // Fallback para dados em cache
+      const cachedComments = JSON.parse(localStorage.getItem('animeComments') || '{}');
+      return cachedComments[animeTitle] || [];
+    }
+  }
+
+  /**
+   * Adiciona um novo comentário para um anime
+   * @param {string} animeTitle - Título do anime
+   * @param {Object} commentData - Dados do comentário (texto, avaliação, username)
+   * @returns {Promise<Object>} - Comentário criado com ID
+   */
+  async addComment(animeTitle, commentData) {
+    try {
+      if (!animeTitle) throw new Error('Título do anime é obrigatório');
+      if (!commentData.text) throw new Error('Texto do comentário é obrigatório');
+      
+      const now = new Date().toISOString();
+      const comment = {
+        animeTitle,
+        text: commentData.text,
+        rating: commentData.rating || 0,
+        username: commentData.username,
+        timestamp: now,
+        likes: [],
+        dislikes: []
+      };
+      
+      // Adiciona ao Firestore
+      const docRef = await this.db.collection(this.commentsCollection).add(comment);
+      
+      // Atualiza o cache local
+      const savedComment = {
+        id: docRef.id,
+        ...comment
+      };
+      
+      const localComments = JSON.parse(localStorage.getItem('animeComments') || '{}');
+      if (!localComments[animeTitle]) localComments[animeTitle] = [];
+      localComments[animeTitle].unshift(savedComment);
+      localStorage.setItem('animeComments', JSON.stringify(localComments));
+      
+      // Atualiza a média de avaliação do anime
+      await this.updateAnimeAverageRating(animeTitle);
+      
+      return savedComment;
+    } catch (error) {
+      console.error('Erro ao adicionar comentário:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Atualiza um comentário existente
+   * @param {string} commentId - ID do comentário
+   * @param {Object} commentData - Dados atualizados do comentário
+   * @returns {Promise<Object>} - Comentário atualizado
+   */
+  async updateComment(commentId, commentData) {
+    try {
+      if (!commentId) throw new Error('ID do comentário é obrigatório');
+      
+      const commentRef = this.db.collection(this.commentsCollection).doc(commentId);
+      const doc = await commentRef.get();
+      
+      if (!doc.exists) throw new Error('Comentário não encontrado');
+      
+      const existingData = doc.data();
+      const animeTitle = existingData.animeTitle;
+      
+      const updatedData = {
+        ...commentData,
+        edited: true,
+        editedAt: new Date().toISOString()
+      };
+      
+      // Atualiza no Firestore
+      await commentRef.update(updatedData);
+      
+      // Atualiza o cache local
+      const localComments = JSON.parse(localStorage.getItem('animeComments') || '{}');
+      if (localComments[animeTitle]) {
+        const index = localComments[animeTitle].findIndex(c => c.id === commentId);
+        if (index !== -1) {
+          localComments[animeTitle][index] = {
+            ...localComments[animeTitle][index],
+            ...updatedData
+          };
+          localStorage.setItem('animeComments', JSON.stringify(localComments));
+        }
+      }
+      
+      // Atualiza a média de avaliação do anime
+      await this.updateAnimeAverageRating(animeTitle);
+      
+      return {
+        id: commentId,
+        ...existingData,
+        ...updatedData
+      };
+    } catch (error) {
+      console.error('Erro ao atualizar comentário:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Exclui um comentário
+   * @param {string} commentId - ID do comentário
+   * @returns {Promise<boolean>} - Sucesso da operação
+   */
+  async deleteComment(commentId) {
+    try {
+      if (!commentId) throw new Error('ID do comentário é obrigatório');
+      
+      // Obtém os dados do comentário antes de excluí-lo
+      const commentRef = this.db.collection(this.commentsCollection).doc(commentId);
+      const doc = await commentRef.get();
+      
+      if (!doc.exists) throw new Error('Comentário não encontrado');
+      
+      const commentData = doc.data();
+      const animeTitle = commentData.animeTitle;
+      
+      // Exclui do Firestore
+      await commentRef.delete();
+      
+      // Atualiza o cache local
+      const localComments = JSON.parse(localStorage.getItem('animeComments') || '{}');
+      if (localComments[animeTitle]) {
+        localComments[animeTitle] = localComments[animeTitle].filter(c => c.id !== commentId);
+        localStorage.setItem('animeComments', JSON.stringify(localComments));
+      }
+      
+      // Atualiza a média de avaliação do anime
+      await this.updateAnimeAverageRating(animeTitle);
+      
+      return true;
+    } catch (error) {
+      console.error('Erro ao excluir comentário:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Adiciona ou remove um voto em um comentário
+   * @param {string} commentId - ID do comentário
+   * @param {string} username - Nome do usuário que está votando
+   * @param {string} voteType - Tipo de voto ('like' ou 'dislike')
+   * @returns {Promise<Object>} - Dados atualizados do comentário
+   */
+  async voteComment(commentId, username, voteType) {
+    try {
+      if (!commentId) throw new Error('ID do comentário é obrigatório');
+      if (!username) throw new Error('Nome de usuário é obrigatório');
+      if (voteType !== 'like' && voteType !== 'dislike') throw new Error('Tipo de voto inválido');
+      
+      // Usa uma transação para garantir consistência
+      const result = await this.db.runTransaction(async (transaction) => {
+        const commentRef = this.db.collection(this.commentsCollection).doc(commentId);
+        const doc = await transaction.get(commentRef);
+        
+        if (!doc.exists) throw new Error('Comentário não encontrado');
+        
+        const commentData = doc.data();
+        const animeTitle = commentData.animeTitle;
+        
+        // Inicializa arrays se não existirem
+        const likes = commentData.likes || [];
+        const dislikes = commentData.dislikes || [];
+        
+        // Verifica se o usuário já votou
+        const hasVotedLike = likes.includes(username);
+        const hasVotedDislike = dislikes.includes(username);
+        
+        // Remove votos existentes
+        const newLikes = likes.filter(user => user !== username);
+        const newDislikes = dislikes.filter(user => user !== username);
+        
+        // Adiciona o novo voto, se não for um toggle
+        if (voteType === 'like' && !hasVotedLike) {
+          newLikes.push(username);
+        } else if (voteType === 'dislike' && !hasVotedDislike) {
+          newDislikes.push(username);
+        }
+        
+        // Atualiza no Firestore
+        transaction.update(commentRef, {
+          likes: newLikes,
+          dislikes: newDislikes
+        });
+        
+        // Prepara o objeto atualizado para o cache
+        const updatedComment = {
+          ...commentData,
+          likes: newLikes,
+          dislikes: newDislikes
+        };
+        
+        // Retorna os dados atualizados e o título do anime
+        return {
+          comment: updatedComment,
+          animeTitle
+        };
+      });
+      
+      // Atualiza o cache local
+      const localComments = JSON.parse(localStorage.getItem('animeComments') || '{}');
+      if (localComments[result.animeTitle]) {
+        const index = localComments[result.animeTitle].findIndex(c => c.id === commentId);
+        if (index !== -1) {
+          localComments[result.animeTitle][index] = {
+            id: commentId,
+            ...result.comment
+          };
+          localStorage.setItem('animeComments', JSON.stringify(localComments));
+        }
+      }
+      
+      return {
+        id: commentId,
+        ...result.comment
+      };
+    } catch (error) {
+      console.error('Erro ao votar em comentário:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Atualiza a média de avaliação de um anime com base nos comentários
+   * @param {string} animeTitle - Título do anime
+   * @returns {Promise<number>} - Nova média de avaliação
+   */
+  async updateAnimeAverageRating(animeTitle) {
+    try {
+      if (!animeTitle) throw new Error('Título do anime é obrigatório');
+      
+      // Busca todos os comentários do anime para calcular a média
+      const commentsSnapshot = await this.db.collection(this.commentsCollection)
+        .where('animeTitle', '==', animeTitle)
+        .get();
+      
+      let totalRating = 0;
+      let commentCount = 0;
+      
+      commentsSnapshot.forEach(doc => {
+        const comment = doc.data();
+        if (typeof comment.rating === 'number') {
+          totalRating += comment.rating;
+          commentCount++;
+        }
+      });
+      
+      // Calcula a nova média
+      const averageRating = commentCount > 0 ? totalRating / commentCount : 0;
+      const formattedRating = parseFloat(averageRating.toFixed(1));
+      
+      // Busca o anime pelo título para atualizar sua avaliação
+      const animesSnapshot = await this.db.collection(this.animeCollection)
+        .where('primaryTitle', '==', animeTitle)
+        .limit(1)
+        .get();
+      
+      if (!animesSnapshot.empty) {
+        const animeDoc = animesSnapshot.docs[0];
+        await this.db.collection(this.animeCollection).doc(animeDoc.id).update({
+          score: formattedRating,
+          updatedAt: new Date().toISOString()
+        });
+        
+        // Atualiza no cache local também
+        const animes = this.getAnimesFromCache();
+        const index = animes.findIndex(a => a.primaryTitle === animeTitle);
+        if (index !== -1) {
+          animes[index].score = formattedRating;
+          localStorage.setItem(this.localStorageKey, JSON.stringify(animes));
+        }
+      }
+      
+      return formattedRating;
+    } catch (error) {
+      console.error('Erro ao atualizar média de avaliação:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Busca comentários mais recentes de todos os animes
+   * @param {number} limit - Número máximo de comentários
+   * @returns {Promise<Array>} - Comentários mais recentes
+   */
+  async getRecentComments(limit = 3) {
+    try {
+      const commentsSnapshot = await this.db.collection(this.commentsCollection)
+        .orderBy('timestamp', 'desc')
+        .limit(limit)
+        .get();
+      
+      const comments = [];
+      commentsSnapshot.forEach(doc => {
+        comments.push({
+          id: doc.id,
+          ...doc.data()
+        });
+      });
+      
+      return comments;
+    } catch (error) {
+      console.error('Erro ao buscar comentários recentes:', error);
+      
+      // Fallback para dados em cache
+      try {
+        const cachedComments = JSON.parse(localStorage.getItem('animeComments') || '{}');
+        
+        // Converte o formato de objeto para array
+        let allComments = [];
+        Object.entries(cachedComments).forEach(([animeTitle, comments]) => {
+          comments.forEach(comment => {
+            allComments.push({
+              ...comment,
+              animeTitle
+            });
+          });
+        });
+        
+        // Ordena por data, mais recentes primeiro
+        allComments.sort((a, b) => {
+          return new Date(b.timestamp) - new Date(a.timestamp);
+        });
+        
+        return allComments.slice(0, limit);
+      } catch (fallbackError) {
+        console.error('Erro no fallback para comentários recentes:', fallbackError);
+        return [];
+      }
+    }
+  }
+
+  /**
+   * Obtém categorias populares
+   * @param {number} limit - Número máximo de categorias
+   * @returns {Promise<Array>} - Lista de categorias populares
+   */
+  async getPopularCategories(limit = 3) {
+    try {
+      const categoriesSnapshot = await this.db.collection('categories')
+        .orderBy('animeCount', 'desc')
+        .limit(limit)
+        .get();
+      
+      const categories = [];
+      categoriesSnapshot.forEach(doc => {
+        categories.push({
+          id: doc.id,
+          ...doc.data()
+        });
+      });
+      
+      return categories;
+    } catch (error) {
+      console.error('Erro ao buscar categorias populares:', error);
+      
+      // Fallback: calcula categorias populares a partir dos animes em cache
+      try {
+        const animes = this.getAnimesFromCache();
+        const categoryCounts = {};
+        const categoryExamples = {};
+        
+        // Conta animes por categoria
+        animes.forEach(anime => {
+          if (anime.genres && Array.isArray(anime.genres)) {
+            anime.genres.forEach(genre => {
+              // Normaliza o nome da categoria
+              const normalizedGenre = genre.trim().toLowerCase();
+              
+              // Incrementa contador
+              categoryCounts[normalizedGenre] = (categoryCounts[normalizedGenre] || 0) + 1;
+              
+              // Adiciona exemplo se ainda não tiver muitos
+              if (!categoryExamples[normalizedGenre]) categoryExamples[normalizedGenre] = [];
+              if (categoryExamples[normalizedGenre].length < 3) {
+                categoryExamples[normalizedGenre].push(anime.primaryTitle);
+              }
+            });
+          }
+        });
+        
+        // Converte para array e ordena
+        const sortedCategories = Object.entries(categoryCounts)
+          .map(([name, animeCount]) => ({
+            name,
+            animeCount,
+            examples: categoryExamples[name] || [],
+            description: `Animes de ${name}`,
+            icon: '📺' // Ícone padrão
+          }))
+          .sort((a, b) => b.animeCount - a.animeCount)
+          .slice(0, limit);
+        
+        return sortedCategories;
+      } catch (fallbackError) {
+        console.error('Erro no fallback para categorias populares:', fallbackError);
+        return [];
+      }
+    }
+  }
+
+  /**
+   * Obtém notícias recentes
+   * @param {number} limit - Número máximo de notícias
+   * @returns {Promise<Array>} - Lista de notícias recentes
+   */
+  async getRecentNews(limit = 4) {
+    try {
+      const newsSnapshot = await this.db.collection('news')
+        .orderBy('date', 'desc')
+        .limit(limit)
+        .get();
+      
+      const news = [];
+      newsSnapshot.forEach(doc => {
+        news.push({
+          id: doc.id,
+          ...doc.data()
+        });
+      });
+      
+      return news;
+    } catch (error) {
+      console.error('Erro ao buscar notícias recentes:', error);
+      
+      // Fallback para dados em cache
+      try {
+        const cachedNews = JSON.parse(localStorage.getItem('news') || '[]');
+        return cachedNews
+          .sort((a, b) => new Date(b.date) - new Date(a.date))
+          .slice(0, limit);
+      } catch (fallbackError) {
+        console.error('Erro no fallback para notícias recentes:', fallbackError);
+        return [];
+      }
+    }
+  }
+
+  /**
+   * Conta o número de comentários de um anime específico
+   * @param {string} animeTitle - Título do anime
+   * @returns {Promise<number>} - Quantidade de comentários
+   */
+  async getCommentCount(animeTitle) {
+    try {
+      if (!animeTitle) return 0;
+      
+      // Busca usando consulta no Firestore
+      const snapshot = await this.db.collection(this.commentsCollection)
+        .where('animeTitle', '==', animeTitle)
+        .get();
+      
+      return snapshot.size;
+    } catch (error) {
+      console.error('Erro ao contar comentários:', error);
+      
+      // Fallback para contagem local
+      const localComments = JSON.parse(localStorage.getItem('animeComments') || '{}');
+      return localComments[animeTitle]?.length || 0;
+    }
+  }
 }
 
 // Exporta a classe para uso em outros arquivos

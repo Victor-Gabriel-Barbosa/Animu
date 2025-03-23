@@ -370,7 +370,7 @@ async function renderAllAnimes() {
                   <span class="info-pill">⭐ ${Number(anime.score).toFixed(1)}</span>
                   <span class="info-pill">
                     <svg class="meta-icon" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-4h2v2h-2v-2zm0-2h2V7h-2v7z"/>
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59 8-8 8zm-1-4h2v2h-2v-2zm0-2h2V7h-2v7z"/>
                     </svg>
                     ${anime.episodes > 0 ? anime.episodes : '?'} eps
                   </span>
@@ -470,11 +470,11 @@ async function getAvailableSeasons() {
   }
 }
 
-// Gerencia sistema de comentários
-function loadComments(animeTitle) {
+// Gerenciamento de sistema de comentários
+async function loadComments(animeTitle) {
   try {
-    const comments = JSON.parse(localStorage.getItem('animeComments')) || {};
-    return comments[animeTitle] || [];
+    // Usa o método do AnimeManager para buscar comentários
+    return await animeManager.getCommentsByAnimeTitle(animeTitle);
   } catch (e) {
     console.warn('Erro ao carregar comentários:', e);
     return [];
@@ -482,11 +482,10 @@ function loadComments(animeTitle) {
 }
 
 // Verifica limite de um comentário por usuário (exceto admin)
-function hasUserAlreadyCommented(animeTitle, username) {
+async function hasUserAlreadyCommented(animeTitle, username) {
   try {
-    const comments = JSON.parse(localStorage.getItem('animeComments')) || {};
-    const animeComments = comments[animeTitle] || [];
-    return animeComments.some(comment => comment.username === username);
+    const comments = await animeManager.getCommentsByAnimeTitle(animeTitle);
+    return comments.some(comment => comment.username === username);
   } catch (e) {
     console.error('Erro ao verificar comentário existente:', e);
     return false;
@@ -496,7 +495,7 @@ function hasUserAlreadyCommented(animeTitle, username) {
 const MAX_COMMENT_LENGTH = 500; // Limite de 500 caracteres para comentários
 
 // Salva comentário com validação e moderação
-async function saveComment(animeTitle, comment) {
+async function saveComment(animeTitle, commentText) {
   try {
     const currentUser = JSON.parse(localStorage.getItem('userSession'));
     if (!currentUser) {
@@ -508,47 +507,36 @@ async function saveComment(animeTitle, comment) {
     const isAdmin = currentUser.isAdmin || false;
 
     // Se não for admin, verifica se já comentou
-    if (!isAdmin && hasUserAlreadyCommented(animeTitle, currentUser.username)) {
+    if (!isAdmin && await hasUserAlreadyCommented(animeTitle, currentUser.username)) {
       alert('Você já fez um comentário neste anime. Apenas administradores podem fazer múltiplos comentários.');
       return null;
     }
 
     // Verifica o tamanho do comentário
-    if (comment.length > MAX_COMMENT_LENGTH) {
+    if (commentText.length > MAX_COMMENT_LENGTH) {
       alert(`O comentário deve ter no máximo ${MAX_COMMENT_LENGTH} caracteres.`);
       return null;
     }
 
     // Valida o conteúdo usando o ContentValidator com suporte a censura parcial
-    const validationResult = await ContentValidator.validateContent(comment, 'comentário');
+    const validationResult = await ContentValidator.validateContent(commentText, 'comentário');
     
     // Determina qual texto usar (censurado ou original)
-    const textToUse = validationResult.wasCensored ? validationResult.censoredText : comment;
-
-    const comments = JSON.parse(localStorage.getItem('animeComments')) || {};
-    if (!comments[animeTitle]) comments[animeTitle] = [];
+    const textToUse = validationResult.wasCensored ? validationResult.censoredText : commentText;
 
     const sliderRating = document.getElementById('rating-slider').value / 10;
 
     // Formata o texto usando await para obter o resultado formatado
     const formattedText = await TextFormatter.format(textToUse);
 
-    const newComment = {
-      id: Date.now(),
+    const commentData = {
       text: formattedText,
       rating: sliderRating,
-      username: currentUser.username,
-      timestamp: new Date().toISOString()
+      username: currentUser.username
     };
 
-    comments[animeTitle].unshift(newComment);
-    localStorage.setItem('animeComments', JSON.stringify(comments));
-
-    // Atualiza a média de avaliações do anime
-    updateAnimeRating(animeTitle);
-
-    // Após salvar o comentário, atualiza a popularidade de todos os animes
-    updateAllAnimesPopularity();
+    // Usa o método do AnimeManager para adicionar o comentário
+    const newComment = await animeManager.addComment(animeTitle, commentData);
     
     // Atualiza as estatísticas em tempo real
     updateAnimeStats(animeTitle);
@@ -564,27 +552,16 @@ async function saveComment(animeTitle, comment) {
 // Atualiza score médio do anime baseado nos comentários
 async function updateAnimeRating(animeTitle) {
   try {
-    const comments = JSON.parse(localStorage.getItem('animeComments')) || {};
-    const animeComments = comments[animeTitle] || [];
-
-    if (animeComments.length === 0) return;
-
-    const totalRating = animeComments.reduce((sum, comment) => sum + (comment.rating || 0), 0);
-    const averageRating = totalRating / animeComments.length;
-
-    // Atualiza a avaliação no objeto do anime
-    let animes = animeManager.getAnimesFromCache();
-    const animeIndex = animes.findIndex(a => a.primaryTitle === animeTitle);
-
-    if (animeIndex !== -1) {
-      animes[animeIndex].score = averageRating.toFixed(1);
-      localStorage.setItem('animeData', JSON.stringify(animes));
-      
-      // Atualiza as estatísticas em tempo real
-      updateAnimeStats(animeTitle);
-    }
+    // Usa o método do AnimeManager para atualizar a média de avaliação
+    const newRating = await animeManager.updateAnimeAverageRating(animeTitle);
+    
+    // Atualiza as estatísticas em tempo real
+    updateAnimeStats(animeTitle);
+    
+    return newRating;
   } catch (e) {
     console.error('Erro ao atualizar avaliação:', e);
+    return 0;
   }
 }
 
@@ -621,22 +598,17 @@ function renderStars(rating) {
 }
 
 // Sistema de moderação de comentários
-function deleteComment(animeTitle, commentId) {
+async function deleteComment(animeTitle, commentId) {
   try {
-    const comments = JSON.parse(localStorage.getItem('animeComments')) || {};
-    if (!comments[animeTitle]) return false;
-
-    // Filtra o comentário a ser removido
-    comments[animeTitle] = comments[animeTitle].filter(comment => comment.id !== commentId);
-    localStorage.setItem('animeComments', JSON.stringify(comments));
-
-    // Atualiza a média de avaliações do anime
-    updateAnimeRating(animeTitle);
+    // Usa o método do AnimeManager para excluir o comentário
+    const success = await animeManager.deleteComment(commentId);
     
-    // Atualiza as estatísticas em tempo real
-    updateAnimeStats(animeTitle);
+    if (success) {
+      // Atualiza as estatísticas em tempo real
+      updateAnimeStats(animeTitle);
+    }
     
-    return true;
+    return success;
   } catch (e) {
     console.error('Erro ao deletar comentário:', e);
     return false;
@@ -644,7 +616,7 @@ function deleteComment(animeTitle, commentId) {
 }
 
 // Sistema de votação em comentários
-function voteComment(animeTitle, commentId, voteType) {
+async function voteComment(animeTitle, commentId, voteType) {
   try {
     const currentUser = JSON.parse(localStorage.getItem('userSession'))?.username;
     if (!currentUser) {
@@ -652,31 +624,8 @@ function voteComment(animeTitle, commentId, voteType) {
       return false;
     }
 
-    const comments = JSON.parse(localStorage.getItem('animeComments')) || {};
-    const comment = comments[animeTitle].find(c => c.id === commentId);
-
-    if (!comment) return false;
-
-    // Inicializa arrays de votos se não existirem
-    comment.likes = comment.likes || [];
-    comment.dislikes = comment.dislikes || [];
-
-    // Verifica se o usuário já votou
-    const hasVotedThisWay = voteType === 'like' ?
-      comment.likes.includes(currentUser) :
-      comment.dislikes.includes(currentUser);
-
-    // Remove todos os votos existentes do usuário
-    comment.likes = comment.likes.filter(user => user !== currentUser);
-    comment.dislikes = comment.dislikes.filter(user => user !== currentUser);
-
-    // Se não tinha votado, adiciona o voto, senão o voto é apenas removido (toggle)
-    if (!hasVotedThisWay) {
-      if (voteType === 'like') comment.likes.push(currentUser);
-      else if (voteType === 'dislike') comment.dislikes.push(currentUser);
-    }
-
-    localStorage.setItem('animeComments', JSON.stringify(comments));
+    // Usa o método do AnimeManager para votar no comentário
+    await animeManager.voteComment(commentId, currentUser, voteType);
     
     // Atualiza as estatísticas em tempo real
     updateAnimeStats(animeTitle);
@@ -707,15 +656,9 @@ function isUserAdmin() {
 // Sistema de edição de comentários com validação
 async function editComment(animeTitle, commentId, newText, newRating) {
   try {
-    const comments = JSON.parse(localStorage.getItem('animeComments')) || {};
-    if (!comments[animeTitle]) return false;
-
-    const comment = comments[animeTitle].find(c => c.id === commentId);
-    if (!comment) return false;
-
     // Verifica se o usuário atual é o dono do comentário
     const currentUser = JSON.parse(localStorage.getItem('userSession'))?.username;
-    if (currentUser !== comment.username) return false;
+    if (!currentUser) return false;
 
     // Valida o conteúdo usando o ContentValidator com suporte a censura parcial
     const validationResult = await ContentValidator.validateContent(newText, 'comentário');
@@ -726,18 +669,16 @@ async function editComment(animeTitle, commentId, newText, newRating) {
     // Formata o texto usando await para obter o resultado formatado
     const formattedText = await TextFormatter.format(textToUse);
     
-    comment.text = formattedText;
-    comment.rating = newRating;
-    comment.edited = true;
-    comment.editedAt = new Date().toISOString();
-
-    localStorage.setItem('animeComments', JSON.stringify(comments));
-
-    // Atualiza a média de avaliações do anime
-    updateAnimeRating(animeTitle);
+    // Usa o método do AnimeManager para atualizar o comentário
+    const result = await animeManager.updateComment(commentId, {
+      text: formattedText,
+      rating: newRating
+    });
     
-    // Atualiza as estatísticas em tempo real
-    updateAnimeStats(animeTitle);
+    if (result) {
+      // Atualiza as estatísticas em tempo real
+      updateAnimeStats(animeTitle);
+    }
     
     return true;
   } catch (e) {
@@ -993,11 +934,11 @@ function renderComment(comment, animeTitle) {
 }
 
 // Atualiza lista completa de comentários
-function updateCommentsList(animeTitle) {
+async function updateCommentsList(animeTitle) {
   const commentsList = document.getElementById('comments-list');
-  const comments = loadComments(animeTitle);
+  const comments = await loadComments(animeTitle);
 
-  if (comments.length === 0) {
+  if (!comments || comments.length === 0) {
     commentsList.innerHTML = `
       <p class="text-center">Nenhum comentário ainda. Seja o primeiro a comentar!</p>
     `;
@@ -1060,7 +1001,7 @@ function renderSearchResults(query) {
                   <span class="info-pill">⭐ ${Number(anime.score).toFixed(1)}</span>
                   <span class="info-pill">
                     <svg class="meta-icon" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-4h2v2h-2v-2zm0-2h2V7h-2v7z"/>
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59 8-8 8zm-1-4h2v2h-2v-2zm0-2h2V7h-2v7z"/>
                     </svg>
                     ${anime.episodes > 0 ? anime.episodes : '?'} eps
                   </span>
@@ -1181,7 +1122,7 @@ async function toggleFavorite(animeTitle) {
     } else console.warn(`Não foi possível atualizar o Firestore: ID do anime não encontrado (${animeTitle})`);
   } catch (error) {
     console.error('Erro ao atualizar favorito no Firestore:', error);
-    alert('Houve um problema ao salvar seu favorito no servidor. Por favor, tente novamente.');
+    alert('Houve um problema ao salvar seu favorito no servidor. Por favor, tente novamente mais tarde.');
   }
 }
 
@@ -1344,7 +1285,7 @@ async function renderRelatedAnimes(currentAnime) {
               <span class="info-pill">⭐ ${Number(anime.score).toFixed(1)}</span>
               <span class="info-pill">
                 <svg class="meta-icon" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-4h2v2h-2v-2zm0-2h2V7h-2v7z"/>
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59 8-8 8zm-1-4h2v2h-2v-2zm0-2h2V7h-2v7z"/>
                 </svg>
                 ${anime.episodes > 0 ? anime.episodes : '?'} eps
               </span>

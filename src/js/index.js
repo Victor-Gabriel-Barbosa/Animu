@@ -182,10 +182,18 @@ class AnimeLoader {
       return;
     }
 
-    // Para cada anime, verifica se está na lista de favoritos do usuário atual
+    // Para cada anime, verifica se está na lista de favoritos e obtém contagem de comentários
     if (currentUser) {
-      // Verifica favoritos para cada anime
-      for (let anime of featuredAnimes) anime.isFavorited = await this.isAnimeFavorited(anime.primaryTitle);
+      for (let anime of featuredAnimes) {
+        anime.isFavorited = await this.isAnimeFavorited(anime.primaryTitle);
+        // Obtém a contagem de comentários do Firestore
+        anime.commentCount = await this.animeManager.getCommentCount(anime.primaryTitle);
+      }
+    } else {
+      // Se não estiver logado, só pega a contagem de comentários
+      for (let anime of featuredAnimes) {
+        anime.commentCount = await this.animeManager.getCommentCount(anime.primaryTitle);
+      }
     }
 
     swiperWrapper.innerHTML = featuredAnimes.map(anime => `
@@ -202,7 +210,7 @@ class AnimeLoader {
               <span class="info-pill">⭐ ${Number(anime.score).toFixed(1)}</span>
               <span class="info-pill">
                 <svg class="meta-icon" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-4h2v2h-2v-2zm0-2h2V7h-2v7z"/>
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59 8-8 8zm-1-4h2v2h-2v-2zm0-2h2V7h-2v7z"/>
                 </svg>
                 ${anime.episodes > 0 ? anime.episodes : '?'}
               </span>
@@ -300,10 +308,18 @@ class AnimeLoader {
       return;
     }
 
-    // Para cada anime, verifica se está na lista de favoritos do usuário atual
+    // Para cada anime, verifica se está na lista de favoritos e obtém contagem de comentários
     if (currentUser) {
-      // Verifica favoritos para cada anime
-      for (let anime of seasonalAnimes) anime.isFavorited = await this.isAnimeFavorited(anime.primaryTitle);
+      for (let anime of seasonalAnimes) {
+        anime.isFavorited = await this.isAnimeFavorited(anime.primaryTitle);
+        // Obtém a contagem de comentários do Firestore
+        anime.commentCount = await this.animeManager.getCommentCount(anime.primaryTitle);
+      }
+    } else {
+      // Se não estiver logado, só pega a contagem de comentários
+      for (let anime of seasonalAnimes) {
+        anime.commentCount = await this.animeManager.getCommentCount(anime.primaryTitle);
+      }
     }
 
     swiperWrapper.innerHTML = seasonalAnimes.map(anime => `
@@ -320,7 +336,7 @@ class AnimeLoader {
               <span class="info-pill">⭐ ${Number(anime.score).toFixed(1)}</span>
               <span class="info-pill">
                 <svg class="meta-icon" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-4h2v2h-2v-2zm0-2h2V7h-2v7z"/>
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59 8-8 8zm-1-4h2v2h-2v-2zm0-2h2V7h-2v7z"/>
                 </svg>
                 ${anime.episodes > 0 ? anime.episodes : '?'}
               </span>
@@ -558,50 +574,29 @@ class AnimeLoader {
       const reviewsList = document.getElementById('latest-reviews');
       if (!reviewsList) return;
       
-      // Busca os comentários mais recentes
-      const snapshot = await firebase.firestore()
-        .collection('comments')
-        .orderBy('timestamp', 'desc')
-        .limit(3)
-        .get();
+      // Obtém os comentários mais recentes diretamente via AnimeManager
+      const comments = await this.animeManager.getRecentComments(3);
       
-      const latestReviews = [];
-      const promises = [];
+      if (!comments || comments.length === 0) {
+        reviewsList.innerHTML = '<li class="inicio-card-item">Nenhum review disponível</li>';
+        return [];
+      }
       
-      snapshot.forEach(doc => {
-        const commentData = doc.data();
-        
-        // Para cada comentário, busca o anime correspondente usando o AnimeManager
-        const promise = this.animeManager.getAnimeById(commentData.animeId)
-          .then(animeData => {
-            if (animeData) {
-              latestReviews.push({
-                animeTitle: animeData.primaryTitle,
-                comment: commentData
-              });
-            }
-          });
-        
-        promises.push(promise);
-      });
-      
-      await Promise.all(promises);
-      
-      // Renderiza os reviews
-      reviewsList.innerHTML = latestReviews.map(review => `
+      // Renderiza os reviews com os dados obtidos
+      reviewsList.innerHTML = comments.map(comment => `
         <li class="inicio-card-item">
-          <a href="animes.html?anime=${encodeURIComponent(review.animeTitle)}" class="inicio-card-link hover:text-purple-600 transition-colors">
-            <span class="inicio-card-link-title">${review.animeTitle}</span>
+          <a href="animes.html?anime=${encodeURIComponent(comment.animeTitle)}" class="inicio-card-link hover:text-purple-600 transition-colors">
+            <span class="inicio-card-link-title">${comment.animeTitle}</span>
             <p class="inicio-card-link-subtitle">
-              ${review.comment.text.length > 50
-            ? review.comment.text.substring(0, 50) + '...'
-            : review.comment.text}
+              ${comment.text.length > 50
+                ? comment.text.substring(0, 50) + '...'
+                : comment.text}
             </p>
           </a>
         </li>
-      `).join('') || '<li class="inicio-card-item">Nenhum review disponível</li>';
+      `).join('');
       
-      return latestReviews;
+      return comments;
     } catch (error) {
       console.error("Erro ao carregar reviews recentes:", error);
       
@@ -891,41 +886,28 @@ async function loadPopularCategories() {
     const popularCategoriesList = document.getElementById('popular-categories');
     if (!popularCategoriesList) return;
     
-    // Busca as categorias mais populares
-    const snapshot = await firebase.firestore()
-      .collection('categories')
-      .orderBy('animeCount', 'desc')
-      .limit(3)
-      .get();
+    // Cria uma instância do AnimeManager se não existir
+    const animeManager = new AnimeManager();
     
-    const popularCategories = [];
-    snapshot.forEach(doc => {
-      const categoryData = doc.data();
-      popularCategories.push({
-        category: categoryData.name,
-        count: categoryData.animeCount,
-        examples: categoryData.examples || [],
-        desc: categoryData.description || 'Explore mais desta categoria',
-        icon: categoryData.icon || '📺'
-      });
-    });
+    // Usa o método do AnimeManager para obter categorias populares
+    const popularCategories = await animeManager.getPopularCategories(3);
     
     // Se não houver categorias cadastradas, usa a função antiga
-    if (popularCategories.length === 0) {
+    if (!popularCategories || popularCategories.length === 0) {
       renderPopularCategories();
       return;
     }
     
     // Renderiza as categorias
-    popularCategoriesList.innerHTML = popularCategories.map(({ category, desc, icon, count, examples }) => `
+    popularCategoriesList.innerHTML = popularCategories.map(({ name, description, icon, animeCount, examples }) => `
       <li class="index-card-item">
-        <a href="animes.html?category=${encodeURIComponent(category)}" class="index-card-link">
+        <a href="animes.html?category=${encodeURIComponent(name)}" class="index-card-link">
           <div class="flex items-center gap-2 mb-1">
-            <span class="category-icon">${icon}</span>
-            <span class="index-card-link-title">${category}</span>
-            <span class="text-sm opacity-75">(${count})</span>
+            <span class="category-icon">${icon || '📺'}</span>
+            <span class="index-card-link-title">${name}</span>
+            <span class="text-sm opacity-75">(${animeCount || 0})</span>
           </div>
-          <p class="index-card-link-subtitle">${desc}</p>
+          <p class="index-card-link-subtitle">${description || 'Explore mais desta categoria'}</p>
           ${examples && examples.length > 0 ? `
             <p class="text-sm mt-1 opacity-75">
               Ex: ${examples.slice(0, 2).join(', ')}
@@ -981,20 +963,17 @@ async function loadRecentNews() {
     const newsGrid = document.querySelector('.news-grid');
     if (!newsGrid) return;
     
-    // Busca as notícias mais recentes
-    const snapshot = await firebase.firestore()
-      .collection('news')
-      .orderBy('date', 'desc')
-      .limit(4)
-      .get();
+    // Cria uma instância do AnimeManager se não existir
+    const animeManager = new AnimeManager();
     
-    const recentNews = [];
-    snapshot.forEach(doc => {
-      recentNews.push({
-        id: doc.id,
-        ...doc.data()
-      });
-    });
+    // Usa o método do AnimeManager para obter notícias recentes
+    const recentNews = await animeManager.getRecentNews(4);
+    
+    // Se não houver notícias, usa o fallback
+    if (!recentNews || recentNews.length === 0) {
+      renderIndexNews();
+      return;
+    }
     
     // Renderiza as notícias
     newsGrid.innerHTML = recentNews.map(news => `
@@ -1018,7 +997,6 @@ async function loadRecentNews() {
     
   } catch (error) {
     console.error("Erro ao carregar notícias recentes:", error);
-
     // Fallback para método antigo
     renderIndexNews();
   }
