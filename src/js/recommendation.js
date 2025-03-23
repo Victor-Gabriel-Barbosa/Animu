@@ -332,42 +332,73 @@ async function toggleFavoriteFromCard(animeTitle, event) {
     return;
   }
   
-  if (!user.favoriteAnimes) user.favoriteAnimes = [];
-  
-  // Cria objeto de datas de favoritos se não existir
-  if (!user.favoriteDates) user.favoriteDates = {};
-  
-  const isFavorited = user.favoriteAnimes.includes(animeTitle);
-  
-  // Toggle favorito
-  if (isFavorited) {
-    user.favoriteAnimes = user.favoriteAnimes.filter(anime => anime !== animeTitle);
-    delete user.favoriteDates[animeTitle];
-  } else {
-    user.favoriteAnimes.push(animeTitle);
-    user.favoriteDates[animeTitle] = new Date().toISOString();
+  // Busca o ID do anime pelo título
+  const animeId = await getAnimeIdByTitle(animeTitle);
+  if (!animeId) {
+    console.error(`Anime não encontrado: ${animeTitle}`);
+    return;
   }
-  
-  // Salva as alterações no usuário
+
   try {
+    // Verifica o estado atual antes da alteração
+    const isFavorited = user.favoriteAnimes && user.favoriteAnimes.includes(animeTitle);
+    
+    if (!user.favoriteAnimes) user.favoriteAnimes = [];
+    
+    // Cria objeto de datas de favoritos se não existir
+    if (!user.favoriteDates) user.favoriteDates = {};
+    
+    // Toggle favorito
+    let newFavoritedState;
+    if (isFavorited) {
+      user.favoriteAnimes = user.favoriteAnimes.filter(anime => anime !== animeTitle);
+      delete user.favoriteDates[animeTitle];
+      newFavoritedState = false;
+    } else {
+      user.favoriteAnimes.push(animeTitle);
+      user.favoriteDates[animeTitle] = new Date().toISOString();
+      newFavoritedState = true;
+    }
+    
+    // Determina se adicionou ou removeu dos favoritos
+    const increment = newFavoritedState ? 1 : -1;
+    
+    // Salva as alterações no usuário
     await userManager.saveUser(user);
     
-    // Atualiza a UI do botão
-    const button = event ? event.currentTarget : null;
-    if (button) {
-      if (isFavorited) button.classList.remove('is-favorited');
-      else button.classList.add('is-favorited');
-      
-      // Atualiza o contador
-      const countElement = button.querySelector('.favorite-number');
+    // Atualiza o contador de favoritos no Firestore
+    await animeManager.updateFavoriteCount(animeId, increment);
+    
+    // Obtém o anime atualizado do Firestore
+    const updatedAnime = await animeManager.getAnimeById(animeId);
+    const favoriteCount = updatedAnime ? (updatedAnime.favoriteCount || 0) : 0;
+    
+    // Atualiza a UI de todos os botões relacionados ao mesmo anime
+    const allButtons = document.querySelectorAll(`[onclick*="${animeTitle}"]`);
+    allButtons.forEach(btn => {
+      btn.classList.toggle('is-favorited', newFavoritedState);
+      const countElement = btn.querySelector('.favorite-number');
       if (countElement) {
-        const newCount = await countAnimeFavorites(animeTitle);
-        countElement.textContent = newCount;
+        countElement.textContent = favoriteCount;
       }
-    }
+    });
+    
+    console.log(`Anime ${animeTitle} ${newFavoritedState ? 'adicionado aos' : 'removido dos'} favoritos.`);
   } catch (error) {
     console.error("Erro ao salvar favorito:", error);
     alert("Ocorreu um erro ao salvar o favorito. Tente novamente.");
+  }
+}
+
+// Função auxiliar para obter o ID do anime pelo título
+async function getAnimeIdByTitle(animeTitle) {
+  try {
+    const animes = await animeManager.getAnimes();
+    const anime = animes.find(a => a.primaryTitle === animeTitle);
+    return anime ? anime.id : null;
+  } catch (error) {
+    console.error("Erro ao buscar ID do anime:", error);
+    return null;
   }
 }
 
