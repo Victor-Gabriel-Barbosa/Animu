@@ -91,25 +91,25 @@ class Navbar {
           </a>
           <!-- Opções de Admin (inicialmente ocultas) -->
           <div id="admin-options" class="hidden">
-            <a href="./admin-users.html" class="nav-link admin-link" title="Gerenciar usuários do sistema">
+            <a href="./users-admin.html" class="nav-link admin-link" title="Gerenciar usuários do sistema">
               <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24">
                 <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
                 </svg>
               <span>Gerenciar Usuários</span>
             </a>
-            <a href="./admin-category.html" class="nav-link admin-link" title="Gerenciar categorias de animes">
+            <a href="./category-admin.html" class="nav-link admin-link" title="Gerenciar categorias de animes">
               <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24">
                 <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
               </svg>
               <span>Gerenciar Categorias</span>
             </a>
-            <a href="./admin-animes.html" class="nav-link admin-link" title="Gerenciar catálogo de animes">
+            <a href="./animes-admin.html" class="nav-link admin-link" title="Gerenciar catálogo de animes">
               <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24">
                 <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12zM12 5.5v9l6-4.5z"/>
               </svg>
               <span>Gerenciar Animes</span>
             </a>
-            <a href="./admin-news.html" class="nav-link admin-link" title="Gerenciar notícias do site">
+            <a href="./news-admin.html" class="nav-link admin-link" title="Gerenciar notícias do site">
               <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24">
                 <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-5 14H4v-6h11v6zm0-8H4V6h11v4zm5 8h-4V6h4v12z"/>
               </svg>
@@ -216,19 +216,17 @@ class Navbar {
 
     navLinks.forEach(link => {
       const href = link.getAttribute('href').split('?')[0]; // Ignora parâmetros do href também
-      const isAdminPage = currentPage.startsWith('admin-');
-      const isAdminLink = href.startsWith('./admin-');
+      const isAdminPage = currentPage.includes('-admin');
+      const isAdminLink = href.includes('-admin');
 
       // Verifica se é uma página de administração
       if (isAdminPage && isAdminLink) {
-        // Remove o './' do início do href para comparação
-        const cleanHref = href.replace('./', '');
-        if (currentPage === cleanHref) link.classList.add('active');
+        if (currentPage === href.replace('./', '')) link.classList.add('active');
         else link.classList.remove('active');
       }
       // Verifica páginas normais
       else if (!isAdminPage && !isAdminLink) {
-        if (currentPage === href ||
+        if (currentPage === href.replace('./', '') ||
           (currentPage.includes('anime') && href === 'animes.html') ||
           (currentPage === '' && href === 'index.html')) {
           link.classList.add('active');

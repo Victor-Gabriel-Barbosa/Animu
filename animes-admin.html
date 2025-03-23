@@ -5,21 +5,21 @@
   <!-- Meta tags e configurações básicas -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gerenciar Animes - Painel Admin</title>
+  <title>Gerenciar Animes - Painel Admin/admin</title>
 
   <!-- Importa fontes e estilos -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="src/css/animu.css">
-  <link rel="stylesheet" href="src/css/admin.css">
+  <link rel="stylesheet" href="src/css/admin/admin.css">
   <link rel="stylesheet" href="src/css/navbar.css">
   <link rel="icon" href="src/data/images/favicon/favicon.ico" type="image/x-icon">
   <script>
-    // Verifica permissões de administrador
+    // Verifica permissões de admin/administrador
     (function () {
       const session = JSON.parse(localStorage.getItem('userSession'));
-      if (!session || !session.isAdmin) {
-        alert('Acesso negado. Esta página é restrita a administradores.');
+      if (!session || !session.isAdmin/admin) {
+        alert('Acesso negado. Esta página é restrita a admin/administradores.');
         window.location.href = 'index.html';
       }
     })();
@@ -80,7 +80,7 @@
 
   <!-- Modal de formulário para criação/edição de anime -->
   <div id="animeModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-100">
-    <div class="admin-form-container scrollbar-thin max-w-4xl w-full">
+    <div class="admin/admin-form-container scrollbar-thin max-w-4xl w-full">
       <!-- Cabeçalho fixo do modal -->
       <div class="modal-header-fixed">
         <div class="flex justify-between items-center">
@@ -472,8 +472,8 @@
   <script src="src/js/ui/search.js"></script>
   <script src="src/js/animu.js"></script>
   <script src="src/js/category.js"></script>
-  <script src="src/js/admin.js"></script>
-  <script src="src/js/admin-animes.js"></script>
+  <script src="src/js/admin/admin.js"></script>
+  <script src="src/js/admin/animes-admin.js"></script>
 </body>
 
 </html>
