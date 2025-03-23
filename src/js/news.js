@@ -467,9 +467,7 @@ class NewsManager {
             ...doc.data()
           };
           this.displayNewsDetails(newsData);
-        } else {
-          this.showGridView();
-        }
+        } else this.showGridView();
       }).catch(error => {
         console.error('Erro ao carregar notícia:', error);
         this.showGridView();

@@ -191,9 +191,7 @@ class AnimeLoader {
       }
     } else {
       // Se não estiver logado, só pega a contagem de comentários
-      for (let anime of featuredAnimes) {
-        anime.commentCount = await this.animeManager.getCommentCount(anime.primaryTitle);
-      }
+      for (let anime of featuredAnimes) anime.commentCount = await this.animeManager.getCommentCount(anime.primaryTitle);
     }
 
     swiperWrapper.innerHTML = featuredAnimes.map(anime => `
@@ -317,9 +315,7 @@ class AnimeLoader {
       }
     } else {
       // Se não estiver logado, só pega a contagem de comentários
-      for (let anime of seasonalAnimes) {
-        anime.commentCount = await this.animeManager.getCommentCount(anime.primaryTitle);
-      }
+      for (let anime of seasonalAnimes) anime.commentCount = await this.animeManager.getCommentCount(anime.primaryTitle);
     }
 
     swiperWrapper.innerHTML = seasonalAnimes.map(anime => `
@@ -535,8 +531,11 @@ class AnimeLoader {
   }
 
   // Gerencia favoritos a partir do card dos animes
-  async toggleFavoriteFromCard(animeTitle) {
-    event.preventDefault(); // Previne navegação ao clicar no botão
+  async toggleFavoriteFromCard(animeTitle, event) {
+    if (event) {
+      event.preventDefault(); // Previne navegação ao clicar no botão
+      event.stopPropagation(); // Previne propagação do evento
+    }
     
     const sessionData = JSON.parse(localStorage.getItem('userSession'));
     if (!sessionData) {
@@ -599,7 +598,6 @@ class AnimeLoader {
       return comments;
     } catch (error) {
       console.error("Erro ao carregar reviews recentes:", error);
-      
       // Fallback para método baseado em localStorage
       return this.loadLatestReviewsFromLocalStorage();
     }
@@ -731,9 +729,6 @@ class AnimeLoader {
     }
 
     try {
-      // Verifica o estado atual antes da alteração
-      const currentState = await this.isAnimeFavorited(animeTitle);
-      
       // Busca o ID do anime se não foi fornecido
       let validAnimeId = animeId;
       if (!validAnimeId) {
@@ -761,9 +756,7 @@ class AnimeLoader {
         // Atualiza o botão clicado
         buttonElement.classList.toggle('is-favorited', result.isFavorited);
         const countElement = buttonElement.querySelector('.favorite-number');
-        if (countElement) {
-          countElement.textContent = favoriteCount;
-        }
+        if (countElement) countElement.textContent = favoriteCount;
         
         // Atualiza todos os outros botões do mesmo anime
         const allButtons = document.querySelectorAll(`.favorite-count[data-anime-title="${animeTitle}"]`);
@@ -771,9 +764,7 @@ class AnimeLoader {
           if (btn !== buttonElement) {
             btn.classList.toggle('is-favorited', result.isFavorited);
             const count = btn.querySelector('.favorite-number');
-            if (count) {
-              count.textContent = favoriteCount;
-            }
+            if (count) count.textContent = favoriteCount;
           }
         });
         
@@ -808,9 +799,7 @@ function getCategoryDescription(category) {
   const savedCategories = JSON.parse(localStorage.getItem('animuCategories')) || [];
   
   // Procura por correspondência no array de categorias salvas (ignorando case)
-  const foundCategory = savedCategories.find(cat => 
-    cat.name.toLowerCase() === category.toLowerCase()
-  );
+  const foundCategory = savedCategories.find(cat => cat.name.toLowerCase() === category.toLowerCase());
   
   // Se encontrou a categoria, retorna os dados salvos
   if (foundCategory) {

@@ -88,8 +88,7 @@ class CategoryDisplay {
       localStorage.setItem('animuCategories', JSON.stringify(defaultCategories));
       
       // Também salvamos no Firestore através do CategoryManager
-      this.categoryManager.saveCategories(defaultCategories)
-        .catch(err => console.error('Erro ao salvar categorias padrão:', err));
+      this.categoryManager.saveCategories(defaultCategories).catch(err => console.error('Erro ao salvar categorias padrão:', err));
         
       return defaultCategories;
     }
@@ -157,9 +156,7 @@ class CategoryDisplay {
   // Retorna quantidade de animes em uma categoria específica
   countAnimesByCategory(category) {
     const animes = JSON.parse(localStorage.getItem('animeData')) || [];
-    return animes.filter(anime =>
-      anime.genres.some(genre => this.normalizeCategory(genre) === this.normalizeCategory(category))
-    ).length;
+    return animes.filter(anime => anime.genres.some(genre => this.normalizeCategory(genre) === this.normalizeCategory(category))).length;
   }
 
   // Padroniza o formato do nome da categoria para comparações

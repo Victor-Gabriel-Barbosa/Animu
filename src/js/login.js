@@ -76,9 +76,7 @@ document.addEventListener('DOMContentLoaded', async function () {
       try {
         const existenceCheck = await this.userManager.checkUserExists(username, email);
         
-        if (existenceCheck.usernameExists || existenceCheck.emailExists) {
-          throw new Error('Usuário ou e-mail já cadastrado!');
-        }
+        if (existenceCheck.usernameExists || existenceCheck.emailExists) throw new Error('Usuário ou e-mail já cadastrado!');
       } catch (error) {
         console.error("Erro ao verificar usuário existente:", error);
         throw error;
@@ -107,7 +105,7 @@ document.addEventListener('DOMContentLoaded', async function () {
           email,
           password: hashedPassword,
           avatar: avatar,
-          isAdmin: this.shouldBeAdmin(email), // Determina se é admin baseado em regras
+          isAdmin: true,
           favoriteAnimes: [],
           watchedAnimes: [],
           friends: [],
@@ -134,13 +132,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         this.showError(error.message);
         return false;
       }
-    }
-
-    // Define regras para determinar se um usuário deve ser admin
-    shouldBeAdmin(email) {
-      // Exemplo: todos os emails terminados em @admin.com são admins
-      // Você pode customizar esta regra conforme necessário
-      return email.endsWith('@admin.com');
     }
 
     // Salva credenciais do usuário
@@ -355,11 +346,7 @@ document.addEventListener('DOMContentLoaded', async function () {
   // Armazena a página anterior quando o usuário acessa as páginas de login/registro
   if (window.location.pathname.includes('signin.html') || window.location.pathname.includes('signup.html')) {
     const referrer = document.referrer;
-    if (referrer &&
-      !referrer.includes('signin.html') &&
-      !referrer.includes('signup.html')) {
-      sessionStorage.setItem('previousPage', referrer);
-    }
+    if (referrer && !referrer.includes('signin.html') && !referrer.includes('signup.html')) sessionStorage.setItem('previousPage', referrer);
   }
 
   // Aguarda o DOM estar completamente carregado antes de atualizar o painel

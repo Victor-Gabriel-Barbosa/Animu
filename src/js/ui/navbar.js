@@ -426,8 +426,11 @@ class Navbar {
   setupTouchGestures() {
     let touchStartX = 0;
     let touchEndX = 0;
+    const edgeThreshold = 30; // Define uma área de 30px da borda esquerda
 
-    document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, false);
+    document.addEventListener('touchstart', (e) => { 
+      touchStartX = e.touches[0].clientX; 
+    }, false);
 
     document.addEventListener('touchend', (e) => {
       touchEndX = e.changedTouches[0].clientX;
@@ -438,10 +441,11 @@ class Navbar {
       const swipeDistance = touchEndX - touchStartX;
       const sideMenu = document.getElementById('side-menu');
       const menuOverlay = document.getElementById('menu-overlay');
+      const startedAtLeftEdge = touchStartX <= edgeThreshold;
 
       if (Math.abs(swipeDistance) > 50) { // Mínimo de 50px
-        if (swipeDistance > 0) {
-          // Swipe direita - Abre o menu
+        if (swipeDistance > 0 && startedAtLeftEdge) {
+          // Swipe direita a partir da borda esquerda - Abre o menu
           sideMenu.classList.add('open');
           menuOverlay.classList.add('show');
           document.body.classList.add('menu-open');
@@ -449,8 +453,8 @@ class Navbar {
           localStorage.setItem('sideMenuState', 'open');
           // Adiciona listener para dispositivos móveis
           if (window.innerWidth <= 768) document.addEventListener('click', this.handleOutsideClick);
-        } else {
-          // Swipe esquerda - Fecha o menu
+        } else if (swipeDistance < 0 && sideMenu.classList.contains('open')) {
+          // Swipe esquerda (qualquer posição) - Fecha o menu se estiver aberto
           sideMenu.classList.remove('open');
           menuOverlay.classList.remove('show');
           document.body.classList.remove('menu-open');

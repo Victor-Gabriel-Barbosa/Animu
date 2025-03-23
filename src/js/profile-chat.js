@@ -1,5 +1,5 @@
 /**
- * Chat - Gerencia conversas entre usuários da plataforma Animu
+ * Gerencia conversas entre usuários da plataforma Animu
  * Armazena e recupera mensagens do localStorage
  */
 class Chat {
