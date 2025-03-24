@@ -1152,9 +1152,6 @@ async function toggleFavoriteFromCard(animeTitle, event) {
   }
 
   try {
-    // Busca o elemento que foi clicado (se o evento existir)
-    const buttonElement = event ? (event.currentTarget || event.target.closest('.favorite-count')) : null;
-    
     // Busca o ID do anime antes de prosseguir
     const animes = animeManager.getAnimesFromCache();
     const animeToUpdate = animes.find(anime => anime.primaryTitle === animeTitle);
