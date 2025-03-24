@@ -295,7 +295,7 @@ tbody tr:nth-child(5) { animation-delay: 0.5s; }
   background-image: var(--parallax-bg-image, url('../data/images/anime-night-sky-illustration.png'));
   background-size: cover;
   background-position: center;
-  background-attachment: fixed;
+  background-attachment: fixed; /* Mantém apenas para desktop */
   filter: brightness(0.8);
   z-index: -1;
 }
@@ -310,11 +310,9 @@ tbody tr:nth-child(5) { animation-delay: 0.5s; }
   );
   padding: 1rem;
   border-radius: 1.5rem;
-  box-shadow: 
-    0 12px 40px var(--primary-color),
-    0 0 0 1px var(--primary-color-alpha) inset;
+  box-shadow: 0 8px 30px var(--primary-color);
   border: 1px solid var(--primary-color);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s ease; /* Simplificado para melhor desempenho */
 }
 
 .parallax-background {
@@ -329,6 +327,41 @@ tbody tr:nth-child(5) { animation-delay: 0.5s; }
   background-size: cover;
   background-position: center;
   filter: brightness(0.8);
+}
+
+/* Otimizações para dispositivos móveis */
+@media (max-width: 768px) {
+  .parallax-section {
+    padding: 3rem 0;
+  }
+  
+  .parallax-section::before {
+    background-attachment: scroll; /* Desativa o efeito parallax em dispositivos móveis */
+    background-position: center; /* Mantém a imagem centralizada */
+    will-change: auto; /* Evita que o navegador crie uma nova camada para esta animação */
+  }
+  
+  .parallax-content {
+    box-shadow: 0 6px 20px rgba(138, 43, 226, 0.5); /* Sombra mais leve */
+    transition: none; /* Remove a transição em dispositivos móveis */
+  }
+  
+  .parallax-background {
+    transform: none; /* Remove transformações 3D em dispositivos móveis */
+    will-change: auto; /* Desativa otimizações que podem ser contraproducentes */
+  }
+}
+
+@media (max-width: 480px) {
+  .parallax-section {
+    padding: 2rem 0;
+    border-radius: 15px;
+  }
+  
+  .parallax-content {
+    box-shadow: 0 4px 15px rgba(138, 43, 226, 0.4); /* Sombra ainda mais leve */
+    border-radius: 1rem;
+  }
 }
 
 /* 4. Componentes
