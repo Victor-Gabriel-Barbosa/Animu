@@ -966,3 +966,40 @@ body.has-navbar {
 nav.nav-hidden + body.has-navbar {
   padding-top: 0;
 }
+
+.user-info-section {
+  padding: 12px;
+}
+
+.user-info-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-info-text {
+  overflow: hidden;
+}
+
+.user-name {
+  font-weight: bold;
+  font-size: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-email {
+  font-size: 14px;
+  opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-type {
+  font-size: 12px;
+  opacity: 0.7;
+  margin-top: 2px;
+  font-style: italic;
+}

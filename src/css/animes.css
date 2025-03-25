@@ -102,7 +102,7 @@
   position: relative;
   animation: fadeScale 0.5s ease-out;
   background: var(--background);
-  border: 1px solid var(--card-shadow);
+  border: 1px solid var(--primary-color);
 }
 
 .anime-card-link {
@@ -113,11 +113,6 @@
   color: inherit;
 }
 
-/* Cards de Animes em Destaque */
-.anime-card {
-  background: var(--background);
-  border: 1px solid var(--card-shadow);
-}
 
 .anime-card .image-wrapper {
   position: relative;

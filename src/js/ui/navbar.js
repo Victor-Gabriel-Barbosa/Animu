@@ -146,6 +146,17 @@ class Navbar {
             <img class="h-10 w-10 rounded-full object-cover" src="${userSession.avatar || 'https://ui-avatars.com/api/?name=User&background=random'}" alt="Avatar do Usuário" />
           </button>
           <div id="user-dropdown" class="user-dropdown hidden">
+            <div class="user-info-section">
+              <div class="user-info-header">
+                <img class="h-12 w-12 rounded-full object-cover" src="${userSession.avatar || 'https://ui-avatars.com/api/?name=User&background=random'}" alt="Avatar do Usuário" />
+                <div class="user-info-text">
+                  <div class="user-name">${userSession.name || userSession.username || 'Usuário'}</div>
+                  <div class="user-email">${userSession.email || ''}</div>
+                  <div class="user-type">${userSession.isAdmin ? 'Administrador' : (userSession.isPremium ? 'Assinante Premium' : 'Conta Padrão')}</div>
+                </div>
+              </div>
+            </div>
+            <div class="dropdown-divider"></div>
             <a href="./profile.html" class="dropdown-item">
               <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 0 24 24">
                 <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
