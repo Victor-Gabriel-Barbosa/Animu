@@ -884,8 +884,8 @@ body.dark-mode {
 .swiper-button-prev {
   color: var(--primary-color);
   background-color: var(--background);
-  width: 40px;
-  height: 40px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   backdrop-filter: blur(4px);
   transition: all 0.3s ease;
@@ -900,13 +900,13 @@ body.dark-mode {
 
 .swiper-button-next:hover,
 .swiper-button-prev:hover {
-  background-color: var(--card-shadow);
-  transform: scale(1.1);
+  background: var(--primary-gradient);
+  color: white;
 }
 
 .swiper-button-next::after,
 .swiper-button-prev::after {
-  font-size: 18px;
+  font-size: 22px;
   font-weight: bold;
 }
 
@@ -918,8 +918,8 @@ body.dark-mode {
 }
 
 .swiper-pagination-bullet {
-  width: 15px;
-  height: 15px;
+  width: 12px;
+  height: 12px;
   background: white;
   opacity: 0.7;
   transition: all 0.3s ease;
@@ -931,7 +931,6 @@ body.dark-mode {
   transform: scale(1.2);
 }
 
-/* Efeito para paginação com dynamicBullets */
 .swiper-pagination-bullet-active-main {
   transform: scale(1.4);
 }

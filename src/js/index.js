@@ -927,7 +927,7 @@ function renderIndexNews() {
   const recentNews = sortedNews.slice(0, 4);
 
   newsGrid.innerHTML = recentNews.map(news => `
-    <a href="news.html?id=${news.id}" class="news-card block hover:transform hover:scale-[1.02] transition-transform">
+    <a href="news.html?id=${news.id}" class="news-card">
       <div class="news-image-container">
         <img src="${news.image}" alt="${news.title}" class="news-image">
         <span class="news-category">${news.category}</span>
@@ -966,7 +966,7 @@ async function loadRecentNews() {
     
     // Renderiza as notícias
     newsGrid.innerHTML = recentNews.map(news => `
-      <a href="news.html?id=${news.id}" class="news-card block hover:transform hover:scale-[1.02] transition-transform">
+      <a href="news.html?id=${news.id}" class="news-card">
         <div class="news-image-container">
           <img src="${news.image}" alt="${news.title}" class="news-image">
           <span class="news-category">${news.category}</span>
