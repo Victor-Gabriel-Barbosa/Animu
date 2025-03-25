@@ -439,12 +439,22 @@ async function shareAnime(event, animeTitle, coverImage) {
           </div>
           <div class="flex justify-end gap-3">
             <button onclick="closeShareModal()" 
-                    class="px-4 py-2 text-gray-500 hover:text-gray-700">
-              Cancelar
+                    class="btn btn-cancel order-2 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
+              <span class="flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Cancelar
+              </span>
             </button>
             <button onclick="confirmShare('${animeTitle}', '${coverImage}')" 
-                    class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
-              Compartilhar
+                    class="btn btn-primary order-1 md:order-3 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
+              <span class="flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                Compartilhar
+              </span>
             </button>
           </div>
         </div>
