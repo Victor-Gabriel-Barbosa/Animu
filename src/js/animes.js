@@ -354,7 +354,7 @@ async function renderAllAnimes() {
     }
 
     container.innerHTML = `
-      ${headerContent || `<h1 class="text-3xl font-bold mb-6">${pageTitle}</h1>`}
+      ${headerContent || `<h1 class="section-title text-2xl md:text-3xl lg:text-4xl my-4 md:my-6">${pageTitle}</h1>`}
       <div class="anime-grid">
         ${filteredAnimes.map(anime => `
           <div class="anime-card">

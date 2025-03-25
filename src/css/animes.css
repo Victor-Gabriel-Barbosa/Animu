@@ -136,10 +136,6 @@
   transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.anime-card:hover .anime-image {
-  transform: scale(1.15);
-}
-
 /* Mantém apenas as informações básicas sempre visíveis */
 .anime-card .anime-info {
   position: absolute;

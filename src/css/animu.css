@@ -305,14 +305,14 @@ tbody tr:nth-child(5) { animation-delay: 0.5s; }
   z-index: 1;
   background: linear-gradient(
     135deg,
-    rgba(0, 0, 0, 0.5) 0%,
-    rgba(0, 0, 0, 0.5) 100%
+    rgba(0, 0, 0, 0.55) 0%,
+    rgba(0, 0, 0, 0.55) 100%
   );
   padding: 1rem;
   border-radius: 1.5rem;
   box-shadow: 0 8px 30px var(--primary-color);
   border: 1px solid var(--primary-color);
-  transition: all 0.3s ease; /* Simplificado para melhor desempenho */
+  transition: all 0.3s ease;
 }
 
 .parallax-background {
@@ -336,19 +336,18 @@ tbody tr:nth-child(5) { animation-delay: 0.5s; }
   }
   
   .parallax-section::before {
-    background-attachment: scroll; /* Desativa o efeito parallax em dispositivos móveis */
-    background-position: center; /* Mantém a imagem centralizada */
-    will-change: auto; /* Evita que o navegador crie uma nova camada para esta animação */
+    background-attachment: scroll; 
+    background-position: center; 
+    will-change: auto; 
   }
   
-  .parallax-content {
-    box-shadow: 0 6px 20px rgba(138, 43, 226, 0.5); /* Sombra mais leve */
-    transition: none; /* Remove a transição em dispositivos móveis */
+  .parallax-content { 
+    transition: none; 
   }
   
   .parallax-background {
-    transform: none; /* Remove transformações 3D em dispositivos móveis */
-    will-change: auto; /* Desativa otimizações que podem ser contraproducentes */
+    transform: none;
+    will-change: auto; 
   }
 }
 
@@ -356,11 +355,6 @@ tbody tr:nth-child(5) { animation-delay: 0.5s; }
   .parallax-section {
     padding: 2rem 0;
     border-radius: 15px;
-  }
-  
-  .parallax-content {
-    box-shadow: 0 4px 15px rgba(138, 43, 226, 0.4); /* Sombra ainda mais leve */
-    border-radius: 1rem;
   }
 }
 
@@ -924,9 +918,9 @@ body.dark-mode {
 }
 
 .swiper-pagination-bullet {
-  width: 10px;
-  height: 10px;
-  background: var(--primary-color);
+  width: 15px;
+  height: 15px;
+  background: white;
   opacity: 0.7;
   transition: all 0.3s ease;
 }
