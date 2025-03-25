@@ -876,7 +876,7 @@ function renderComment(comment, animeTitle) {
               ${isCommentOwner ? `
                 <button 
                   class="btn-action btn-edit" 
-                  onclick="toggleEditMode(${comment.id})"
+                  onclick="toggleEditMode('${comment.id}')"
                   title="Editar comentário"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -888,7 +888,7 @@ function renderComment(comment, animeTitle) {
                 <button 
                   class="btn-action btn-delete"
                   onclick="if(confirm('Deseja realmente excluir este comentário?')) { 
-                    deleteComment('${animeTitle}', ${comment.id}); 
+                    deleteComment('${animeTitle}', '${comment.id}'); 
                     updateCommentsList('${animeTitle}');
                   }"
                   title="${isAdmin && !isCommentOwner ? 'Excluir como administrador' : 'Excluir comentário'}"
@@ -909,7 +909,7 @@ function renderComment(comment, animeTitle) {
           <div class="vote-buttons mt-2">
             <button 
               class="vote-btn ${userVote === 'like' ? 'active' : ''}"
-              onclick="voteComment('${animeTitle}', ${comment.id}, 'like') && updateCommentsList('${animeTitle}')"
+              onclick="voteComment('${animeTitle}', '${comment.id}', 'like') && updateCommentsList('${animeTitle}')"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M7 10v12" />
@@ -919,7 +919,7 @@ function renderComment(comment, animeTitle) {
             </button>
             <button 
               class="vote-btn ${userVote === 'dislike' ? 'active' : ''}"
-              onclick="voteComment('${animeTitle}', ${comment.id}, 'dislike') && updateCommentsList('${animeTitle}')"
+              onclick="voteComment('${animeTitle}', '${comment.id}', 'dislike') && updateCommentsList('${animeTitle}')"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M17 14V2" />
