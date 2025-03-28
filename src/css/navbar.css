@@ -494,7 +494,24 @@ body.menu-open {
   transform: scale(1.05);
 }
 
-/* Adiciona estilos para o botão de autenticação */
+#user-dropdown-btn img,
+.user-info-header img {
+  border: 2px solid var(--primary-color);
+  box-shadow: 0 0 8px rgba(138, 43, 226, 0.4);
+  transition: all 0.3s ease;
+}
+
+#user-dropdown:not(.hidden) + #user-dropdown-btn img {
+  border: 3px solid transparent;
+  background-image: linear-gradient(white, white), var(--primary-gradient);
+  background-origin: border-box;
+  background-clip: content-box, border-box;
+}
+
+.user-info-header img {
+  border: 2px solid var(--primary-color);
+}
+
 .auth-btn {
   display: flex;
   align-items: center;
@@ -519,7 +536,6 @@ body.menu-open {
   fill: currentColor;
 }
 
-/* Estilos atualizados do Dropdown do Usuário */
 .dropdown-divider {
   height: 1px;
   background: var(--card-shadow);
@@ -533,7 +549,6 @@ body.menu-open {
   gap: 4px;
 }
 
-/* Ajuste do espaçamento no dropdown de temas */
 .theme-option {
   display: flex;
   align-items: center;
@@ -547,7 +562,6 @@ body.menu-open {
   font-size: 0.95rem;
 }
 
-/* Remove todos os media queries relacionados ao side-menu */
 @media (max-width: 768px) {
   .menu-overlay.show {
     background: rgba(0, 0, 0, 0.5);
