@@ -1,6 +1,7 @@
 // Inicializa os gerenciadores
 const userManager = new UserManager();
 const animeManager = new AnimeManager();
+const animeChat = new AnimeChat(); 
 
 // Extrai parâmetros da URL de forma segura
 function getUrlParameter(name) {
@@ -1028,13 +1029,13 @@ window.addEventListener('DOMContentLoaded', async () => {
 
           try {
             const animeTitle = new URLSearchParams(window.location.search).get('anime');
-            const result = await saveComment(decodeURIComponent(animeTitle), commentText, ratingValue);
+            const result = await animeChat.saveComment(decodeURIComponent(animeTitle), commentText, ratingValue);
             
             if (result) {
               document.getElementById('comment-text').value = '';
               document.getElementById('rating-slider').value = '0';
-              updateRatingEmoji(0); // Reseta o emoji
-              updateCommentsList(decodeURIComponent(animeTitle));
+              animeChat.updateRatingEmoji(0); // Reseta o emoji
+              animeChat.updateCommentsList(decodeURIComponent(animeTitle));
             }
           } catch (error) {
             console.error('Erro ao enviar comentário:', error);
@@ -1047,7 +1048,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       }
 
       // Carrega comentários existentes
-      updateCommentsList(decodeURIComponent(animeTitle));
+      animeChat.updateCommentsList(decodeURIComponent(animeTitle));
       
       // Adiciona eventos para os botões de favorito
       attachFavoriteButtonEvents();
@@ -1069,21 +1070,21 @@ document.addEventListener('DOMContentLoaded', function () {
   const slider = document.getElementById('rating-slider');
   if (slider) {
     slider.addEventListener('input', function () {
-      updateRatingEmoji(this.value);
+      animeChat.updateRatingEmoji(this.value);
     });
   }
 
   // Adiciona o contador de caracteres ao textarea
   const commentText = document.getElementById('comment-text');
   if (commentText) {
-    commentText.setAttribute('maxlength', MAX_COMMENT_LENGTH);
+    commentText.setAttribute('maxlength', AnimeChat.MAX_COMMENT_LENGTH);
     commentText.insertAdjacentHTML('afterend',
-      `<small id="comment-char-count" class="text-right block mt-1">0/${MAX_COMMENT_LENGTH}</small>`
+      `<small id="comment-char-count" class="text-right block mt-1">0/${AnimeChat.MAX_COMMENT_LENGTH}</small>`
     );
 
     commentText.addEventListener('input', function () {
       const counter = document.getElementById('comment-char-count');
-      counter.textContent = `${this.value.length}/${MAX_COMMENT_LENGTH}`;
+      counter.textContent = `${this.value.length}/${AnimeChat.MAX_COMMENT_LENGTH}`;
     });
   }
 
@@ -1101,7 +1102,7 @@ document.addEventListener('DOMContentLoaded', function () {
       value = Math.round(value * 10);
 
       // Atualiza o slider e emoji
-      updateRatingEmoji(value, false);
+      animeChat.updateRatingEmoji(value, false);
     });
 
     // Formata o valor quando o input perde o foco
@@ -1115,7 +1116,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const ratingSlider = document.getElementById('rating-slider');
   if (ratingSlider) {
     ratingSlider.addEventListener('input', function () {
-      updateRatingEmoji(this.value);
+      animeChat.updateRatingEmoji(this.value);
     });
   }
 });
