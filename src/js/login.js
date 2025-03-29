@@ -167,7 +167,7 @@ document.addEventListener('DOMContentLoaded', async function () {
       return diffDays <= 30; // Expira após 30 dias
     }
 
-    // Método de login atualizado
+    // Método de login do usuário
     async loginUser(identifier, password, remember = false) {
       try {
         this.checkLoginAttempts(identifier);
@@ -279,7 +279,7 @@ document.addEventListener('DOMContentLoaded', async function () {
       window.location.reload();
     }
 
-    // Método atualizado para mostrar erros com feedback visual
+    // Mostra erros com feedback visual
     showError(message) {
       // Remove qualquer mensagem de erro existente
       this.clearErrors();

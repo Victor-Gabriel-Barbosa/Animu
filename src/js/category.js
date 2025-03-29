@@ -84,10 +84,10 @@ class CategoryDisplay {
         }
       ];
       
-      // Salvar localmente as categorias padrão
+      // Salva localmente as categorias padrão
       localStorage.setItem('animuCategories', JSON.stringify(defaultCategories));
       
-      // Também salvamos no Firestore através do CategoryManager
+      // Também salva no Firestore através do CategoryManager
       this.categoryManager.saveCategories(defaultCategories).catch(err => console.error('Erro ao salvar categorias padrão:', err));
         
       return defaultCategories;

@@ -13,7 +13,7 @@ class AnimeLoader {
 
   // Método estático para inicializar o AnimeLoader
   static init() {
-    // Verifica se estamos na página principal antes de inicializar
+    // Verifica se está na página principal antes de inicializar
     if (AnimeLoader.isMainPage()) {
       const loader = new AnimeLoader();
       loader.registerAnimeEventHandlers();
@@ -25,7 +25,7 @@ class AnimeLoader {
     return null;
   }
 
-  // Método estático para verificar se estamos na página principal
+  // Método estático para verificar se está na página principal
   static isMainPage() {
     const path = window.location.pathname;
     return path.endsWith('index.html') || path.endsWith('/') || path === '';
@@ -697,7 +697,6 @@ class AnimeLoader {
 
   // Registra manipuladores de eventos relacionados a animes
   registerAnimeEventHandlers() {
-    // Exponha as funções necessárias para manipulação de eventos
     window.toggleFavoriteFromCard = (animeTitle) => this.toggleFavoriteFromCard(animeTitle);
   }
 
@@ -816,7 +815,7 @@ function getCategoryDescription(category) {
   };
 }
 
-// Função atualizada para obter categorias populares
+// Obtém categorias populares
 function getPopularCategories(limit = 3) {
   const animes = JSON.parse(localStorage.getItem('animeData')) || [];
   const categoryCount = {};
@@ -908,7 +907,6 @@ async function loadPopularCategories() {
     
   } catch (error) {
     console.error("Erro ao carregar categorias populares:", error);
-    // Fallback para método antigo
     renderPopularCategories();
   }
 }
@@ -986,7 +984,6 @@ async function loadRecentNews() {
     
   } catch (error) {
     console.error("Erro ao carregar notícias recentes:", error);
-    // Fallback para método antigo
     renderIndexNews();
   }
 }
@@ -1003,7 +1000,7 @@ function formatDate(dateStr) {
 
 // Inicializa o AnimeLoader automaticamente quando o DOM estiver carregado
 document.addEventListener('DOMContentLoaded', () => {
-  // Inicializa o AnimeLoader se estivermos na página principal
+  // Inicializa o AnimeLoader se estiver na página principal
   window.animeLoader = AnimeLoader.init();
 
   // Inicializa dados da página

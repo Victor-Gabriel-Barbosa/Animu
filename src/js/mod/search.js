@@ -1,6 +1,6 @@
 /**
- * Classe que implementa uma barra de busca de animes com filtros
- * e sugestões em tempo real
+ * Classe que implementa uma barra de busca de 
+ * animes com filtros e sugestões em tempo real
  */
 class AnimeSearchBar {
   constructor(options = {}) {
@@ -678,9 +678,7 @@ class AnimeSearchBar {
     // Aplica cada filtro ao seu respectivo elemento de interface
     Object.keys(this.filters).forEach(key => {
       const filterSelect = this.container.querySelector(`#${key}-filter`);
-      if (filterSelect && this.filters[key]) {
-        filterSelect.value = this.filters[key];
-      }
+      if (filterSelect && this.filters[key]) filterSelect.value = this.filters[key];
     });
 
     // Trata caso especial do filtro de data personalizada
@@ -688,9 +686,7 @@ class AnimeSearchBar {
       const customDateFilter = this.container.querySelector('#custom-date-filter');
       if (customDateFilter) {
         customDateFilter.classList.remove('hidden');
-        if (this.filters.customDate) {
-          customDateFilter.value = this.filters.customDate;
-        }
+        if (this.filters.customDate) customDateFilter.value = this.filters.customDate;
       }
     }
 

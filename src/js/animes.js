@@ -619,9 +619,7 @@ async function toggleFavorite(animeTitle) {
     updateAllFavoriteButtons(animeTitle, wasAdded, favoriteCount);
     
     // Atualiza as estatísticas em tempo real - utiliza a função de animes-chat.js
-    if (typeof window.updateAnimeStats === 'function') {
-      window.updateAnimeStats(animeTitle);
-    }
+    if (typeof window.updateAnimeStats === 'function') window.updateAnimeStats(animeTitle);
     
     return result;
   } catch (error) {
@@ -681,9 +679,7 @@ async function toggleFavoriteFromCard(animeTitle, event) {
     
     // Atualiza as estatísticas em tempo real para a página de detalhes, se estiver nela
     if (window.location.search.includes(`anime=${encodeURIComponent(animeTitle)}`) && 
-        typeof window.updateAnimeStats === 'function') {
-      window.updateAnimeStats(animeTitle);
-    }
+        typeof window.updateAnimeStats === 'function') window.updateAnimeStats(animeTitle);
   } catch (error) {
     console.error('Erro ao atualizar favorito:', error);
     alert('Houve um problema ao salvar seu favorito. Por favor, tente novamente.');
@@ -700,8 +696,8 @@ function updateAllFavoriteButtons(animeTitle, isFavorited, count) {
     const buttonLink = button.closest('a');
     
     // Verifica se este botão pertence ao anime em questão usando atributo ou link
-    if (buttonAnimeTitle === animeTitle || 
-        (buttonLink && buttonLink.href && buttonLink.href.includes(encodeURIComponent(animeTitle)))) {
+    if (buttonAnimeTitle === animeTitle || (buttonLink && buttonLink.href &&
+        buttonLink.href.includes(encodeURIComponent(animeTitle)))) {
       // Atualiza a classe para refletir o novo estado
       button.classList.toggle('is-favorited', isFavorited);
       

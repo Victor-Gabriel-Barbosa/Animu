@@ -158,68 +158,75 @@ function renderTopics() {
   });
 }
 
-// Função para obter o avatar do usuário
+// Obtém o avatar do usuário
 function getUserAvatar(username) {
   const users = JSON.parse(localStorage.getItem('animuUsers') || '[]');
   const user = users.find(u => u.username === username);
   return user ? user.avatar : `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=8B5CF6&color=ffffff&size=100`;
 }
 
-// Atualiza a função renderReplies para incluir avatares
+// Renderiza a lista de tópicos do fórum
 function renderReplies(replies, topicId, userId) {
   return replies.map(reply => `
     <div class="mb-3 overflow-hidden" id="reply-${reply.id}">
-      <div class="flex items-start gap-2 sm:gap-3">
-        <img class="h-6 w-6 sm:h-8 sm:w-8 rounded-full object-cover"
+      <div class="flex items-start gap-3">
+        <img class="h-8 w-8 rounded-full object-cover"
              src="${getUserAvatar(reply.author)}"
              alt="${reply.author}">
-        <div class="flex-1 min-w-0">
-          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start">
-            <p class="text-xs sm:text-sm">
+        <div class="flex-1">
+          <div class="flex justify-between items-start">
+            <p class="text-sm">
               <span class="font-semibold">${reply.author}</span>
               em ${formatDate(reply.date)}
               ${reply.editedAt ? `<span class="text-xs">(editado)</span>` : ''}
             </p>
-            <div class="flex items-center gap-1 sm:gap-2 mt-1 sm:mt-0">
+            <div class="flex items-center gap-2">
               ${(isAuthor(reply.author) || isAdmin()) ? `
-                <button onclick="editReply('${topicId}', '${reply.id}'); event.stopPropagation();" 
-                        class="text-blue-600 hover:text-blue-800 p-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" viewBox="0 0 20 20" fill="currentColor">
+                <button onclick="editReply('${topicId}', '${reply.id}')" class="text-blue-600 hover:text-blue-800">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
                   </svg>
                 </button>
-                <button onclick="deleteReply('${topicId}', '${reply.id}'); event.stopPropagation();"
-                        class="text-red-600 hover:text-red-800 p-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" viewBox="0 0 20 20" fill="currentColor">
+                <button onclick="deleteReply('${topicId}', '${reply.id}')" class="text-red-600 hover:text-red-800">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
                   </svg>
                 </button>
               ` : ''}
-              <button onclick="likeReply('${topicId}', '${reply.id}'); event.stopPropagation();"
-                      class="text-xs sm:text-sm ${reply.likedBy && reply.likedBy.includes(userId) ? 'text-purple-600' : 'text-gray-400'} transition-colors p-1">
+              <button onclick="likeReply('${topicId}', '${reply.id}')" 
+                      class="text-sm ${reply.likedBy && reply.likedBy.includes(userId) ? 'text-purple-600' : 'text-gray-400'} transition-colors">
                 ${reply.likes || 0} ❤️
               </button>
             </div>
           </div>
           <div class="reply-content overflow-hidden mt-1">
-            <p class="break-words text-sm sm:text-base">${reply.content}</p>
+            <p class="break-words">${reply.content}</p>
           </div>
-          <div class="reply-edit-form hidden">
-            <form onsubmit="saveReplyEdit(event, '${topicId}', '${reply.id}')" 
-                  class="flex flex-col sm:flex-row gap-2 mt-2">
-              <div class="flex-1">
-                <textarea class="w-full p-2 border rounded-lg text-sm"
+          <div class="reply-edit-form hidden mt-4">
+            <form onsubmit="saveReplyEdit(event, '${topicId}', '${reply.id}')" class="space-y-3">
+              <div>
+                <textarea class="w-full p-2 border rounded-lg" 
                           maxlength="${FORUM_CONFIG.maxReplyLength}"
                           oninput="updateCharCount(this, 'reply-edit-count-${reply.id}')">${reply.content}</textarea>
-                <small id="reply-edit-count-${reply.id}" 
-                       class="text-right block mt-1 text-xs">0/${FORUM_CONFIG.maxReplyLength}</small>
+                <small id="reply-edit-count-${reply.id}" class="text-right block mt-1">0/${FORUM_CONFIG.maxReplyLength}</small>
               </div>
-              <div class="flex sm:flex-col gap-2">
-                <button type="submit" 
-                        class="btn btn-primary text-sm py-1 px-3 flex-1">Salvar</button>
-                <button type="button"
-                        onclick="cancelReplyEdit('${reply.id}')" 
-                        class="btn btn-cancel text-sm py-1 px-3 flex-1">Cancelar</button>
+              <div class="flex flex-col sm:flex-row justify-end gap-2">
+                <button type="button" onclick="cancelReplyEdit('${reply.id}')" class="btn btn-cancel order-2 sm:order-1 w-full py-2 text-sm">
+                  <span class="flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    Cancelar
+                  </span>
+                </button>
+                <button type="submit" class="btn btn-primary order-1 sm:order-2 w-full py-2 text-sm">
+                  <span class="flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Salvar
+                  </span>
+                </button>
               </div>
             </form>
           </div>
@@ -316,9 +323,23 @@ function renderTopicCard(topic, userId) {
           </div>
           <div class="flex flex-col sm:flex-row justify-end gap-2">
             <button type="button" onclick="cancelTopicEdit('${topic.id}')" 
-                    class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg order-2 sm:order-1">Cancelar</button>
+                    class="btn btn-cancel order-2 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
+              <span class="flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Cancelar
+              </span>
+            </button>
             <button type="submit" 
-                    class="btn btn-primary order-1 sm:order-2">Salvar</button>
+                    class="btn btn-primary order-1 md:order-3 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
+              <span class="flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                Salvar
+              </span>
+            </button>
           </div>
         </form>
       </div>
@@ -374,7 +395,7 @@ function renderTopicCard(topic, userId) {
   `;
 }
 
-// Correção da função de edição de tópicos
+// Edita um tópico do fórum
 function editTopic(topicId) {
   const topic = forumTopics.find(t => t.id === topicId);
   if (!topic || (!isAuthor(topic.author) && !isAdmin())) return;
@@ -393,13 +414,11 @@ function editTopic(topicId) {
   try {
     const editorElement = document.querySelector(`#edit-content-${topicId}`);
     if (editorElement) {
-      // Remover qualquer toolbar anterior
+      // Remove qualquer toolbar anterior
       const prevToolbar = editorElement.previousSibling;
-      if (prevToolbar && prevToolbar.classList.contains('ql-toolbar')) {
-        prevToolbar.remove();
-      }
+      if (prevToolbar && prevToolbar.classList.contains('ql-toolbar')) prevToolbar.remove();
       
-      // Limpar o conteúdo para evitar duplicação
+      // Limpa o conteúdo para evitar duplicação
       editorElement.innerHTML = '';
     }
   } catch (error) {
@@ -435,13 +454,11 @@ function editTopic(topicId) {
     // Inicializa contador com valor atual
     const text = editQuill.getText().trim();
     const charCount = document.getElementById(`edit-content-count-${topicId}`);
-    if (charCount) {
-      charCount.textContent = `${text.length}/${FORUM_CONFIG.maxContentLength}`;
-    }
+    if (charCount) charCount.textContent = `${text.length}/${FORUM_CONFIG.maxContentLength}`;
   }, 0);
 }
 
-// Atualizar também a função saveTopicEdit para usar corretamente o editor
+// Salva a edição de um tópico no fórum
 async function saveTopicEdit(event, topicId) {
   event.preventDefault();
 
@@ -451,7 +468,7 @@ async function saveTopicEdit(event, topicId) {
   const form = event.target;
   const newTitle = form.querySelector('input').value.trim();
   
-  // Obtém a instância do Quill corretamente
+  // Obtém a instância do Quill
   const editQuill = Quill.find(document.querySelector(`#edit-content-${topicId}`));
   if (!editQuill) {
     console.error('Editor Quill não encontrado');
@@ -480,9 +497,7 @@ async function saveTopicEdit(event, topicId) {
     if (titleValidation.wasCensored) {
       formattedTitle = await TextFormatter.format(titleValidation.censoredText);
       notifyCensorship = true;
-    } else {
-      formattedTitle = await TextFormatter.format(newTitle);
-    }
+    } else formattedTitle = await TextFormatter.format(newTitle);
     
     // Aplica a censura ao conteúdo se necessário
     if (contentValidation.wasCensored) {
@@ -490,9 +505,7 @@ async function saveTopicEdit(event, topicId) {
       editQuill.setText(contentValidation.censoredText);
       formattedContent = editQuill.root.innerHTML;
       notifyCensorship = true;
-    } else {
-      formattedContent = newContent;
-    }
+    } else formattedContent = newContent;
     
     // Prepara o objeto com os dados atualizados
     const updatedData = {
@@ -507,16 +520,14 @@ async function saveTopicEdit(event, topicId) {
     await loadForumData();
     renderTopics();
     
-    if (notifyCensorship) {
-      alert('Alguns termos impróprios foram filtrados do seu conteúdo.');
-    }
+    if (notifyCensorship) alert('Alguns termos impróprios foram filtrados do seu conteúdo.');
   } catch (error) {
     console.error('Erro ao atualizar tópico:', error);
     alert(error.message || 'Não foi possível atualizar o tópico. Tente novamente.');
   }
 }
 
-// Melhorar também a função de cancelar edição para garantir limpeza adequada
+// Cancela a edição de um tópico do fórum
 function cancelTopicEdit(topicId) {
   const topicElement = document.getElementById(`topic-${topicId}`);
   if (!topicElement) return;
@@ -524,16 +535,14 @@ function cancelTopicEdit(topicId) {
   const contentDiv = topicElement.querySelector('.topic-content');
   const editFormDiv = topicElement.querySelector('.topic-edit-form');
 
-  // Abordagem corrigida para limpar o editor Quill
+  // Limpa o editor atual do Quill
   try {
-    // Primeiro, tentamos obter o editor usando o método find do Quill
+    // Tenta obter o editor usando o método find do Quill
     const editorElement = document.querySelector(`#edit-content-${topicId}`);
     if (editorElement) {
-      // Se o editor existe, removemos a toolbar e o conteúdo manualmente
+      // Se o editor existe, remove a toolbar e o conteúdo manualmente
       const toolbarElement = editorElement.previousSibling;
-      if (toolbarElement && toolbarElement.classList.contains('ql-toolbar')) {
-        toolbarElement.remove();
-      }
+      if (toolbarElement && toolbarElement.classList.contains('ql-toolbar')) toolbarElement.remove();
       
       // Limpamos o conteúdo do editor
       editorElement.innerHTML = '';
@@ -541,90 +550,16 @@ function cancelTopicEdit(topicId) {
       // Removemos atributos de dados do Quill
       const attributes = Array.from(editorElement.attributes);
       attributes.forEach(attr => {
-        if (attr.name.startsWith('data-')) {
-          editorElement.removeAttribute(attr.name);
-        }
+        if (attr.name.startsWith('data-')) editorElement.removeAttribute(attr.name);
       });
     }
   } catch (error) {
     console.warn('Erro ao limpar editor:', error);
-    // Continua com a operação mesmo se houver erro na limpeza
   }
 
   // Restaura a visibilidade dos elementos originais
   contentDiv.classList.remove('hidden');
   editFormDiv.classList.add('hidden');
-}
-
-// Renderiza a lista de tópicos
-function renderReplies(replies, topicId, userId) {
-  return replies.map(reply => `
-    <div class="mb-3 overflow-hidden" id="reply-${reply.id}">
-      <div class="flex items-start gap-3">
-        <img class="h-8 w-8 rounded-full object-cover"
-             src="${getUserAvatar(reply.author)}"
-             alt="${reply.author}">
-        <div class="flex-1">
-          <div class="flex justify-between items-start">
-            <p class="text-sm">
-              <span class="font-semibold">${reply.author}</span>
-              em ${formatDate(reply.date)}
-              ${reply.editedAt ? `<span class="text-xs">(editado)</span>` : ''}
-            </p>
-            <div class="flex items-center gap-2">
-              ${(isAuthor(reply.author) || isAdmin()) ? `
-                <button onclick="editReply('${topicId}', '${reply.id}')" class="text-blue-600 hover:text-blue-800">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
-                  </svg>
-                </button>
-                <button onclick="deleteReply('${topicId}', '${reply.id}')" class="text-red-600 hover:text-red-800">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                  </svg>
-                </button>
-              ` : ''}
-              <button onclick="likeReply('${topicId}', '${reply.id}')" 
-                      class="text-sm ${reply.likedBy && reply.likedBy.includes(userId) ? 'text-purple-600' : 'text-gray-400'} transition-colors">
-                ${reply.likes || 0} ❤️
-              </button>
-            </div>
-          </div>
-          <div class="reply-content overflow-hidden mt-1">
-            <p class="break-words">${reply.content}</p>
-          </div>
-          <div class="reply-edit-form hidden">
-            <form onsubmit="saveReplyEdit(event, '${topicId}', '${reply.id}')" class="flex gap-2 mt-2">
-              <div class="flex-1">
-                <textarea class="w-full p-2 border rounded-lg" 
-                          maxlength="${FORUM_CONFIG.maxReplyLength}"
-                          oninput="updateCharCount(this, 'reply-edit-count-${reply.id}')">${reply.content}</textarea>
-                <small id="reply-edit-count-${reply.id}" class="text-right block mt-1">0/${FORUM_CONFIG.maxReplyLength}</small>
-              </div>
-              <div class="flex flex-col gap-2">
-                <button type="submit" class="btn btn-primary order-1 md:order-2 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
-                  <span class="flex items-center justify-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    Salvar
-                  </span>
-                </button>
-                <button type="button" onclick="cancelReplyEdit('${reply.id}')" class="btn btn-cancel order-2 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
-                  <span class="flex items-center justify-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                    Cancelar
-                  </span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-  `).join('');
 }
 
 // Funções auxiliares
@@ -633,22 +568,12 @@ function formatDate(dateStr) {
     let date;
     
     // Verifica se é um objeto do Firestore timestamp
-    if (dateStr && typeof dateStr === 'object' && dateStr.toDate) {
-      date = dateStr.toDate();
-    } 
-    // Verifica se é um número (timestamp em milissegundos)
-    else if (!isNaN(dateStr) && dateStr !== null) {
-      date = new Date(Number(dateStr));
-    }
-    // Caso seja uma string ou outro formato
-    else {
-      date = new Date(dateStr);
-    }
+    if (dateStr && typeof dateStr === 'object' && dateStr.toDate) date = dateStr.toDate();
+    else if (!isNaN(dateStr) && dateStr !== null) date = new Date(Number(dateStr)); // Verifica se é um número (timestamp em milissegundos)
+    else date = new Date(dateStr); // Caso seja uma string ou outro formato
     
     // Verifica se a data é válida
-    if (isNaN(date.getTime())) {
-      return 'Agora';
-    }
+    if (isNaN(date.getTime())) return 'Agora';
     
     return date.toLocaleDateString('pt-BR', {
       day: '2-digit',
@@ -681,7 +606,7 @@ async function likeTopic(topicId) {
     await loadForumData();
     renderTopics();
     
-    // Feedback visual (opcional)
+    // Feedback visual
     const likeButton = document.querySelector(`#topic-${topicId} .like-button`);
     if (likeButton) {
       likeButton.classList.toggle('text-purple-600', wasAdded);
@@ -711,7 +636,7 @@ async function likeReply(topicId, replyId) {
     await loadForumData();
     renderTopics();
     
-    // Feedback visual (opcional)
+    // Feedback visual
     const likeButton = document.querySelector(`#reply-${replyId} .like-button`);
     if (likeButton) {
       likeButton.classList.toggle('text-purple-600', wasAdded);
@@ -723,7 +648,7 @@ async function likeReply(topicId, replyId) {
   }
 }
 
-// Adiciona uma resposta para um tópico
+// Adiciona uma resposta para um tópico do fórum
 async function addReply(event, topicId) {
   event.preventDefault();
 
@@ -750,7 +675,7 @@ async function addReply(event, topicId) {
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span class="animate-spin mr-2">⏳</span> Analisando...';
 
-    // Agora validateContent retorna um objeto com o texto censurado se necessário
+    // Retorna um objeto com o texto censurado se necessário
     const validationResult = await ForumModerator.validateContent(content, 'resposta');
 
     // Usa o texto censurado se houve censura, ou formata o original
@@ -783,7 +708,7 @@ async function addReply(event, topicId) {
   }
 }
 
-// Edição e remoção de tópicos
+// Edita e remove tópicos do fórum
 function editTopic(topicId) {
   const topic = forumTopics.find(t => t.id === topicId);
   if (!topic || (!isAuthor(topic.author) && !isAdmin())) return;
@@ -800,9 +725,7 @@ function editTopic(topicId) {
   
   // Limpa qualquer instância anterior do Quill
   const existingEditor = Quill.find(document.querySelector(`#edit-content-${topicId}`));
-  if (existingEditor) {
-    existingEditor.destroy();
-  }
+  if (existingEditor) existingEditor.destroy();
   
   // Inicializa o editor Quill com as opções de toolbar
   const editQuill = new Quill(`#edit-content-${topicId}`, {
@@ -829,122 +752,7 @@ function editTopic(topicId) {
   });
 }
 
-// Salva a edição de um tópico
-async function saveTopicEdit(event, topicId) {
-  event.preventDefault();
-
-  const topic = forumTopics.find(t => t.id === topicId);
-  if (!topic) return;
-
-  const form = event.target;
-  const newTitle = form.querySelector('input').value.trim();
-  
-  // Obtém a instância do Quill corretamente
-  const editQuill = Quill.find(document.querySelector(`#edit-content-${topicId}`));
-  if (!editQuill) {
-    console.error('Editor Quill não encontrado');
-    return;
-  }
-  
-  const newContent = editQuill.root.innerHTML;
-  const plainContent = editQuill.getText().trim();
-
-  if (plainContent.length > FORUM_CONFIG.maxContentLength) {
-    alert(`O conteúdo excede o limite de ${FORUM_CONFIG.maxContentLength} caracteres.`);
-    return;
-  }
-
-  try {
-    // Valida o título e o conteúdo com suporte a censura parcial
-    const [titleValidation, contentValidation] = await Promise.all([
-      ForumModerator.validateContent(newTitle, 'título'),
-      ForumModerator.validateContent(plainContent, 'conteúdo')
-    ]);
-    
-    let notifyCensorship = false;
-    let formattedTitle, formattedContent;
-    
-    // Aplica a censura ao título se necessário
-    if (titleValidation.wasCensored) {
-      formattedTitle = await TextFormatter.format(titleValidation.censoredText);
-      notifyCensorship = true;
-    } else {
-      formattedTitle = await TextFormatter.format(newTitle);
-    }
-    
-    // Aplica a censura ao conteúdo se necessário
-    if (contentValidation.wasCensored) {
-      // Atualiza o texto do editor com o conteúdo censurado
-      editQuill.setText(contentValidation.censoredText);
-      formattedContent = editQuill.root.innerHTML;
-      notifyCensorship = true;
-    } else {
-      formattedContent = newContent;
-    }
-    
-    // Prepara o objeto com os dados atualizados
-    const updatedData = {
-      title: formattedTitle,
-      content: formattedContent
-    };
-    
-    // Usa o ForumManager para atualizar o tópico
-    await forumManager.updateTopic(topicId, updatedData);
-    
-    // Atualiza a lista de tópicos
-    await loadForumData();
-    renderTopics();
-    
-    if (notifyCensorship) {
-      alert('Alguns termos impróprios foram filtrados do seu conteúdo.');
-    }
-  } catch (error) {
-    console.error('Erro ao atualizar tópico:', error);
-    alert(error.message || 'Não foi possível atualizar o tópico. Tente novamente.');
-  }
-}
-
-// Melhorar também a função de cancelar edição para garantir limpeza adequada
-function cancelTopicEdit(topicId) {
-  const topicElement = document.getElementById(`topic-${topicId}`);
-  if (!topicElement) return;
-
-  const contentDiv = topicElement.querySelector('.topic-content');
-  const editFormDiv = topicElement.querySelector('.topic-edit-form');
-
-  // Abordagem corrigida para limpar o editor Quill
-  try {
-    // Primeiro, tentamos obter o editor usando o método find do Quill
-    const editorElement = document.querySelector(`#edit-content-${topicId}`);
-    if (editorElement) {
-      // Se o editor existe, removemos a toolbar e o conteúdo manualmente
-      const toolbarElement = editorElement.previousSibling;
-      if (toolbarElement && toolbarElement.classList.contains('ql-toolbar')) {
-        toolbarElement.remove();
-      }
-      
-      // Limpamos o conteúdo do editor
-      editorElement.innerHTML = '';
-      
-      // Removemos atributos de dados do Quill
-      const attributes = Array.from(editorElement.attributes);
-      attributes.forEach(attr => {
-        if (attr.name.startsWith('data-')) {
-          editorElement.removeAttribute(attr.name);
-        }
-      });
-    }
-  } catch (error) {
-    console.warn('Erro ao limpar editor:', error);
-    // Continua com a operação mesmo se houver erro na limpeza
-  }
-
-  // Restaura a visibilidade dos elementos originais
-  contentDiv.classList.remove('hidden');
-  editFormDiv.classList.add('hidden');
-}
-
-// Remove um tópico 
+// Remove um tópico do fórum
 async function deleteTopic(topicId) {
   const topic = forumTopics.find(t => t.id === topicId);
   if (!topic || (!isAuthor(topic.author) && !isAdmin())) return;
@@ -967,7 +775,7 @@ async function deleteTopic(topicId) {
   }
 }
 
-// Edita uma resposta
+// Edita uma resposta do fórum
 function editReply(topicId, replyId) {
   const replyElement = document.getElementById(`reply-${replyId}`);
   if (!replyElement) {
@@ -989,11 +797,9 @@ function editReply(topicId, replyId) {
   
   // Inicializa o contador de caracteres para a textarea
   const textarea = editFormDiv.querySelector('textarea');
-  if (textarea) {
-    updateCharCount(textarea, `reply-edit-count-${replyId}`);
-  }
+  if (textarea) updateCharCount(textarea, `reply-edit-count-${replyId}`);
   
-  // Armazenamos o ID do tópico como atributo de dados para uso posterior
+  // Armazena o ID do tópico como atributo de dados para uso posterior
   replyElement.dataset.topicId = topicId;
 }
 
@@ -1020,11 +826,8 @@ async function saveReplyEdit(event, topicId, replyId) {
     
     // Usa o texto censurado se houve censura
     let formattedContent;
-    if (validationResult.wasCensored) {
-      formattedContent = await TextFormatter.format(validationResult.censoredText);
-    } else {
-      formattedContent = await TextFormatter.format(newContent);
-    }
+    if (validationResult.wasCensored) formattedContent = await TextFormatter.format(validationResult.censoredText);
+    else formattedContent = await TextFormatter.format(newContent);
     
     // Prepara os dados da resposta atualizada
     const replyData = {
@@ -1038,9 +841,7 @@ async function saveReplyEdit(event, topicId, replyId) {
     await loadForumData();
     renderTopics();
     
-    if (validationResult.wasCensored) {
-      alert('Alguns termos impróprios foram filtrados da sua resposta.');
-    }
+    if (validationResult.wasCensored) alert('Alguns termos impróprios foram filtrados da sua resposta.');
   } catch (error) {
     console.error('Erro ao atualizar resposta:', error);
     alert(error.message || 'Não foi possível atualizar a resposta. Tente novamente.');
@@ -1088,7 +889,7 @@ async function deleteReply(topicId, replyId) {
   }
 }
 
-// Funções para gerenciamento de tópicos
+// Adiciona um novo tópico ao fórum
 async function addTopic(event) {
   event.preventDefault();
 
@@ -1131,7 +932,7 @@ async function addTopic(event) {
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span class="animate-spin mr-2">⏳</span> Analisando...';
 
-    // Validamos título e conteúdo, agora com suporte a censura parcial
+    // Valida título e conteúdo com suporte a censura parcial
     const titleValidation = await ForumModerator.validateContent(title, 'título');
     const contentValidation = await ForumModerator.validateContent(plainContent, 'conteúdo');
     
@@ -1140,18 +941,14 @@ async function addTopic(event) {
     // Valida e filtra tags impróprias
     const validatedTags = await ForumModerator.validateTags(rawTags);
 
-    if (rawTags.length !== validatedTags.length) {
-      alert('Algumas tags foram removidas por conterem conteúdo impróprio.');
-    }
+    if (rawTags.length !== validatedTags.length) alert('Algumas tags foram removidas por conterem conteúdo impróprio.');
 
-    // Formatamos o título, possivelmente censurado
+    // Formata o título, possivelmente censurado
     let formattedTitle;
     if (titleValidation.wasCensored) {
       formattedTitle = await TextFormatter.format(titleValidation.censoredText);
       notifyCensorship = true;
-    } else {
-      formattedTitle = await TextFormatter.format(title);
-    }
+    } else formattedTitle = await TextFormatter.format(title);
     
     // Formata o conteúdo, possivelmente censurado
     let formattedContent;
@@ -1159,10 +956,8 @@ async function addTopic(event) {
       quillEditor.setText(contentValidation.censoredText);
       formattedContent = quillEditor.root.innerHTML;
       notifyCensorship = true;
-    } else {
-      formattedContent = content;
-    }
-
+    } else formattedContent = content;
+    
     // Prepara o objeto com os dados do novo tópico
     const topicData = {
       title: formattedTitle,
@@ -1182,20 +977,18 @@ async function addTopic(event) {
     // Fecha o modal e limpa o formulário
     closeModal();
     
-    if (notifyCensorship) {
-      alert('Alguns termos impróprios foram filtrados do seu conteúdo.');
-    }
+    if (notifyCensorship) alert('Alguns termos impróprios foram filtrados do seu conteúdo.');
   } catch (error) {
     console.error('Erro ao criar tópico:', error);
     alert(error.message || 'Não foi possível criar o tópico. Tente novamente.');
   } finally {
-    // Restaura o botão ao estado original sempre
+    // Sempre restaura o botão ao estado original
     submitBtn.disabled = false;
     submitBtn.innerHTML = originalBtnText;
   }
 }
 
-// Função para preencher as opções de categorias
+// Preenche as opções de categorias
 function populateCategories() {
   const categorySelect = document.getElementById('topic-category');
   if (!categorySelect) return;
@@ -1271,7 +1064,6 @@ async function incrementTopicViews(topicId) {
     }
   } catch (error) {
     console.error('Erro ao incrementar visualização:', error);
-    // Silenciosamente falha - não é crítico para o usuário
   }
 }
 
@@ -1285,7 +1077,7 @@ function updateCharCount(input, counterId) {
 // Carrega dados necessários e configura estado inicial do fórum
 document.addEventListener('DOMContentLoaded', async () => {
   try {
-    // Carrega a lista de palavrões (mantido para compatibilidade)
+    // Carrega a lista de palavrões
     await loadBadWords();
     
     // Carrega os tópicos usando o ForumManager
@@ -1303,10 +1095,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
-// Adiciona variável global para o editor
+// Variável global para o editor Quill
 let quillEditor;
 
-// Atualiza a função de inicialização do editor
+// Função de inicialização do editor Quill
 function initQuillEditor() {
   quillEditor = new Quill('#topic-content', {
     theme: 'snow',
