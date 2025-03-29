@@ -1160,7 +1160,7 @@ async function openChat(friendId) {
     
     const chatWindow = document.createElement('div');
     chatWindow.id = `chat-${friendId}`;
-    chatWindow.className = 'w-80 rounded-lg shadow-lg overflow-hidden';
+    chatWindow.className = 'w-80 rounded-lg shadow-lg overflow-hidden chat-window';
     chatWindow.style.background = 'var(--background)';
     chatWindow.innerHTML = `
       <div class="flex items-center justify-between p-3 bg-purple-500 text-white">
@@ -1170,26 +1170,40 @@ async function openChat(friendId) {
                class="w-8 h-8 rounded-full">
           <span class="font-medium">${friend.displayName || friend.username}</span>
         </div>
-        <button onclick="closeChat('${friendId}')" class="text-white hover:text-gray-200 transition-colors">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-      <div class="h-80 overflow-y-auto p-4 space-y-3 scrollbar-thin" id="chat-messages-${friendId}">
-        <!-- Mensagens serão inseridas aqui -->
-      </div>
-      <div class="p-3 border-t dark:border-gray-700">
-        <form onsubmit="sendMessage(event, '${sessionData.userId}', '${friendId}')" class="flex gap-2">
-          <input type="text" placeholder="Digite sua mensagem..." 
-                 class="flex-1 p-2 rounded-lg border border-gray-300 dark:border-gray-600">
-          <button type="submit" 
-                  class="p-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+        <div class="flex items-center gap-1">
+          <button onclick="minimizeChat('${friendId}')" class="text-white hover:text-gray-200 transition-colors p-1" title="Minimizar">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 12H6" />
             </svg>
           </button>
-        </form>
+          <button onclick="maximizeChat('${friendId}')" class="text-white hover:text-gray-200 transition-colors p-1" title="Maximizar">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+            </svg>
+          </button>
+          <button onclick="closeChat('${friendId}')" class="text-white hover:text-gray-200 transition-colors p-1" title="Fechar">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="chat-body">
+        <div class="h-80 overflow-y-auto p-4 space-y-3 scrollbar-thin" id="chat-messages-${friendId}">
+          <!-- Mensagens serão inseridas aqui -->
+        </div>
+        <div class="p-3 border-t dark:border-gray-700">
+          <form onsubmit="sendMessage(event, '${sessionData.userId}', '${friendId}')" class="flex gap-2">
+            <input type="text" placeholder="Digite sua mensagem..." 
+                   class="flex-1 p-2 rounded-lg border border-gray-300 dark:border-gray-600">
+            <button type="submit" 
+                    class="p-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors">
+              <svg class="w-5 h-5 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+            </button>
+          </form>
+        </div>
       </div>
     `;
 
@@ -1198,6 +1212,122 @@ async function openChat(friendId) {
   } catch (error) {
     console.error("Erro ao abrir chat:", error);
   }
+}
+
+/**
+ * Maximiza a janela de chat para tela cheia
+ * @param {string} friendId - ID do amigo no chat
+ */
+function maximizeChat(friendId) {
+  const chatWindow = document.getElementById(`chat-${friendId}`);
+  if (!chatWindow) return;
+  
+  // Adiciona classe para estilo de tela cheia
+  chatWindow.classList.add('chat-maximized');
+  // Remove classe de minimizado caso exista
+  chatWindow.classList.remove('chat-minimized', 'chat-normal');
+  
+  // Atualiza os botões para mostrar opção de restaurar e minimizar
+  const headerButtons = chatWindow.querySelector('.flex.items-center.gap-1');
+  headerButtons.innerHTML = `
+    <button onclick="minimizeChat('${friendId}')" class="text-white hover:text-gray-200 transition-colors p-1" title="Minimizar">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 12H6" />
+      </svg>
+    </button>
+    <button onclick="restoreChat('${friendId}')" class="text-white hover:text-gray-200 transition-colors p-1" title="Restaurar">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8v8a4 4 0 004 4h8m4-4v-8a4 4 0 00-4-4H8" />
+      </svg>
+    </button>
+    <button onclick="closeChat('${friendId}')" class="text-white hover:text-gray-200 transition-colors p-1" title="Fechar">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  `;
+  
+  // Ajusta a rolagem das mensagens
+  const messagesContainer = document.getElementById(`chat-messages-${friendId}`);
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+/**
+ * Minimiza a janela de chat para mostrar apenas o cabeçalho
+ * @param {string} friendId - ID do amigo no chat
+ */
+function minimizeChat(friendId) {
+  const chatWindow = document.getElementById(`chat-${friendId}`);
+  if (!chatWindow) return;
+  
+  // Se já está minimizado, restaura para normal
+  if (chatWindow.classList.contains('chat-minimized')) {
+    restoreChat(friendId);
+    return;
+  }
+  
+  // Adiciona classe para estilo minimizado
+  chatWindow.classList.add('chat-minimized');
+  // Remove outras classes de estado
+  chatWindow.classList.remove('chat-maximized', 'chat-normal');
+  
+  // Atualiza os botões para mostrar opção de restaurar e maximizar
+  const headerButtons = chatWindow.querySelector('.flex.items-center.gap-1');
+  headerButtons.innerHTML = `
+    <button onclick="restoreChat('${friendId}')" class="text-white hover:text-gray-200 transition-colors p-1" title="Restaurar">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+      </svg>
+    </button>
+    <button onclick="maximizeChat('${friendId}')" class="text-white hover:text-gray-200 transition-colors p-1" title="Maximizar">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+      </svg>
+    </button>
+    <button onclick="closeChat('${friendId}')" class="text-white hover:text-gray-200 transition-colors p-1" title="Fechar">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  `;
+}
+
+/**
+ * Restaura a janela de chat para o tamanho normal
+ * @param {string} friendId - ID do amigo no chat
+ */
+function restoreChat(friendId) {
+  const chatWindow = document.getElementById(`chat-${friendId}`);
+  if (!chatWindow) return;
+  
+  // Adiciona classe para estilo normal
+  chatWindow.classList.add('chat-normal');
+  // Remove outras classes de estado
+  chatWindow.classList.remove('chat-maximized', 'chat-minimized');
+  
+  // Atualiza os botões para mostrar opções padrão
+  const headerButtons = chatWindow.querySelector('.flex.items-center.gap-1');
+  headerButtons.innerHTML = `
+    <button onclick="minimizeChat('${friendId}')" class="text-white hover:text-gray-200 transition-colors p-1" title="Minimizar">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 12H6" />
+      </svg>
+    </button>
+    <button onclick="maximizeChat('${friendId}')" class="text-white hover:text-gray-200 transition-colors p-1" title="Maximizar">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+      </svg>
+    </button>
+    <button onclick="closeChat('${friendId}')" class="text-white hover:text-gray-200 transition-colors p-1" title="Fechar">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  `;
+  
+  // Ajusta a rolagem das mensagens
+  const messagesContainer = document.getElementById(`chat-messages-${friendId}`);
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
 /**
