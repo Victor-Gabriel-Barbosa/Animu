@@ -544,8 +544,7 @@ input, button, textarea, select {
   font-weight: 600;
 }
 
-.form-group input,
-.form-group textarea {
+input, textarea {
   width: 100%;
   padding: var(--spacing-sm);
   border: 1px solid var(--input-border-color);

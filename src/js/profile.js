@@ -372,15 +372,15 @@ function loadFavoriteAnimes(user) {
         <div class="flex-1">
           <h3 class="font-semibold">${anime.primaryTitle}</h3>
           <div class="flex gap-2 mt-1">
-            <span class="text-sm bg-purple-100 dark:bg-purple-900 px-2 py-1 rounded text-white">
+            <span class="text-sm px-2 py-1 rounded text-white" style="background:var(--primary-color)">
               ⭐ ${anime.score || 'N/A'}
             </span>
             <span class="text-sm">${anime.status}</span>
           </div>
         </div>
         <button onclick="shareAnime(event, '${anime.primaryTitle}', '${anime.coverImage}')"
-                class="opacity-0 group-hover:opacity-100 p-2 text-purple-600 hover:text-purple-800 
-                       hover:bg-purple-100 rounded-full transition-all duration-200"
+                class="opacity-0 group-hover:opacity-100 p-2 text-purple-600 hover:text-white 
+                       hover:bg-purple-600 rounded-full transition-all duration-200"
                 title="Compartilhar com amigos">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
@@ -1141,7 +1141,7 @@ function debounce(func, wait) {
 // Abre uma janela de chat com um amigo específico
 async function openChat(friendId) {
   try {
-    // Usar userManager para buscar os usuários em vez do localStorage
+    // Usa userManager para buscar os usuários em vez do localStorage
     const users = await userManager.loadUsers();
     const sessionData = JSON.parse(localStorage.getItem('userSession'));
     const friend = users.find(u => u.id === friendId);

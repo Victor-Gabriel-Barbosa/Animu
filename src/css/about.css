@@ -93,6 +93,11 @@ section.visible {
   animation: slideFromLeft 0.5s ease-out forwards;
 }
 
+.resource-list li:hover {
+  background: var(--card-shadow);
+  box-shadow: 0 10px 30px var(--primary-color);
+}
+
 .resource-list li:before {
   content: "★";
   font-size: 1.5em;

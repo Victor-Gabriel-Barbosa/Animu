@@ -312,7 +312,7 @@ function renderTopicCard(topic, userId) {
       </div>
       
       <!-- Seção de respostas com melhor espaçamento para mobile -->
-      <div class="ml-3 sm:ml-6 border-l-2 border-purple-200 pl-2 sm:pl-4 mt-4">
+      <div class="ml-3 sm:ml-6 border-l-2 border-purple-600 pl-2 sm:pl-4 mt-4">
         ${renderReplies(topic.replies, topic.id, userId)}
       </div>
       
