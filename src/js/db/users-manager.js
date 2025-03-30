@@ -137,26 +137,6 @@ class UserManager {
       throw error;
     }
   }
-  
-  // Formata uma data do Firestore para exibição
-  formatFirestoreDate(firestoreDate, format = 'pt-BR') {
-    if (!firestoreDate) return 'Data desconhecida';
-    
-    let date;
-    
-    // Verifica se é um timestamp do Firestore
-    if (firestoreDate.toDate && typeof firestoreDate.toDate === 'function') date = firestoreDate.toDate();
-    else if (firestoreDate.seconds) date = new Date(firestoreDate.seconds * 1000); // Verifica se é um objeto timestamp com segundos/nanossegundos
-    else if (typeof firestoreDate === 'string') date = new Date(firestoreDate); // Verifica se é uma string ISO
-    else date = new Date(); // Fallback para data atual
-    
-    // Formata para exibição
-    return date.toLocaleDateString(format, {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-  }
 
   // Gerencia os favoritos de um usuário
   async toggleAnimeFavorite(userId, animeTitle) {

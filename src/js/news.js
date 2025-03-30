@@ -245,7 +245,7 @@ class NewsUIManager {
         </div>
         <div class="news-content">
           <div class="news-metadata">
-            <span class="news-date">${this.formatDate(news.date)}</span>
+            <span class="news-date">${Utils.formatDate(news.date)}</span>
             <div class="news-tags">
               ${news.tags.map(tag => `<span class="news-tag">#${tag}</span>`).join('')}
             </div>
@@ -255,15 +255,6 @@ class NewsUIManager {
         </div>
       </a>
     `;
-  }
-
-  formatDate(dateStr) {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    });
   }
 
   renderNewsGrid(container, limit = null, newsData = null) {
@@ -484,7 +475,7 @@ class NewsUIManager {
     };
 
     // Preenche conteúdo nos elementos existentes
-    elements.date && (elements.date.textContent = this.formatDate(news.date));
+    elements.date && (elements.date.textContent = Utils.formatDate(news.date));
     elements.category && (elements.category.textContent = news.category);
     elements.title && (elements.title.textContent = news.title);
     if (elements.image) {

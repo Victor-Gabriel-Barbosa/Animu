@@ -112,18 +112,6 @@ class AnimeChat {
     }
   }
 
-  // Formata data para exibição no padrão brasileiro
-  formatDate(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  }
-
   // Renderiza as estrelas
   renderStars(rating) {
     const starsTotal = 10;
@@ -189,12 +177,6 @@ class AnimeChat {
     if (likes.includes(currentUser)) return 'like';
     if (dislikes.includes(currentUser)) return 'dislike';
     return null;
-  }
-
-  // Verifica permissões de administrador
-  isUserAdmin() {
-    const sessionData = JSON.parse(localStorage.getItem('userSession'));
-    return sessionData?.isAdmin || false;
   }
 
   // Sistema de edição de comentários com validação
@@ -387,7 +369,7 @@ class AnimeChat {
     const currentUser = JSON.parse(localStorage.getItem('userSession'))?.username;
     const isCommentOwner = currentUser === comment.username;
     const userVote = this.getUserVote(comment.likes, comment.dislikes);
-    const isAdmin = this.isUserAdmin();
+    const isAdmin = Utils.isUserAdmin();
     const canDelete = isCommentOwner || isAdmin;
 
     return `
@@ -401,7 +383,7 @@ class AnimeChat {
               <div>
                 <strong class="text-purple-600">${comment.username}</strong>
                 <div class="comment-rating">${this.renderStars(comment.rating)}</div>
-                <span class="text-sm text-gray-500">${this.formatDate(comment.timestamp)}</span>
+                <span class="text-sm text-gray-500">${Utils.formatDate(comment.timestamp)}</span>
               </div>
               <div class="action-buttons">
                 ${isCommentOwner ? `
@@ -434,7 +416,7 @@ class AnimeChat {
             <p class="comment-text mt-2">${comment.text}</p>
             ${comment.edited ? `
               <small class="text-gray-500 italic">
-                (editado em ${this.formatDate(comment.editedAt)})
+                (editado em ${Utils.formatDate(comment.editedAt)})
               </small>
             ` : ''}
             <div class="vote-buttons mt-2">

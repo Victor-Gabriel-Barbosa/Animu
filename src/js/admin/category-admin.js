@@ -686,17 +686,6 @@ class CategoryAdmin {
     this.updateStatistics(); // Adiciona chamada após deletar
   }
 
-  // Função para verificar se o usuário é admin
-  checkAdminAccess() {
-    const session = JSON.parse(localStorage.getItem('userSession'));
-    if (!session || !session.isAdmin) {
-      alert('Acesso negado. Esta página é restrita a administradores.');
-      window.location.href = 'index.html';
-      return false;
-    }
-    return true;
-  }
-
   // Limpa o formulário
   clearForm() {
     if (confirm('Tem certeza que deseja limpar todos os campos do formulário?')) {
@@ -919,5 +908,5 @@ class CategoryAdmin {
 document.addEventListener('DOMContentLoaded', () => {
   // Verifica se o usuário tem permissão de admin
   const manager = new CategoryAdmin();
-  if (manager.checkAdminAccess()) window.categoryManager = manager; // Torna acessível globalmente para os event handlers
+  if (Utils.isUserAdmin()) window.categoryManager = manager; // Torna acessível globalmente para os event handlers
 });

@@ -1,8 +1,7 @@
 // Restringe acesso à área administrativa validando credenciais do usuário
 function checkAdminAccess() {
-  const session = JSON.parse(localStorage.getItem('userSession'));
   // Redireciona para página inicial se não for admin
-  if (!session || !session.isAdmin) {
+  if (!Utils.isUserAdmin()) {
     alert('Acesso negado. Esta página é restrita a administradores.');
     window.location.href = 'index.html';
     return false;
@@ -14,3 +13,6 @@ function checkAdminAccess() {
 document.addEventListener('DOMContentLoaded', function () {
   if (!checkAdminAccess()) return;
 });
+
+// Torna acessível globalmente 
+window.checkAdminAccess = checkAdminAccess;

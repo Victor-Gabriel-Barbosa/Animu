@@ -3,7 +3,7 @@
  * Controla a criação, edição, exclusão e visualização de notícias
  */
 document.addEventListener('DOMContentLoaded', function () {
-  if (!checkAdminAccess()) return;
+  if (!Utils.isUserAdmin()) return;
 
   // Elementos do DOM
   const modal = document.getElementById('news-modal');

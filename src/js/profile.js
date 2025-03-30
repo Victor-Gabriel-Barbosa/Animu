@@ -115,7 +115,7 @@ function initializeProfile(user) {
   document.getElementById('display-name').textContent = user.displayName || user.username;
   
   // Usa o formatador de data do UserManager para exibir a data de criação da conta
-  const formattedDate = userManager.formatFirestoreDate(user.createdAt);
+  const formattedDate = Utils.formatDate(user.createdAt);
   document.getElementById('profile-joined').textContent = `Membro desde: ${formattedDate}`;
 
   // Usa o avatar da sessão do usuário

@@ -932,7 +932,7 @@ function renderIndexNews() {
       </div>
       <div class="news-content">
         <div class="news-metadata">
-          <span class="news-date">${formatDate(news.date)}</span>
+          <span class="news-date">${Utils.formatDate(news.date)}</span>
           <div class="news-tags">
             ${news.tags.map(tag => `<span class="news-tag">#${tag}</span>`).join('')}
           </div>
@@ -971,7 +971,7 @@ async function loadRecentNews() {
         </div>
         <div class="news-content">
           <div class="news-metadata">
-            <span class="news-date">${formatDate(news.date)}</span>
+            <span class="news-date">${Utils.formatDate(news.date)}</span>
             <div class="news-tags">
               ${news.tags.map(tag => `<span class="news-tag">#${tag}</span>`).join('')}
             </div>
@@ -986,16 +986,6 @@ async function loadRecentNews() {
     console.error("Erro ao carregar notícias recentes:", error);
     renderIndexNews();
   }
-}
-
-// Formata data para o formato brasileiro
-function formatDate(dateStr) {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric'
-  });
 }
 
 // Inicializa o AnimeLoader automaticamente quando o DOM estiver carregado

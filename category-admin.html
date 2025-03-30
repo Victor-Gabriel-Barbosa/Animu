@@ -14,14 +14,11 @@
   <link rel="stylesheet" href="src/css/admin.css">
   <link rel="stylesheet" href="src/css/navbar.css">
   <link rel="icon" href="src/data/images/favicon/favicon.ico" type="image/x-icon">
-  
-  <!-- Firebase SDK - Removido daqui para evitar carregamento duplo -->
-  
+  <script src="src/js/mod/utils.js"></script>
   <script>
     // Verifica permissões de administrador
     (function () {
-      const session = JSON.parse(localStorage.getItem('userSession'));
-      if (!session || !session.isAdmin) {
+      if (!Utils.isUserAdmin()) {
         alert('Acesso negado. Esta página é restrita a administradores.');
         window.location.href = 'index.html';
       }

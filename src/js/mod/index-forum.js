@@ -33,12 +33,6 @@ function getLoggedUsername() {
   return session ? session.username : null;
 }
 
-// Verifica se o usuário é admin
-function isAdmin() {
-  const session = JSON.parse(localStorage.getItem('userSession'));
-  return session && session.isAdmin;
-}
-
 // Verifica se o usuário é o autor do comentário
 function isAuthor(authorName) {
   const session = JSON.parse(localStorage.getItem('userSession'));
@@ -177,11 +171,11 @@ function renderReplies(replies, topicId, userId) {
           <div class="flex justify-between items-start">
             <p class="text-sm">
               <span class="font-semibold">${reply.author}</span>
-              em ${formatDate(reply.date)}
+              em ${Utils.formatDate(reply.date)}
               ${reply.editedAt ? `<span class="text-xs">(editado)</span>` : ''}
             </p>
             <div class="flex items-center gap-2">
-              ${(isAuthor(reply.author) || isAdmin()) ? `
+              ${(isAuthor(reply.author) || Utils.isUserAdmin()) ? `
                 <button onclick="editReply('${topicId}', '${reply.id}')" class="text-blue-600 hover:text-blue-800">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
@@ -267,14 +261,14 @@ function renderTopicCard(topic, userId) {
               </div>
               <p class="text-sm">
                 Por <span class="font-semibold">${topic.author}</span> 
-                em ${formatDate(topic.date)}
+                em ${Utils.formatDate(topic.date)}
                 ${topic.editedAt ? `<span class="text-xs">(editado)</span>` : ''}
               </p>
             </div>
           </div>
           <!-- Botões de ação otimizados para mobile -->
           <div class="flex items-center justify-end gap-2 flex-shrink-0 mt-2 sm:mt-0">
-            ${(isAuthor(topic.author) || isAdmin()) ? `
+            ${(isAuthor(topic.author) || Utils.isUserAdmin()) ? `
               <button onclick="editTopic('${topic.id}'); event.stopPropagation();" 
                       class="edit-topic-btn text-blue-600 hover:text-blue-800 p-1">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -398,7 +392,7 @@ function renderTopicCard(topic, userId) {
 // Edita um tópico do fórum
 function editTopic(topicId) {
   const topic = forumTopics.find(t => t.id === topicId);
-  if (!topic || (!isAuthor(topic.author) && !isAdmin())) return;
+  if (!topic || (!isAuthor(topic.author) && !Utils.isUserAdmin())) return;
 
   const topicElement = document.getElementById(`topic-${topicId}`);
   if (!topicElement) return;
@@ -562,32 +556,6 @@ function cancelTopicEdit(topicId) {
   editFormDiv.classList.add('hidden');
 }
 
-// Funções auxiliares
-function formatDate(dateStr) {
-  try {
-    let date;
-    
-    // Verifica se é um objeto do Firestore timestamp
-    if (dateStr && typeof dateStr === 'object' && dateStr.toDate) date = dateStr.toDate();
-    else if (!isNaN(dateStr) && dateStr !== null) date = new Date(Number(dateStr)); // Verifica se é um número (timestamp em milissegundos)
-    else date = new Date(dateStr); // Caso seja uma string ou outro formato
-    
-    // Verifica se a data é válida
-    if (isNaN(date.getTime())) return 'Agora';
-    
-    return date.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  } catch (error) {
-    console.warn('Erro ao formatar data:', error);
-    return 'Agora';
-  }
-}
-
 // Gerencia o sistema de likes dos tópico e verifica autenticação e atualiza contadores
 async function likeTopic(topicId) {
   if (!isUserLoggedIn()) {
@@ -711,7 +679,7 @@ async function addReply(event, topicId) {
 // Edita e remove tópicos do fórum
 function editTopic(topicId) {
   const topic = forumTopics.find(t => t.id === topicId);
-  if (!topic || (!isAuthor(topic.author) && !isAdmin())) return;
+  if (!topic || (!isAuthor(topic.author) && !Utils.isUserAdmin())) return;
 
   const topicElement = document.getElementById(`topic-${topicId}`);
   if (!topicElement) return;
@@ -755,7 +723,7 @@ function editTopic(topicId) {
 // Remove um tópico do fórum
 async function deleteTopic(topicId) {
   const topic = forumTopics.find(t => t.id === topicId);
-  if (!topic || (!isAuthor(topic.author) && !isAdmin())) return;
+  if (!topic || (!isAuthor(topic.author) && !Utils.isUserAdmin())) return;
 
   if (confirm('Tem certeza que deseja excluir esta discussão? Todos os comentários serão removidos permanentemente.')) {
     try {
@@ -872,7 +840,7 @@ async function deleteReply(topicId, replyId) {
   if (!topic) return;
 
   const reply = topic.replies.find(r => r.id === replyId);
-  if (!reply || (!isAuthor(reply.author) && !isAdmin())) return;
+  if (!reply || (!isAuthor(reply.author) && !Utils.isUserAdmin())) return;
 
   if (confirm('Tem certeza que deseja excluir esta resposta?')) {
     try {

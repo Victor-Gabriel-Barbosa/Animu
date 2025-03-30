@@ -1,10 +1,6 @@
+// Verifica se o usuário é admin ao carregar a página
 document.addEventListener('DOMContentLoaded', function () {
-  // Verifica permissões de administrador e redireciona se necessário
-  const sessionData = JSON.parse(localStorage.getItem('userSession'));
-  if (!sessionData?.isAdmin) {
-    window.location.href = 'index.html';
-    return;
-  }
+ if (!Utils.isUserAdmin()) return;
 
   // Instancia o gerenciador de usuários
   const userManager = new UserManager();
