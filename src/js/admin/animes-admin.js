@@ -17,7 +17,7 @@ let animeManager = null;
 
 // Verifica se o usuário é admin ao carregar a página
 document.addEventListener('DOMContentLoaded', () => {
-  if (!Utils.isUserAdmin()) return;
+  if (!AnimuUtils.isUserAdmin()) return;
   
   // Inicializa o gerenciador de animes
   animeManager = new AnimeManager();

@@ -8,114 +8,46 @@ const MODERATION_CONFIG = {
     tag: 30
   },
   moderation: {
-    usePerspectiveAPI: true, 
-    fallbackToLocalModeration: true, // Se a API falhar, usa moderação local
     forbiddenWords: [],
     partialCensoring: true, // Habilita censura parcial
     censorCharacter: '•' // Caractere usado para censura
-  },
-  perspectiveAPI: {
-    apiKey: 'AIzaSyAwCIcLXouCkm9stRAWIZkY0_bp5_sx-O8',
-    endpoint: 'https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze',
-    threshold: {
-      TOXICITY: 0.7,
-      SEVERE_TOXICITY: 0.5,
-      IDENTITY_ATTACK: 0.6,
-      INSULT: 0.6,
-      PROFANITY: 0.6
-    }
   }
 };
 
 /**
- * Classe responsável pela integração com o Google Perspective API
- * Analisa o texto quanto a toxicidade, insultos, etc.
+ * Classe responsável pela moderação de conteúdo baseada em palavras proibidas
  */
 class ContentModerator {
-  static async analyzeText(text) {
-    try {
-      if (!MODERATION_CONFIG.perspectiveAPI.apiKey || MODERATION_CONFIG.perspectiveAPI.apiKey === 'SUA_CHAVE_API_AQUI') {
-        console.warn('Chave da API Perspective não configurada. Usando moderação local.');
-        return { success: false, error: 'API_KEY_NOT_CONFIGURED' };
-      }
-
-      const response = await fetch(`${MODERATION_CONFIG.perspectiveAPI.endpoint}?key=${MODERATION_CONFIG.perspectiveAPI.apiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          comment: { text: text },
-          languages: ['pt'],
-          requestedAttributes: {
-            TOXICITY: { spanAnnotations: true },
-            SEVERE_TOXICITY: { spanAnnotations: true },
-            IDENTITY_ATTACK: { spanAnnotations: true },
-            INSULT: { spanAnnotations: true },
-            PROFANITY: { spanAnnotations: true }
-          },
-          spanAnnotations: true
-        })
-      });
-
-      if (!response.ok) {
-        console.error('Falha ao analisar texto com Perspective API:', await response.text());
-        return { success: false, error: 'API_REQUEST_FAILED' };
-      }
-
-      const data = await response.json();
-      
-      // Extrai scores gerais
-      const scores = {
-        TOXICITY: data.attributeScores?.TOXICITY?.summaryScore?.value || 0,
-        SEVERE_TOXICITY: data.attributeScores?.SEVERE_TOXICITY?.summaryScore?.value || 0,
-        IDENTITY_ATTACK: data.attributeScores?.IDENTITY_ATTACK?.summaryScore?.value || 0,
-        INSULT: data.attributeScores?.INSULT?.summaryScore?.value || 0,
-        PROFANITY: data.attributeScores?.PROFANITY?.summaryScore?.value || 0
-      };
-      
-      // Extrai spans problemáticos
-      const spans = [];
-      
-      // Para cada atributo, verifica os spans anotados
-      Object.keys(MODERATION_CONFIG.perspectiveAPI.threshold).forEach(attribute => {
-        if (!data.attributeScores?.[attribute]?.spanScores) return;
-        
-        data.attributeScores[attribute].spanScores.forEach(span => {
-          const spanScore = span.score?.value || 0;
-          const threshold = MODERATION_CONFIG.perspectiveAPI.threshold[attribute];
-          
-          // Se o score do span é maior que o threshold, marca para censura
-          if (spanScore >= threshold) {
-            spans.push({
-              begin: span.begin,
-              end: span.end,
-              score: spanScore,
-              attribute
-            });
-          }
-        });
-      });
-      
-      return { success: true, scores, spans };
-    } catch (error) {
-      console.error('Erro ao analisar texto com Perspective API:', error);
-      return { 
-        success: false, 
-        error: error.message 
-      };
-    }
-  }
-
-  // Verifica se o conteúdo deve ser sinalizado para censura
-  static shouldFlagContent(scores) {
-    if (!scores) return false;
+  // Verifica se o texto contém palavras proibidas
+  static containsForbiddenWords(text) {
+    if (!text || !MODERATION_CONFIG.moderation.forbiddenWords.length) return false;
     
-    return Object.keys(MODERATION_CONFIG.perspectiveAPI.threshold).some(attribute => {
-      const score = scores[attribute];
-      const threshold = MODERATION_CONFIG.perspectiveAPI.threshold[attribute];
-      return score >= threshold;
+    return MODERATION_CONFIG.moderation.forbiddenWords.some(word => {
+      const regex = new RegExp(`\\b${word}\\b`, 'i');
+      return regex.test(text);
     });
+  }
+  
+  // Identifica e retorna spans de palavras proibidas no texto
+  static identifyForbiddenWordSpans(text) {
+    const spans = [];
+    
+    if (!text || !MODERATION_CONFIG.moderation.forbiddenWords.length) return spans;
+    
+    MODERATION_CONFIG.moderation.forbiddenWords.forEach(word => {
+      const regex = new RegExp(`\\b${word}\\b`, 'gi');
+      let match;
+      
+      while ((match = regex.exec(text)) !== null) {
+        spans.push({
+          begin: match.index,
+          end: match.index + match[0].length,
+          word: match[0]
+        });
+      }
+    });
+    
+    return spans;
   }
   
   // Censura apenas partes específicas do texto
@@ -149,9 +81,8 @@ class TextFormatter {
     formattedText = this.formatMarkdown(formattedText);
     formattedText = this.formatEmojis(formattedText);
     
-    // Se estiver usando a API, não precisa censurar aqui
-    // a validação completa é feita na classe ContentModerator
-    if (!MODERATION_CONFIG.moderation.usePerspectiveAPI) formattedText = this.censorText(formattedText);
+    // Censura palavras proibidas
+    formattedText = this.censorText(formattedText);
     
     return formattedText;
   }
@@ -160,7 +91,7 @@ class TextFormatter {
   static censorText(text) {
     let censoredText = text;
     MODERATION_CONFIG.moderation.forbiddenWords.forEach(word => {
-      const regex = new RegExp(word, 'gi');
+      const regex = new RegExp(`\\b${word}\\b`, 'gi');
       censoredText = censoredText.replace(regex, match => '•'.repeat(match.length));
     });
     return censoredText;
@@ -208,34 +139,15 @@ class ContentValidator {
     const maxLength = MODERATION_CONFIG.maxContentLength[type];
     if (maxLength && plainContent.length > maxLength) throw new Error(`O ${type} excede o limite máximo de ${maxLength} caracteres.`);
 
-    // Usando Perspective API para checar conteúdo impróprio
-    if (MODERATION_CONFIG.moderation.usePerspectiveAPI) {
-      const analysis = await ContentModerator.analyzeText(plainContent);
-      
-      if (analysis.success) {
-        const hasProblemContent = ContentModerator.shouldFlagContent(analysis.scores);
-        
-        if (hasProblemContent) {
-          // Se a censura parcial está habilitada, censura apenas as partes problemáticas
-          if (MODERATION_CONFIG.moderation.partialCensoring && analysis.spans && analysis.spans.length > 0) {
-            const censoredText = ContentModerator.censorTextPartially(plainContent, analysis.spans);
-            return { isValid: true, censoredText, wasCensored: true };
-          } else throw new Error(`O ${type} contém conteúdo impróprio ou ofensivo. Por favor, revise seu texto.`); // Caso contrário, rejeita o conteúdo
-        }
-      } else if (MODERATION_CONFIG.moderation.fallbackToLocalModeration) {
-        // Usa moderação local como fallback se a API falhar
-        const hasForbiddenWords = MODERATION_CONFIG.moderation.forbiddenWords.some(word => {
-          const regex = new RegExp(`\\b${word}\\b`, 'i');
-          return regex.test(plainContent);
-        });
-
-        if (hasForbiddenWords) {
-          if (MODERATION_CONFIG.moderation.partialCensoring) {
-            const censoredText = TextFormatter.censorText(plainContent);
-            return { isValid: true, censoredText, wasCensored: true };
-          } else throw new Error(`O ${type} contém palavras inapropriadas.`);
-        }
-      }
+    // Checando por palavras proibidas
+    const hasForbiddenWords = ContentModerator.containsForbiddenWords(plainContent);
+    
+    if (hasForbiddenWords) {
+      if (MODERATION_CONFIG.moderation.partialCensoring) {
+        const spans = ContentModerator.identifyForbiddenWordSpans(plainContent);
+        const censoredText = ContentModerator.censorTextPartially(plainContent, spans);
+        return { isValid: true, censoredText, wasCensored: true };
+      } else throw new Error(`O ${type} contém palavras inapropriadas.`);
     }
 
     return { isValid: true, censoredText: plainContent, wasCensored: false };
@@ -271,9 +183,10 @@ class ContentValidator {
 // Função para carregar a lista de palavrões
 async function loadBadWords() {
   try {
-    const response = await fetch('src/data/badwords.json');
+    const response = await fetch('src/assets/badwords.json');
     const data = await response.json();
     MODERATION_CONFIG.moderation.forbiddenWords = data.palavroes;
+    console.log(`Carregados ${data.palavroes.length} termos para moderação`);
     return data.palavroes;
   } catch (error) {
     console.error('Erro ao carregar lista de palavrões:', error);

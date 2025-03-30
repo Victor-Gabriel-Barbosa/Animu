@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', async function () {
           email,
           password: hashedPassword,
           avatar: avatar,
-          isAdmin: true,
+          isAdmin: false,
           favoriteAnimes: [],
           watchedAnimes: [],
           friends: [],

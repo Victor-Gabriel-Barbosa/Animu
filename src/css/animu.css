@@ -292,7 +292,7 @@ tbody tr:nth-child(5) { animation-delay: 0.5s; }
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: var(--parallax-bg-image, url('../data/images/anime-night-sky-illustration.png'));
+  background-image: var(--parallax-bg-image, url('../assets/images/anime-night-sky-illustration.png'));
   background-size: cover;
   background-position: center;
   background-attachment: fixed; /* Mantém apenas para desktop */
@@ -544,7 +544,7 @@ input, button, textarea, select {
   font-weight: 600;
 }
 
-input, textarea {
+.form-group :is(input, textarea) {
   width: 100%;
   padding: var(--spacing-sm);
   border: 1px solid var(--input-border-color);

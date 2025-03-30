@@ -1,6 +1,6 @@
 // Verifica se o usuário é admin ao carregar a página
 document.addEventListener('DOMContentLoaded', function () {
- if (!Utils.isUserAdmin()) return;
+ if (!AnimuUtils.isUserAdmin()) return;
 
   // Instancia o gerenciador de usuários
   const userManager = new UserManager();
@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', function () {
               ${user.isAdmin ? 'Admin' : 'Usuário'}
         </span>
       </td>
-      <td>${Utils.formatDate(user.createdAt)}</td>
+      <td>${AnimuUtils.formatDate(user.createdAt)}</td>
       <td>
         <div class="class="flex flex-col md:flex-row gap-3 mt-6">
           <button onclick="toggleAdminStatus('${user.id}')"

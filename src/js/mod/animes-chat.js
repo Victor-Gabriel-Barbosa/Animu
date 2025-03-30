@@ -376,33 +376,26 @@ class AnimeChat {
     if (!updateInput && slider) slider.value = Math.round(value);
   }
 
-  // Recupera avatar do usuário ou gera placeholder
-  getUserAvatar(username) {
-    const users = JSON.parse(localStorage.getItem('animuUsers') || '[]');
-    const user = users.find(u => u.username === username);
-    return user ? user.avatar : `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=8B5CF6&color=ffffff&size=100`;
-  }
-
   // Renderiza comentário individual com controles de moderação
   renderComment(comment, animeTitle) {
     const currentUser = JSON.parse(localStorage.getItem('userSession'))?.username;
     const isCommentOwner = currentUser === comment.username;
     const userVote = this.getUserVote(comment.likes, comment.dislikes);
-    const isAdmin = Utils.isUserAdmin();
+    const isAdmin = AnimuUtils.isUserAdmin();
     const canDelete = isCommentOwner || isAdmin;
 
     return `
       <div class="comment p-4 rounded-lg" data-comment-id="${comment.id}" data-rating="${comment.rating}">
         <div class="flex items-start gap-3">
           <img class="h-10 w-10 rounded-full object-cover"
-               src="${this.getUserAvatar(comment.username)}"
+               src="${AnimuUtils.getAuthorAvatar(comment.username)}"
                alt="${comment.username}">
           <div class="flex-1">
             <div class="flex items-start justify-between">
               <div>
                 <strong class="text-purple-600">${comment.username}</strong>
                 <div class="comment-rating">${this.renderStars(comment.rating)}</div>
-                <span class="text-sm text-gray-500">${Utils.formatDate(comment.timestamp)}</span>
+                <span class="text-sm text-gray-500">${AnimuUtils.formatDate(comment.timestamp)}</span>
               </div>
               <div class="action-buttons">
                 ${isCommentOwner ? `
@@ -435,7 +428,7 @@ class AnimeChat {
             <p class="comment-text mt-2">${comment.text}</p>
             ${comment.edited ? `
               <small class="text-gray-500 italic">
-                (editado em ${Utils.formatDate(comment.editedAt)})
+                (editado em ${AnimuUtils.formatDate(comment.editedAt)})
               </small>
             ` : ''}
             <div class="vote-buttons mt-2">

@@ -115,7 +115,7 @@ function initializeProfile(user) {
   document.getElementById('display-name').textContent = user.displayName || user.username;
   
   // Usa o formatador de data do UserManager para exibir a data de criação da conta
-  const formattedDate = Utils.formatDate(user.createdAt);
+  const formattedDate = AnimuUtils.formatDate(user.createdAt);
   document.getElementById('profile-joined').textContent = `Membro desde: ${formattedDate}`;
 
   // Usa o avatar da sessão do usuário
@@ -526,24 +526,15 @@ async function confirmShare(animeTitle, coverImage) {
  */
 async function changeAvatar(avatar, userId) {
   try {
-    // Carrega o usuário atualmente
-    const users = await userManager.loadUsers();
-    const userToUpdate = users.find(u => u.id === userId);
+    // Usa o método específico para atualizar avatar
+    const result = await userManager.updateUserAvatar(userId, avatar);
     
-    if (userToUpdate) {
-      // Atualiza o avatar
-      userToUpdate.avatar = avatar;
-      
-      // Salva as alterações no Firestore
-      await userManager.saveUser(userToUpdate);
-      
-      // Atualiza na sessão atual
-      const sessionData = JSON.parse(localStorage.getItem('userSession'));
-      sessionData.avatar = avatar;
-      localStorage.setItem('userSession', JSON.stringify(sessionData));
-      
+    if (result.success) {
       // Atualiza a imagem na interface
       document.getElementById('profile-avatar').src = avatar;
+      console.log("Avatar atualizado com sucesso!");
+    } else {
+      console.error("Erro ao atualizar avatar:", result.error);
     }
   } catch (error) {
     console.error("Erro ao atualizar avatar:", error);
@@ -678,21 +669,20 @@ function setupEventListeners(user, isOwnProfile) {
       const newAvatar = previewAvatar.src;
 
       try {
-        // Atualiza dados do usuário no Firestore
+        // Primeiro atualiza o avatar usando o método específico
+        if (newAvatar !== user.avatar) {
+          await userManager.updateUserAvatar(user.id, newAvatar);
+        }
+        
+        // Atualiza os outros dados do usuário
         const updatedUser = {
           ...user,
           displayName,
           email,
-          favoriteGenres: selectedGenres,
-          avatar: newAvatar
+          favoriteGenres: selectedGenres
         };
 
         await userManager.saveUser(updatedUser);
-
-        // Atualiza a sessão com o novo avatar
-        const sessionData = JSON.parse(localStorage.getItem('userSession'));
-        sessionData.avatar = newAvatar;
-        localStorage.setItem('userSession', JSON.stringify(sessionData));
 
         // Atualiza a página
         window.location.reload();

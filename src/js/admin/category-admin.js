@@ -908,5 +908,5 @@ class CategoryAdmin {
 document.addEventListener('DOMContentLoaded', () => {
   // Verifica se o usuário tem permissão de admin
   const manager = new CategoryAdmin();
-  if (Utils.isUserAdmin()) window.categoryManager = manager; // Torna acessível globalmente para os event handlers
+  if (AnimuUtils.isUserAdmin()) window.categoryManager = manager; // Torna acessível globalmente para os event handlers
 });

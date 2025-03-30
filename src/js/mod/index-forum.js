@@ -4,6 +4,9 @@ let forumTopics = [];
 // Instância do gerenciador de fórum para operações no Firestore
 const forumManager = new ForumManager();
 
+// Instância do gerenciador de usuários para operações no Firestore
+const userManager = new UserManager();
+
 // Elementos do DOM
 const newTopicBtn = document.getElementById('new-topic-btn');
 const newTopicModal = document.getElementById('new-topic-modal');
@@ -61,7 +64,7 @@ function closeModal() {
 
 // Event Listeners
 newTopicBtn?.addEventListener('click', () => {
-  if (!Utils.isUserLoggedIn()) {
+  if (!AnimuUtils.isUserLoggedIn()) {
     alert('Você precisa estar logado para criar uma discussão!');
     window.location.href = 'signin.html';
     return;
@@ -92,7 +95,7 @@ newTopicForm?.addEventListener('submit', addTopic);
 function renderTopics() {
   if (!forumTopicsContainer) return;
 
-  const userId = Utils.isUserLoggedIn() ? JSON.parse(localStorage.getItem('userSession')).userId : null;
+  const userId = AnimuUtils.isUserLoggedIn() ? JSON.parse(localStorage.getItem('userSession')).userId : null;
 
   // Adiciona filtros de categoria com melhor scroll horizontal em dispositivos móveis
   const categoryFilters = `
@@ -140,17 +143,17 @@ function renderReplies(replies, topicId, userId) {
     <div class="mb-3 overflow-hidden" id="reply-${reply.id}">
       <div class="flex items-start gap-3">
         <img class="h-8 w-8 rounded-full object-cover"
-             src="${Utils.getUserAvatar(reply.author)}"
+             src="${AnimuUtils.getAuthorAvatar(reply.author)}"
              alt="${reply.author}">
         <div class="flex-1">
           <div class="flex justify-between items-start">
             <p class="text-sm">
               <span class="font-semibold">${reply.author}</span>
-              em ${Utils.formatDate(reply.date)}
+              em ${AnimuUtils.formatDate(reply.date)}
               ${reply.editedAt ? `<span class="text-xs">(editado)</span>` : ''}
             </p>
             <div class="flex items-center gap-2">
-              ${(Utils.isAuthor(reply.author) || Utils.isUserAdmin()) ? `
+              ${(AnimuUtils.isAuthor(reply.author) || AnimuUtils.isUserAdmin()) ? `
                 <button onclick="editReply('${topicId}', '${reply.id}')" class="text-blue-600 hover:text-blue-800">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
@@ -226,7 +229,7 @@ function renderTopicCard(topic, userId) {
         <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
           <!-- Avatar com tamanho adaptável -->
           <img class="h-10 w-10 sm:h-12 sm:w-12 rounded-full object-cover flex-shrink-0"
-               src="${Utils.getUserAvatar(topic.author)}"
+               src="${AnimuUtils.getAuthorAvatar(topic.author)}"
                alt="${topic.author}">
           <div class="flex-1 min-w-0">
             <div class="flex flex-col gap-1 sm:gap-2">
@@ -236,14 +239,14 @@ function renderTopicCard(topic, userId) {
               </div>
               <p class="text-sm">
                 Por <span class="font-semibold">${topic.author}</span> 
-                em ${Utils.formatDate(topic.date)}
+                em ${AnimuUtils.formatDate(topic.date)}
                 ${topic.editedAt ? `<span class="text-xs">(editado)</span>` : ''}
               </p>
             </div>
           </div>
           <!-- Botões de ação otimizados para mobile -->
           <div class="flex items-center justify-end gap-2 flex-shrink-0 mt-2 sm:mt-0">
-            ${(Utils.isAuthor(topic.author) || Utils.isUserAdmin()) ? `
+            ${(AnimuUtils.isAuthor(topic.author) || AnimuUtils.isUserAdmin()) ? `
               <button onclick="editTopic('${topic.id}'); event.stopPropagation();" 
                       class="edit-topic-btn text-blue-600 hover:text-blue-800 p-1">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -319,7 +322,7 @@ function renderTopicCard(topic, userId) {
       </div>
       
       <!-- Formulário de resposta responsivo -->
-      ${Utils.isUserLoggedIn() ? `
+      ${AnimuUtils.isUserLoggedIn() ? `
         <div class="mt-4">
           <form onsubmit="addReply(event, '${topic.id}')" class="space-y-2">
             <div class="flex-1">
@@ -367,7 +370,7 @@ function renderTopicCard(topic, userId) {
 // Edita um tópico do fórum
 function editTopic(topicId) {
   const topic = forumTopics.find(t => t.id === topicId);
-  if (!topic || (!Utils.isAuthor(topic.author) && !Utils.isUserAdmin())) return;
+  if (!topic || (!AnimuUtils.isAuthor(topic.author) && !AnimuUtils.isUserAdmin())) return;
 
   const topicElement = document.getElementById(`topic-${topicId}`);
   if (!topicElement) return;
@@ -533,7 +536,7 @@ function cancelTopicEdit(topicId) {
 
 // Gerencia o sistema de likes dos tópico e verifica autenticação e atualiza contadores
 async function likeTopic(topicId) {
-  if (!Utils.isUserLoggedIn()) {
+  if (!AnimuUtils.isUserLoggedIn()) {
     alert('Você precisa estar logado para curtir!');
     window.location.href = 'signin.html';
     return;
@@ -563,7 +566,7 @@ async function likeTopic(topicId) {
 
 // Gerencia o sistema de likes das respostas e verifica autenticação e atualiza contadores
 async function likeReply(topicId, replyId) {
-  if (!Utils.isUserLoggedIn()) {
+  if (!AnimuUtils.isUserLoggedIn()) {
     alert('Você precisa estar logado para curtir!');
     window.location.href = 'signin.html';
     return;
@@ -595,7 +598,7 @@ async function likeReply(topicId, replyId) {
 async function addReply(event, topicId) {
   event.preventDefault();
 
-  if (!Utils.isUserLoggedIn()) {
+  if (!AnimuUtils.isUserLoggedIn()) {
     alert('Você precisa estar logado para responder!');
     window.location.href = 'signin.html';
     return;
@@ -628,7 +631,7 @@ async function addReply(event, topicId) {
     
     // Cria o objeto da resposta
     const replyData = {
-      author: Utils.getLoggedUsername(),
+      author: AnimuUtils.getLoggedUsername(),
       content: formattedContent,
     };
     
@@ -654,7 +657,7 @@ async function addReply(event, topicId) {
 // Edita e remove tópicos do fórum
 function editTopic(topicId) {
   const topic = forumTopics.find(t => t.id === topicId);
-  if (!topic || (!Utils.isAuthor(topic.author) && !Utils.isUserAdmin())) return;
+  if (!topic || (!AnimuUtils.isAuthor(topic.author) && !AnimuUtils.isUserAdmin())) return;
 
   const topicElement = document.getElementById(`topic-${topicId}`);
   if (!topicElement) return;
@@ -698,7 +701,7 @@ function editTopic(topicId) {
 // Remove um tópico do fórum
 async function deleteTopic(topicId) {
   const topic = forumTopics.find(t => t.id === topicId);
-  if (!topic || (!Utils.isAuthor(topic.author) && !Utils.isUserAdmin())) return;
+  if (!topic || (!AnimuUtils.isAuthor(topic.author) && !AnimuUtils.isUserAdmin())) return;
 
   if (confirm('Tem certeza que deseja excluir esta discussão? Todos os comentários serão removidos permanentemente.')) {
     try {
@@ -815,7 +818,7 @@ async function deleteReply(topicId, replyId) {
   if (!topic) return;
 
   const reply = topic.replies.find(r => r.id === replyId);
-  if (!reply || (!Utils.isAuthor(reply.author) && !Utils.isUserAdmin())) return;
+  if (!reply || (!AnimuUtils.isAuthor(reply.author) && !AnimuUtils.isUserAdmin())) return;
 
   if (confirm('Tem certeza que deseja excluir esta resposta?')) {
     try {
@@ -836,7 +839,7 @@ async function deleteReply(topicId, replyId) {
 async function addTopic(event) {
   event.preventDefault();
 
-  if (!Utils.isUserLoggedIn()) {
+  if (!AnimuUtils.isUserLoggedIn()) {
     alert('Você precisa estar logado para criar tópicos.');
     window.location.href = 'signin.html';
     return;
@@ -907,7 +910,7 @@ async function addTopic(event) {
       content: formattedContent,
       category,
       tags: validatedTags,
-      author: Utils.getLoggedUsername()
+      author: AnimuUtils.getLoggedUsername()
     };
 
     // Usa o ForumManager para criar o tópico
@@ -993,7 +996,7 @@ async function incrementTopicViews(topicId) {
   if (!topicId) return;
   
   try {
-    const userId = Utils.isUserLoggedIn() ? JSON.parse(localStorage.getItem('userSession')).userId : 'anonymous';
+    const userId = AnimuUtils.isUserLoggedIn() ? JSON.parse(localStorage.getItem('userSession')).userId : 'anonymous';
     
     // Usa o ForumManager para incrementar visualização
     const wasIncremented = await forumManager.incrementTopicView(topicId, userId);

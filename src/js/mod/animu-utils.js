@@ -3,6 +3,9 @@
  * Fornece métodos úteis para a aplicação
  */
 class AnimuUtils {
+  // Cache para evitar requisições duplicadas de avatares
+  static avatarCache = {};
+
   /**
    * Formata uma string de data para o formato brasileiro (dd/mm/aaaa hh:mm).
    * @param {Date|Object|string|number} dateString - A data a ser formatada. 
@@ -78,17 +81,64 @@ class AnimuUtils {
   }
 
   /**
-   * Obtém o avatar de um usuário pelo nome de usuário.
-   * Se o usuário não for encontrado nos dados armazenados, gera um avatar com as iniciais.
-   * @param {string} username - Nome do usuário para buscar o avatar.
-   * @returns {string} URL do avatar do usuário.
+   * Busca o ID de um usuário pelo seu nome de usuário.
+   * @param {string} username - Nome de usuário para buscar
+   * @returns {Promise<string|null>} ID do usuário ou null se não encontrado
    */
-  static getUserAvatar(username) {
-    const users = JSON.parse(localStorage.getItem('animuUsers') || '[]');
-    const user = users.find(u => u.username === username);
-    return user ? user.avatar : `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=8B5CF6&color=ffffff&size=100`;
+  static async getUserIdByUsername(username) {
+    try {
+      // Obtém a instância do UserManager
+      const userManager = window.userManager || new UserManager();
+      const user = await userManager.findUser(username);
+      return user ? user.id : null;
+    } catch (error) {
+      console.error(`Erro ao buscar ID do usuário ${username}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Obtém o avatar de um autor pelo seu nome de usuário de forma otimizada.
+   * Usa um sistema de cache para evitar requisições desnecessárias.
+   * 
+   * @param {string} username - Nome do usuário para buscar o avatar
+   * @returns {string} URL do avatar do usuário ou um avatar padrão
+   */
+  static getAuthorAvatar(username) {
+    // Se já temos o avatar no cache, retorna imediatamente
+    if (this.avatarCache[username]) return this.avatarCache[username];
+    
+    // Avatar padrão para usar enquanto carrega
+    const defaultAvatar = './src/assets/images/default-avatar.jpg';
+    this.avatarCache[username] = defaultAvatar;
+    
+    // Obtém a instância do UserManager
+    const userManager = window.userManager || new UserManager();
+    
+    // Inicia processo assíncrono para buscar o avatar real
+    this.getUserIdByUsername(username).then(userId => {
+      if (!userId) return;
+      
+      // Busca o avatar usando o ID do usuário
+      userManager.getUserAvatar(userId).then(avatarUrl => {
+        if (avatarUrl) {
+          // Atualiza o cache
+          this.avatarCache[username] = avatarUrl;
+          
+          // Atualiza todas as imagens de avatar deste usuário na página
+          document.querySelectorAll(`img[alt="${username}"]`).forEach(img => {
+            img.src = avatarUrl;
+          });
+        }
+      }).catch(error => {
+        console.error(`Erro ao buscar avatar para ${username}:`, error);
+      });
+    });
+    
+    // Retorna o avatar padrão ou o avatar em cache enquanto a busca acontece
+    return this.avatarCache[username];
   }
 }
 
 // Exporta a classe AnimuUtils para uso global como 'Utils'
-window.Utils = AnimuUtils;
+window.AnimuUtils = AnimuUtils;

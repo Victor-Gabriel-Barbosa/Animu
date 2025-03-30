@@ -932,7 +932,7 @@ function renderIndexNews() {
       </div>
       <div class="news-content">
         <div class="news-metadata">
-          <span class="news-date">${Utils.formatDate(news.date)}</span>
+          <span class="news-date">${AnimuUtils.formatDate(news.date)}</span>
           <div class="news-tags">
             ${news.tags.map(tag => `<span class="news-tag">#${tag}</span>`).join('')}
           </div>
@@ -971,7 +971,7 @@ async function loadRecentNews() {
         </div>
         <div class="news-content">
           <div class="news-metadata">
-            <span class="news-date">${Utils.formatDate(news.date)}</span>
+            <span class="news-date">${AnimuUtils.formatDate(news.date)}</span>
             <div class="news-tags">
               ${news.tags.map(tag => `<span class="news-tag">#${tag}</span>`).join('')}
             </div>

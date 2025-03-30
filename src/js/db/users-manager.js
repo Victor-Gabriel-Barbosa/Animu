@@ -202,6 +202,77 @@ class UserManager {
       return user?.favoriteAnimes?.includes(animeTitle) || false;
     }
   }
+
+  // Atualiza o avatar do usuário
+  async updateUserAvatar(userId, newAvatarUrl) {
+    try {
+      // Busca o documento do usuário
+      const userRef = this.usersCollection.doc(userId);
+      const userDoc = await userRef.get();
+      
+      if (!userDoc.exists) throw new Error(`Usuário com ID ${userId} não encontrado`);
+      
+      // Atualiza o avatar no Firestore
+      await userRef.update({
+        avatar: newAvatarUrl,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      
+      // Atualiza também no localStorage se existir
+      const userSession = JSON.parse(localStorage.getItem('userSession') || '{}');
+      if (userSession && userSession.userId === userId) {
+        userSession.avatar = newAvatarUrl;
+        localStorage.setItem('userSession', JSON.stringify(userSession));
+      }
+      
+      // Atualiza o localStorage de usuários se existir
+      const localUsers = JSON.parse(localStorage.getItem('animuUsers') || '[]');
+      const userIndex = localUsers.findIndex(user => user.id === userId);
+      
+      if (userIndex !== -1) {
+        localUsers[userIndex].avatar = newAvatarUrl;
+        localStorage.setItem('animuUsers', JSON.stringify(localUsers));
+      }
+      
+      console.log(`Avatar do usuário ${userId} atualizado com sucesso`);
+      
+      return {
+        success: true,
+        newAvatar: newAvatarUrl
+      };
+    } catch (error) {
+      console.error("Erro ao atualizar avatar do usuário:", error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Recupera o avatar de um usuário pelo ID
+  async getUserAvatar(userId) {
+    try {
+      // Verifica primeiro na sessão do usuário (se for o usuário atual)
+      const userSession = JSON.parse(localStorage.getItem('userSession') || '{}');
+      if (userSession && userSession.userId === userId && userSession.avatar) {
+        return userSession.avatar;
+      }
+      
+      // Se não encontrou na sessão ou não é o usuário atual, busca no Firestore
+      const userDoc = await this.usersCollection.doc(userId).get();
+      
+      if (userDoc.exists) {
+        const userData = userDoc.data();
+        return userData.avatar || null;
+      }
+      
+      // Fallback para localStorage
+      const localUsers = JSON.parse(localStorage.getItem('animuUsers') || '[]');
+      const localUser = localUsers.find(user => user.id === userId);
+      
+      return localUser?.avatar || null;
+    } catch (error) {
+      console.error("Erro ao recuperar avatar do usuário:", error);
+      return null;
+    }
+  }
 }
 
 // Exporta a classe para uso em outros arquivos

@@ -231,7 +231,7 @@ function updateUserInterface() {
     if (userPanel && userNameSpan) {
       userNameSpan.innerHTML = `<a href="profile.html" class="hover:text-purple-600 transition-colors">${sessionData.username}</a>`;
       if (userAvatar) {
-        userAvatar.src = Utils.getUserAvatar(sessionData.username);
+        userAvatar.src = AnimuUtils.getUserAvatar(sessionData.username);
         userAvatar.style.cursor = 'pointer';
         userAvatar.onclick = () => window.location.href = 'profile.html';
         userAvatar.title = 'Ver perfil';

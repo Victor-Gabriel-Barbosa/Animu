@@ -23,7 +23,7 @@ class Navbar {
               <!-- Logo -->
               <div class="logo-container">
                 <a href="index.html" class="logo-link" title="Página Inicial do Animu">
-                  <img src="src/data/images/favicon/favicon.svg" class="logo-icon" alt="Logo Animu">
+                  <img src="src/assets/images/favicon/favicon.svg" class="logo-icon" alt="Logo Animu">
                   <span class="logo-text">Animu</span>
                 </a>
               </div>
