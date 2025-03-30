@@ -711,14 +711,14 @@ async function toggleFavoriteFromCard(animeTitle, event) {
 
 // Atualiza todos os botões de favorito para um anime específico
 function updateAllFavoriteButtons(animeTitle, isFavorited, count) {
-  // Atualiza todos os botões de favorito nos cards
+  // Atualiza todos os botões de favorito nos cards - usando seletor mais preciso
   const favoriteButtons = document.querySelectorAll(`.favorite-count[data-anime-title="${animeTitle}"], .meta-item.favorite-count`);
   
   favoriteButtons.forEach(button => {
     const buttonAnimeTitle = button.getAttribute('data-anime-title');
     const buttonLink = button.closest('a');
     
-    // Verifica se este botão pertence ao anime em questão usando atributo ou link
+    // Verifica se este botão pertence ao anime em questão, usando atributo ou link
     if (buttonAnimeTitle === animeTitle || (buttonLink && buttonLink.href &&
         buttonLink.href.includes(encodeURIComponent(animeTitle)))) {
       // Atualiza a classe para refletir o novo estado
@@ -1211,15 +1211,14 @@ async function toggleFavoriteFromCard(animeTitle) {
       localStorage.setItem('animeData', JSON.stringify(animes));
     } else console.warn(`Não foi possível atualizar o Firestore: ID do anime não encontrado (${animeTitle})`);
 
-    // O novo estado é o oposto do anterior
-    const newState = !isAnimeFavorited(animeTitle);
+    // Calcula o novo valor do contador para atualização da UI
     const updatedCount = countAnimeFavorites(animeTitle);
     
     // Atualiza a UI - todos os botões relacionados a este anime em toda a página
-    updateAllFavoriteButtons(animeTitle, newState, updatedCount);
+    updateAllFavoriteButtons(animeTitle, wasAdded, updatedCount);
     
-    // Atualiza as estatísticas em tempo real para a página de detalhes, se estiver nela
-    if (window.location.search.includes(`anime=${encodeURIComponent(animeTitle)}`)) updateAnimeStats(animeTitle);
+    // Atualiza as estatísticas em tempo real para a página de detalhes
+    updateAnimeStats(animeTitle);
   } catch (error) {
     console.error('Erro ao atualizar favorito:', error);
     alert('Houve um problema ao salvar seu favorito. Por favor, tente novamente.');
@@ -1228,14 +1227,16 @@ async function toggleFavoriteFromCard(animeTitle) {
 
 // Atualiza todos os botões de favorito para um anime específico
 function updateAllFavoriteButtons(animeTitle, isFavorited, count) {
-  // Atualiza todos os botões de favorito nos cards
-  const favoriteButtons = document.querySelectorAll(`.favorite-count`);
+  // Atualiza todos os botões de favorito nos cards - usando seletor mais preciso
+  const favoriteButtons = document.querySelectorAll(`.favorite-count[data-anime-title="${animeTitle}"], .meta-item.favorite-count`);
   
   favoriteButtons.forEach(button => {
+    const buttonAnimeTitle = button.getAttribute('data-anime-title');
     const buttonLink = button.closest('a');
     
-    // Verifica se este botão pertence ao anime em questão
-    if (buttonLink && buttonLink.href.includes(encodeURIComponent(animeTitle))) {
+    // Verifica se este botão pertence ao anime em questão, usando atributo ou link
+    if (buttonAnimeTitle === animeTitle || (buttonLink && buttonLink.href &&
+        buttonLink.href.includes(encodeURIComponent(animeTitle)))) {
       // Atualiza a classe para refletir o novo estado
       button.classList.toggle('is-favorited', isFavorited);
       
@@ -1252,7 +1253,26 @@ function updateAllFavoriteButtons(animeTitle, isFavorited, count) {
       '❤️ Remover dos Favoritos' : 
       '🤍 Adicionar aos Favoritos';
     mainButton.classList.toggle('favorited', isFavorited);
+    mainButton.setAttribute('data-anime-title', animeTitle);
   }
+}
+
+// Função de manipulação do clique de favoritos
+function handleFavoriteButtonClick(event) {
+  event.preventDefault();
+  event.stopPropagation();
+  
+  const button = event.currentTarget;
+  const animeTitle = button.getAttribute('data-anime-title');
+  
+  // Se não tiver o atributo data-anime-title, tenta obter do link pai
+  if (!animeTitle) {
+    const link = button.closest('a');
+    if (link && link.href) {
+      const match = link.href.match(/anime=([^&]+)/);
+      if (match) toggleFavoriteFromCard(decodeURIComponent(match[1]));
+    }
+  } else toggleFavoriteFromCard(animeTitle);
 }
 
 // Formata os filtros aplicados para exibição com ícones
