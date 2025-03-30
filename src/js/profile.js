@@ -488,7 +488,7 @@ async function confirmShare(animeTitle, coverImage) {
       return;
     }
 
-    const chat = new Chat();
+    const chat = new FirestoreChat(); // Usando FirestoreChat em vez de Chat
     const sessionData = JSON.parse(localStorage.getItem('userSession'));
 
     // Cria mensagem especial para compartilhamento de anime
@@ -501,7 +501,7 @@ async function confirmShare(animeTitle, coverImage) {
 
     // Envia para cada amigo selecionado
     for (const friendId of selectedFriends) {
-      chat.sendMessage(sessionData.userId, friendId, JSON.stringify(message));
+      await chat.sendMessage(sessionData.userId, friendId, JSON.stringify(message));
     }
 
     closeShareModal();
@@ -1324,8 +1324,8 @@ function restoreChat(friendId) {
  */
 async function loadChatMessages(senderId, receiverId) {
   try {
-    const chat = new Chat();
-    const messages = chat.getMessages(senderId, receiverId);
+    const chat = new FirestoreChat(); // Usando FirestoreChat em vez de Chat
+    const messages = await chat.getMessages(senderId, receiverId); // Agora retorna Promise
     const container = document.getElementById(`chat-messages-${receiverId}`);
     
     // Usa userManager para obter usuários
@@ -1401,6 +1401,14 @@ async function loadChatMessages(senderId, receiverId) {
     }).join('');
 
     container.scrollTop = container.scrollHeight;
+    
+    // Configura listener em tempo real
+    chat.listenToMessages(senderId, receiverId, updatedMessages => {
+      if (updatedMessages.length > messages.length) {
+        // Atualiza apenas se houver novas mensagens
+        loadChatMessages(senderId, receiverId);
+      }
+    });
   } catch (error) {
     console.error("Erro ao carregar mensagens:", error);
   }
@@ -1419,9 +1427,11 @@ async function sendMessage(event, senderId, receiverId) {
 
   if (!message) return;
 
-  const chat = new Chat();
-  chat.sendMessage(senderId, receiverId, message);
+  const chat = new FirestoreChat(); // Usando FirestoreChat em vez de Chat
+  await chat.sendMessage(senderId, receiverId, message);
 
+  // A função loadChatMessages será chamada pelo listener em tempo real
+  // mas chamamos explicitamente para garantir atualização imediata
   await loadChatMessages(senderId, receiverId);
   input.value = '';
 }
