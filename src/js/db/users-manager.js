@@ -172,6 +172,9 @@ class UserManager {
         localStorage.setItem('animuUsers', JSON.stringify(localUsers));
       }
       
+      // Atualiza o cache após a operação
+      this.updateFavoriteCache(userId, animeTitle, !isFavorited);
+      
       console.log(`Anime ${animeTitle} ${!isFavorited ? 'adicionado aos' : 'removido dos'} favoritos do usuário ${userId}`);
       
       return {
@@ -185,14 +188,24 @@ class UserManager {
     }
   }
 
-  // Verifica se um anime está na lista de favoritos do usuário
+  // Verifica se um anime está na lista de favoritos do usuário - OTIMIZADO
   async isAnimeFavorited(userId, animeTitle) {
     try {
+      // Primeiro verifica se existe em cache da sessão atual
+      const cachedResult = this.getCachedFavoriteStatus(userId, animeTitle);
+      if (cachedResult !== null) return cachedResult;
+      
+      // Se não encontrou em cache, busca do Firestore
       const userDoc = await this.usersCollection.doc(userId).get();
       if (!userDoc.exists) return false;
       
       const userData = userDoc.data();
-      return userData.favoriteAnimes?.includes(animeTitle) || false;
+      const isFavorited = userData.favoriteAnimes?.includes(animeTitle) || false;
+      
+      // Atualiza o cache para acessos futuros
+      this.updateFavoriteCache(userId, animeTitle, isFavorited);
+      
+      return isFavorited;
     } catch (error) {
       console.error("Erro ao verificar anime favorito:", error);
       
@@ -200,6 +213,85 @@ class UserManager {
       const localUsers = JSON.parse(localStorage.getItem('animuUsers') || '[]');
       const user = localUsers.find(u => u.id === userId);
       return user?.favoriteAnimes?.includes(animeTitle) || false;
+    }
+  }
+
+  // Método auxiliar para gerenciar cache de favoritos
+  getCachedFavoriteStatus(userId, animeTitle) {
+    try {
+      const favoritesCache = JSON.parse(localStorage.getItem('favoriteStatusCache') || '{}');
+      const userCache = favoritesCache[userId];
+      
+      if (userCache && userCache.hasOwnProperty(animeTitle)) {
+        // Verifica se o cache não expirou (15 minutos)
+        const cacheTime = userCache[animeTitle].timestamp || 0;
+        const now = Date.now();
+        if (now - cacheTime < 15 * 60 * 1000) {
+          return userCache[animeTitle].status;
+        }
+      }
+      return null; // Cache não encontrado ou expirado
+    } catch (e) {
+      console.warn('Erro ao acessar cache de favoritos:', e);
+      return null;
+    }
+  }
+
+  // Atualiza o cache de status de favoritos
+  updateFavoriteCache(userId, animeTitle, status) {
+    try {
+      const favoritesCache = JSON.parse(localStorage.getItem('favoriteStatusCache') || '{}');
+      
+      if (!favoritesCache[userId]) favoritesCache[userId] = {};
+      
+      favoritesCache[userId][animeTitle] = {
+        status: status,
+        timestamp: Date.now()
+      };
+      
+      localStorage.setItem('favoriteStatusCache', JSON.stringify(favoritesCache));
+    } catch (e) {
+      console.warn('Erro ao atualizar cache de favoritos:', e);
+    }
+  }
+  
+  // Atualiza o cache de favoritos para todos os animes
+  async updateFavoritesCache(userId) {
+    try {
+      const userDoc = await this.usersCollection.doc(userId).get();
+      if (!userDoc.exists) return;
+      
+      const userData = userDoc.data();
+      const favoriteAnimes = userData.favoriteAnimes || [];
+      
+      // Atualiza o localStorage para manter consistência
+      const localUsers = JSON.parse(localStorage.getItem('animuUsers') || '[]');
+      const userIndex = localUsers.findIndex(user => user.id === userId);
+      
+      if (userIndex !== -1) {
+        localUsers[userIndex].favoriteAnimes = favoriteAnimes;
+        localStorage.setItem('animuUsers', JSON.stringify(localUsers));
+      }
+      
+      // Limpa e atualiza o cache de status
+      const favoritesCache = JSON.parse(localStorage.getItem('favoriteStatusCache') || '{}');
+      favoritesCache[userId] = {};
+      
+      // Preenche o cache com o status atual
+      const now = Date.now();
+      favoriteAnimes.forEach(title => {
+        favoritesCache[userId][title] = {
+          status: true,
+          timestamp: now
+        };
+      });
+      
+      localStorage.setItem('favoriteStatusCache', JSON.stringify(favoritesCache));
+      
+      return favoriteAnimes;
+    } catch (error) {
+      console.error("Erro ao atualizar cache de favoritos:", error);
+      return null;
     }
   }
 

@@ -242,8 +242,8 @@ async function renderAnimeDetails(anime) {
   // Atualiza o título da página
   document.title = `${anime.primaryTitle} - Detalhes do Anime`;
 
-  // Atualiza o estado inicial do botão de favorito
-  updateFavoriteButton(anime.primaryTitle);
+  // Atualiza o estado inicial do botão de favorito (agora usando a função assíncrona)
+  await updateFavoriteButton(anime.primaryTitle);
 
   // Adiciona renderização de animes relacionados após renderizar os detalhes do anime
   try {
@@ -388,7 +388,7 @@ async function renderAllAnimes() {
                     ${(JSON.parse(localStorage.getItem('animeComments')) || {})[anime.primaryTitle]?.length || 0}
                   </span>
                   <button 
-                    class="meta-item favorite-count ${isAnimeFavorited(anime.primaryTitle) ? 'is-favorited' : ''}"
+                    class="meta-item favorite-count loading-state"
                     data-anime-title="${anime.primaryTitle}"
                     data-anime-id="${anime.id || ''}"
                     ${!currentUser ? 'title="Faça login para favoritar"' : ''}
@@ -396,7 +396,7 @@ async function renderAllAnimes() {
                     <svg class="meta-icon heart-icon" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                     </svg>
-                    <span class="favorite-number">${anime.favoriteCount || countAnimeFavorites(anime.primaryTitle)}</span>
+                    <span class="favorite-number">${anime.favoriteCount || 0}</span>
                   </button>
                 </div>
               </div>
@@ -562,17 +562,23 @@ function renderSearchResults(query) {
   attachFavoriteButtonEvents();
 }
 
-// Sistema de favoritos
-function isAnimeFavorited(animeTitle) {
+// Sistema de favoritos - ATUALIZADO para usar Firestore
+async function isAnimeFavorited(animeTitle) {
   const sessionData = JSON.parse(localStorage.getItem('userSession'));
   if (!sessionData) return false;
 
-  // Primeiro tenta obter dados do usuário atualizados no cache
-  const users = JSON.parse(localStorage.getItem('animuUsers')) || [];
-  const currentUser = users.find(user => user.id === sessionData.userId);
-  
-  // Verifica se o usuário tem favoritos e se o anime está entre eles
-  return currentUser && Array.isArray(currentUser.favoriteAnimes) && currentUser.favoriteAnimes.includes(animeTitle);
+  try {
+    // Consulta o Firestore usando o método da classe UserManager
+    return await userManager.isAnimeFavorited(sessionData.userId, animeTitle);
+  } catch (error) {
+    console.error('Erro ao verificar status de favorito:', error);
+    
+    // Fallback para o localStorage se o Firestore falhar
+    const users = JSON.parse(localStorage.getItem('animuUsers')) || [];
+    const currentUser = users.find(user => user.id === sessionData.userId);
+    return currentUser && Array.isArray(currentUser.favoriteAnimes) && 
+           currentUser.favoriteAnimes.includes(animeTitle);
+  }
 }
 
 // Alterna estado de favorito do anime
@@ -709,8 +715,8 @@ async function toggleFavoriteFromCard(animeTitle, event) {
   }
 }
 
-// Atualiza todos os botões de favorito para um anime específico
-function updateAllFavoriteButtons(animeTitle, isFavorited, count) {
+// Atualiza todos os botões de favorito para um anime específico - ATUALIZADO
+async function updateAllFavoriteButtons(animeTitle, isFavorited, count) {
   // Atualiza todos os botões de favorito nos cards - usando seletor mais preciso
   const favoriteButtons = document.querySelectorAll(`.favorite-count[data-anime-title="${animeTitle}"], .meta-item.favorite-count`);
   
@@ -741,17 +747,31 @@ function updateAllFavoriteButtons(animeTitle, isFavorited, count) {
   }
 }
 
-// Atualiza interface do botão de favoritos
-function updateFavoriteButton(animeTitle) {
+// Atualiza interface do botão de favoritos - ATUALIZADO para ser assíncrono
+async function updateFavoriteButton(animeTitle) {
   const favoriteButton = document.getElementById('favorite-button');
-  const isFavorited = isAnimeFavorited(animeTitle);
-
-  if (favoriteButton) {
+  if (!favoriteButton) return;
+  
+  try {
+    // Define um estado de carregamento temporário
+    favoriteButton.disabled = true;
+    favoriteButton.innerHTML = 'Verificando...';
+    
+    // Obtém o estado atual do favorito do Firestore
+    const isFavorited = await isAnimeFavorited(animeTitle);
+    
+    // Atualiza o botão com o estado correto
     favoriteButton.innerHTML = isFavorited ?
       '❤️ Remover dos Favoritos' :
       '🤍 Adicionar aos Favoritos';
     favoriteButton.classList.toggle('favorited', isFavorited);
     favoriteButton.setAttribute('data-anime-title', animeTitle);
+  } catch (error) {
+    console.error('Erro ao atualizar botão de favorito:', error);
+    // Em caso de erro, mantém um estado padrão
+    favoriteButton.innerHTML = '🤍 Adicionar aos Favoritos';
+  } finally {
+    favoriteButton.disabled = false;
   }
 }
 
@@ -1468,7 +1488,7 @@ async function searchWithoutFilters(query) {
   }
 }
 
-// Adiciona eventos aos botões de favoritos
+// Adiciona eventos aos botões de favoritos - ATUALIZADO
 function attachFavoriteButtonEvents() {
   // Seleciona todos os botões de favoritar
   const favoriteButtons = document.querySelectorAll('.favorite-count');
@@ -1480,6 +1500,9 @@ function attachFavoriteButtonEvents() {
     
     // Adiciona o novo evento
     button.addEventListener('click', handleFavoriteButtonClick);
+    
+    // Sincroniza o estado inicial do botão com o Firestore
+    syncFavoriteButtonState(button);
   });
 }
 
@@ -1499,4 +1522,28 @@ function handleFavoriteButtonClick(event) {
       if (match) toggleFavoriteFromCard(decodeURIComponent(match[1]));
     }
   } else toggleFavoriteFromCard(animeTitle);
+}
+
+// Função para atualizar estado do botão em cards de animes
+async function syncFavoriteButtonState(button) {
+  const animeTitle = button.getAttribute('data-anime-title');
+  if (!animeTitle) return;
+  
+  try {
+    // Consulta o estado atual no Firestore
+    const isFavorited = await isAnimeFavorited(animeTitle);
+    
+    // Atualiza a aparência do botão
+    button.classList.toggle('is-favorited', isFavorited);
+    
+    // Atualiza o contador se necessário (usando o contador do Firestore)
+    const animes = animeManager.getAnimesFromCache();
+    const anime = animes.find(a => a.primaryTitle === animeTitle);
+    if (anime && anime.favoriteCount !== undefined) {
+      const countElement = button.querySelector('.favorite-number');
+      if (countElement) countElement.textContent = anime.favoriteCount;
+    }
+  } catch (error) {
+    console.error(`Erro ao sincronizar estado do botão para ${animeTitle}:`, error);
+  }
 }
