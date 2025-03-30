@@ -618,13 +618,36 @@ async function toggleFavorite(animeTitle) {
     // Atualiza todos os botões relacionados a este anime em toda a página
     updateAllFavoriteButtons(animeTitle, wasAdded, favoriteCount);
     
-    // Atualiza as estatísticas em tempo real - utiliza a função de animes-chat.js
-    if (typeof window.updateAnimeStats === 'function') window.updateAnimeStats(animeTitle);
+    // Atualiza as estatísticas em tempo real
+    updateAnimeStats(animeTitle);
     
     return result;
   } catch (error) {
     console.error('Erro ao atualizar favorito no Firestore:', error);
     alert('Houve um problema ao salvar seu favorito no servidor. Por favor, tente novamente mais tarde.');
+  }
+}
+
+// Nova função para atualizar estatísticas de anime na página de detalhes
+function updateAnimeStats(animeTitle) {
+  // Verifica se estamos na página de detalhes do anime correto
+  if (!window.location.search.includes(`anime=${encodeURIComponent(animeTitle)}`)) return;
+  
+  // Encontra os elementos de estatísticas
+  const statsContainer = document.querySelector('.anime-stats');
+  if (!statsContainer) return;
+  
+  // Atualiza a contagem de favoritos
+  const favoritesStatValue = statsContainer.querySelector('.stat-item:nth-child(2) .stat-value');
+  if (favoritesStatValue) {
+    favoritesStatValue.textContent = countAnimeFavorites(animeTitle);
+  }
+  
+  // Atualiza a contagem de comentários
+  const commentsStatValue = statsContainer.querySelector('.stat-item:nth-child(3) .stat-value');
+  if (commentsStatValue) {
+    const comments = (JSON.parse(localStorage.getItem('animeComments')) || {})[animeTitle] || [];
+    commentsStatValue.textContent = comments.length;
   }
 }
 
