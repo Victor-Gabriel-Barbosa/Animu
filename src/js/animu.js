@@ -219,13 +219,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// Obtém o avatar do usuário
-function getUserAvatar(username) {
-  const users = JSON.parse(localStorage.getItem('animuUsers') || '[]');
-  const user = users.find(u => u.username === username);
-  return user ? user.avatar : `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=8B5CF6&color=ffffff&size=100`;
-}
-
 // Atualiza interface do usuário na navbar
 function updateUserInterface() {
   const sessionData = JSON.parse(localStorage.getItem('userSession'));
@@ -238,7 +231,7 @@ function updateUserInterface() {
     if (userPanel && userNameSpan) {
       userNameSpan.innerHTML = `<a href="profile.html" class="hover:text-purple-600 transition-colors">${sessionData.username}</a>`;
       if (userAvatar) {
-        userAvatar.src = getUserAvatar(sessionData.username);
+        userAvatar.src = Utils.getUserAvatar(sessionData.username);
         userAvatar.style.cursor = 'pointer';
         userAvatar.onclick = () => window.location.href = 'profile.html';
         userAvatar.title = 'Ver perfil';

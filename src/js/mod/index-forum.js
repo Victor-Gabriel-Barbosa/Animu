@@ -152,20 +152,13 @@ function renderTopics() {
   });
 }
 
-// Obtém o avatar do usuário
-function getUserAvatar(username) {
-  const users = JSON.parse(localStorage.getItem('animuUsers') || '[]');
-  const user = users.find(u => u.username === username);
-  return user ? user.avatar : `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=8B5CF6&color=ffffff&size=100`;
-}
-
 // Renderiza a lista de tópicos do fórum
 function renderReplies(replies, topicId, userId) {
   return replies.map(reply => `
     <div class="mb-3 overflow-hidden" id="reply-${reply.id}">
       <div class="flex items-start gap-3">
         <img class="h-8 w-8 rounded-full object-cover"
-             src="${getUserAvatar(reply.author)}"
+             src="${Utils.getUserAvatar(reply.author)}"
              alt="${reply.author}">
         <div class="flex-1">
           <div class="flex justify-between items-start">
@@ -251,7 +244,7 @@ function renderTopicCard(topic, userId) {
         <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
           <!-- Avatar com tamanho adaptável -->
           <img class="h-10 w-10 sm:h-12 sm:w-12 rounded-full object-cover flex-shrink-0"
-               src="${getUserAvatar(topic.author)}"
+               src="${Utils.getUserAvatar(topic.author)}"
                alt="${topic.author}">
           <div class="flex-1 min-w-0">
             <div class="flex flex-col gap-1 sm:gap-2">
