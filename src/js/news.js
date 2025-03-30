@@ -2,7 +2,7 @@
 class NewsUIManager {
   constructor() {
     // Inicializa o gerenciador de notícias do Firestore
-    this.newsManagerDB = new window.NewsManager();
+    this.newsManagerDB = new NewsManager();
     
     // Armazena as notícias
     this.newsData = [];
@@ -438,9 +438,8 @@ class NewsUIManager {
 
       // Busca usando o NewsManager
       this.newsManagerDB.getNewsById(newsId).then(newsData => {
-        if (newsData) {
-          this.displayNewsDetails(newsData);
-        } else this.showGridView();
+        if (newsData) this.displayNewsDetails(newsData);
+        else this.showGridView();
       }).catch(error => {
         console.error('Erro ao carregar notícia:', error);
         this.showGridView();

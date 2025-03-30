@@ -3,7 +3,7 @@ class CategoryDisplay {
   constructor() {
     this.mainContainer = document.getElementById('main-categories');
     this.subContainer = document.getElementById('subcategories');
-    this.categoryManager = new CategoryManager(); // Instância do CategoryManager
+    this.categoryManager = new CategoryManager(); 
     this.initialize();
     
     // Recarrega categorias quando houver atualizações

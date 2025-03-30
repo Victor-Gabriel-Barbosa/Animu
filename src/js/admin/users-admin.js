@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', function () {
               ${user.isAdmin ? 'Admin' : 'Usuário'}
         </span>
       </td>
-      <td>${userManager.formatFirestoreDate(user.createdAt)}</td>
+      <td>${Utils.formatDate(user.createdAt)}</td>
       <td>
         <div class="class="flex flex-col md:flex-row gap-3 mt-6">
           <button onclick="toggleAdminStatus('${user.id}')"
