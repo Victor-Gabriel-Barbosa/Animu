@@ -21,24 +21,6 @@ const toolbarOptions = [
   ['clean']
 ];
 
-// Verifica se o usuário está logado
-function isUserLoggedIn() {
-  const session = localStorage.getItem('userSession');
-  return session !== null;
-}
-
-// Obtém o nome do usuário logado
-function getLoggedUsername() {
-  const session = JSON.parse(localStorage.getItem('userSession'));
-  return session ? session.username : null;
-}
-
-// Verifica se o usuário é o autor do comentário
-function isAuthor(authorName) {
-  const session = JSON.parse(localStorage.getItem('userSession'));
-  return session && session.username === authorName;
-}
-
 // Configurações globais do fórum
 const FORUM_CONFIG = {
   categories: [
@@ -79,7 +61,7 @@ function closeModal() {
 
 // Event Listeners
 newTopicBtn?.addEventListener('click', () => {
-  if (!isUserLoggedIn()) {
+  if (!Utils.isUserLoggedIn()) {
     alert('Você precisa estar logado para criar uma discussão!');
     window.location.href = 'signin.html';
     return;
@@ -110,7 +92,7 @@ newTopicForm?.addEventListener('submit', addTopic);
 function renderTopics() {
   if (!forumTopicsContainer) return;
 
-  const userId = isUserLoggedIn() ? JSON.parse(localStorage.getItem('userSession')).userId : null;
+  const userId = Utils.isUserLoggedIn() ? JSON.parse(localStorage.getItem('userSession')).userId : null;
 
   // Adiciona filtros de categoria com melhor scroll horizontal em dispositivos móveis
   const categoryFilters = `
@@ -168,7 +150,7 @@ function renderReplies(replies, topicId, userId) {
               ${reply.editedAt ? `<span class="text-xs">(editado)</span>` : ''}
             </p>
             <div class="flex items-center gap-2">
-              ${(isAuthor(reply.author) || Utils.isUserAdmin()) ? `
+              ${(Utils.isAuthor(reply.author) || Utils.isUserAdmin()) ? `
                 <button onclick="editReply('${topicId}', '${reply.id}')" class="text-blue-600 hover:text-blue-800">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
@@ -261,7 +243,7 @@ function renderTopicCard(topic, userId) {
           </div>
           <!-- Botões de ação otimizados para mobile -->
           <div class="flex items-center justify-end gap-2 flex-shrink-0 mt-2 sm:mt-0">
-            ${(isAuthor(topic.author) || Utils.isUserAdmin()) ? `
+            ${(Utils.isAuthor(topic.author) || Utils.isUserAdmin()) ? `
               <button onclick="editTopic('${topic.id}'); event.stopPropagation();" 
                       class="edit-topic-btn text-blue-600 hover:text-blue-800 p-1">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -337,7 +319,7 @@ function renderTopicCard(topic, userId) {
       </div>
       
       <!-- Formulário de resposta responsivo -->
-      ${isUserLoggedIn() ? `
+      ${Utils.isUserLoggedIn() ? `
         <div class="mt-4">
           <form onsubmit="addReply(event, '${topic.id}')" class="space-y-2">
             <div class="flex-1">
@@ -385,7 +367,7 @@ function renderTopicCard(topic, userId) {
 // Edita um tópico do fórum
 function editTopic(topicId) {
   const topic = forumTopics.find(t => t.id === topicId);
-  if (!topic || (!isAuthor(topic.author) && !Utils.isUserAdmin())) return;
+  if (!topic || (!Utils.isAuthor(topic.author) && !Utils.isUserAdmin())) return;
 
   const topicElement = document.getElementById(`topic-${topicId}`);
   if (!topicElement) return;
@@ -551,7 +533,7 @@ function cancelTopicEdit(topicId) {
 
 // Gerencia o sistema de likes dos tópico e verifica autenticação e atualiza contadores
 async function likeTopic(topicId) {
-  if (!isUserLoggedIn()) {
+  if (!Utils.isUserLoggedIn()) {
     alert('Você precisa estar logado para curtir!');
     window.location.href = 'signin.html';
     return;
@@ -581,7 +563,7 @@ async function likeTopic(topicId) {
 
 // Gerencia o sistema de likes das respostas e verifica autenticação e atualiza contadores
 async function likeReply(topicId, replyId) {
-  if (!isUserLoggedIn()) {
+  if (!Utils.isUserLoggedIn()) {
     alert('Você precisa estar logado para curtir!');
     window.location.href = 'signin.html';
     return;
@@ -613,7 +595,7 @@ async function likeReply(topicId, replyId) {
 async function addReply(event, topicId) {
   event.preventDefault();
 
-  if (!isUserLoggedIn()) {
+  if (!Utils.isUserLoggedIn()) {
     alert('Você precisa estar logado para responder!');
     window.location.href = 'signin.html';
     return;
@@ -646,7 +628,7 @@ async function addReply(event, topicId) {
     
     // Cria o objeto da resposta
     const replyData = {
-      author: getLoggedUsername(),
+      author: Utils.getLoggedUsername(),
       content: formattedContent,
     };
     
@@ -672,7 +654,7 @@ async function addReply(event, topicId) {
 // Edita e remove tópicos do fórum
 function editTopic(topicId) {
   const topic = forumTopics.find(t => t.id === topicId);
-  if (!topic || (!isAuthor(topic.author) && !Utils.isUserAdmin())) return;
+  if (!topic || (!Utils.isAuthor(topic.author) && !Utils.isUserAdmin())) return;
 
   const topicElement = document.getElementById(`topic-${topicId}`);
   if (!topicElement) return;
@@ -716,7 +698,7 @@ function editTopic(topicId) {
 // Remove um tópico do fórum
 async function deleteTopic(topicId) {
   const topic = forumTopics.find(t => t.id === topicId);
-  if (!topic || (!isAuthor(topic.author) && !Utils.isUserAdmin())) return;
+  if (!topic || (!Utils.isAuthor(topic.author) && !Utils.isUserAdmin())) return;
 
   if (confirm('Tem certeza que deseja excluir esta discussão? Todos os comentários serão removidos permanentemente.')) {
     try {
@@ -833,7 +815,7 @@ async function deleteReply(topicId, replyId) {
   if (!topic) return;
 
   const reply = topic.replies.find(r => r.id === replyId);
-  if (!reply || (!isAuthor(reply.author) && !Utils.isUserAdmin())) return;
+  if (!reply || (!Utils.isAuthor(reply.author) && !Utils.isUserAdmin())) return;
 
   if (confirm('Tem certeza que deseja excluir esta resposta?')) {
     try {
@@ -854,7 +836,7 @@ async function deleteReply(topicId, replyId) {
 async function addTopic(event) {
   event.preventDefault();
 
-  if (!isUserLoggedIn()) {
+  if (!Utils.isUserLoggedIn()) {
     alert('Você precisa estar logado para criar tópicos.');
     window.location.href = 'signin.html';
     return;
@@ -925,7 +907,7 @@ async function addTopic(event) {
       content: formattedContent,
       category,
       tags: validatedTags,
-      author: getLoggedUsername()
+      author: Utils.getLoggedUsername()
     };
 
     // Usa o ForumManager para criar o tópico
@@ -1011,9 +993,7 @@ async function incrementTopicViews(topicId) {
   if (!topicId) return;
   
   try {
-    const userId = isUserLoggedIn() ? 
-      JSON.parse(localStorage.getItem('userSession')).userId : 
-      'anonymous';
+    const userId = Utils.isUserLoggedIn() ? JSON.parse(localStorage.getItem('userSession')).userId : 'anonymous';
     
     // Usa o ForumManager para incrementar visualização
     const wasIncremented = await forumManager.incrementTopicView(topicId, userId);

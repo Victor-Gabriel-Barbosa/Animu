@@ -20,7 +20,7 @@ class ForumManager {
       
       // Inicializa dados no localStorage se não existirem
       if (!localStorage.getItem('forum_topics')) localStorage.setItem('forum_topics', JSON.stringify([]));
-      if (!localStorage.getItem('forum_views')) localStorage.setItem('forum_views', JSON.stringify({}));
+      if (!localStorage.getItem('forumViews')) localStorage.setItem('forumViews', JSON.stringify({}));
     }
   }
 
@@ -670,7 +670,7 @@ class ForumManager {
     if (this.useLocalStorage) {
       try {
         // Obtém ou inicializa o registro de visualizações
-        const viewsData = JSON.parse(localStorage.getItem('forum_views') || '{}');
+        const viewsData = JSON.parse(localStorage.getItem('forumViews') || '{}');
         const viewId = `${userId}_${topicId}`;
         
         const now = new Date();
@@ -684,7 +684,7 @@ class ForumManager {
         
         // Atualiza o registro de visualização
         viewsData[viewId] = now.toISOString();
-        localStorage.setItem('forum_views', JSON.stringify(viewsData));
+        localStorage.setItem('forumViews', JSON.stringify(viewsData));
         
         // Incrementa a contagem de visualizações
         const topics = JSON.parse(localStorage.getItem('forum_topics') || '[]');
@@ -704,7 +704,7 @@ class ForumManager {
     
     try {
       // Define uma coleção para rastrear visualizações
-      const viewsCollection = this.db.collection('forum_views');
+      const viewsCollection = this.db.collection('forumViews');
       const viewId = `${userId}_${topicId}`;
       const viewRef = viewsCollection.doc(viewId);
       

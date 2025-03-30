@@ -1,8 +1,8 @@
-// Sistema de Comentários do Animu
-// Este módulo contém todas as funcionalidades relacionadas a comentários de animes
-
+/**
+ * Classe do sistema de comentários de animes
+ * Gerencia comentários, avaliações e moderação de comentários
+ */
 class AnimeChat {
-  // Constantes como propriedades estáticas
   static MAX_COMMENT_LENGTH = 500; // Limite de 500 caracteres para comentários
   
   // Define os emojis de avaliação como propriedade estática
@@ -14,10 +14,6 @@ class AnimeChat {
     { max: 80, emoji: '😊' },
     { max: Infinity, emoji: '🤩' }
   ];
-
-  constructor() {
-    // Inicializações, se necessário
-  }
 
   // Gerenciamento de sistema de comentários
   async loadComments(animeTitle) {
@@ -132,17 +128,40 @@ class AnimeChat {
     `;
   }
 
-  // Sistema de moderação de comentários
+  /**
+   * Sistema de moderação de comentários
+   * @param {string} animeTitle - Título do anime
+   * @param {string} commentId - ID do comentário a ser excluído
+   * @returns {Promise<boolean>} Sucesso da operação
+   */
   async deleteComment(animeTitle, commentId) {
     try {
-      // Usa o método do AnimeManager para excluir o comentário
-      const success = await animeManager.deleteComment(commentId);
+      if (!commentId) {
+        console.error('ID do comentário não fornecido');
+        return false;
+      }
       
-      if (success) this.updateAnimeStats(animeTitle); // Atualiza as estatísticas em tempo real
+      // Tenta excluir o comentário
+      const result = await animeManager.deleteComment(commentId);
       
-      return success;
+      if (result) {
+        console.log(`Comentário ID ${commentId} excluído com sucesso`);
+        
+        // Atualiza a interface imediatamente removendo o elemento DOM
+        const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
+        if (commentElement) commentElement.remove();
+        
+        // Atualiza as estatísticas do anime
+        this.updateAnimeStats(animeTitle);
+      
+        return true;
+      } else {
+        console.error(`Falha ao excluir comentário ID ${commentId}`);
+        return false;
+      }
     } catch (e) {
       console.error('Erro ao deletar comentário:', e);
+      alert('Não foi possível excluir o comentário. Por favor, tente novamente mais tarde.');
       return false;
     }
   }
