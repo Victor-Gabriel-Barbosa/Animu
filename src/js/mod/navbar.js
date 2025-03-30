@@ -132,6 +132,9 @@ class Navbar {
 
     // Adiciona handler para fechar menu em telas pequenas
     this.handleOutsideClick = this.handleOutsideClick.bind(this);
+    
+    // Inicializa o gerenciador de usuários
+    this.userManager = new UserManager();
   }
 
   // Gera o painel do usuário com avatar e opções de login/logout
@@ -139,16 +142,17 @@ class Navbar {
     const userSession = JSON.parse(localStorage.getItem('userSession'));
     const themeSection = window.ThemeManager.getThemeSectionTemplate(); // Usa o template do ThemeManager global
 
+    // Retorna um template inicial, que será atualizado após carregar do Firestore
     if (userSession) {
       return `
         <div class="relative">
           <button id="user-dropdown-btn" class="flex items-center focus:outline-none" title="Menu do usuário">
-            <img class="h-10 w-10 rounded-full object-cover" src="${userSession.avatar || 'https://ui-avatars.com/api/?name=User&background=random'}" alt="Avatar do Usuário" />
+            <img class="h-10 w-10 rounded-full object-cover user-avatar" src="${userSession.avatar || 'https://ui-avatars.com/api/?name=User&background=random'}" alt="Avatar do Usuário" />
           </button>
           <div id="user-dropdown" class="user-dropdown hidden">
             <div class="user-info-section">
               <div class="user-info-header">
-                <img class="h-12 w-12 rounded-full object-cover" src="${userSession.avatar || 'https://ui-avatars.com/api/?name=User&background=random'}" alt="Avatar do Usuário" />
+                <img class="h-12 w-12 rounded-full object-cover user-info-avatar" src="${userSession.avatar || 'https://ui-avatars.com/api/?name=User&background=random'}" alt="Avatar do Usuário" />
                 <div class="user-info-text">
                   <div class="user-name">${userSession.name || userSession.username || 'Usuário'}</div>
                   <div class="user-email">${userSession.email || ''}</div>
@@ -210,12 +214,80 @@ class Navbar {
 
     // Destaca o link da página atual
     this.highlightCurrentPage();
-
-    this.checkLoginStatus();
+    
+    // Inicializa componentes de UI
     this.initSideMenu();
+    this.initNavigationToggle();
+    
+    // Carrega os dados do usuário do Firestore
+    this.loadUserData();
+  }
+  
+  // Método para carregar dados do usuário do Firestore
+  async loadUserData() {
+    const userSession = JSON.parse(localStorage.getItem('userSession'));
+    
+    if (userSession && userSession.userId) {
+      try {
+        // Busca dados atualizados do usuário no Firestore
+        const userData = await this.userManager.getUserById(userSession.userId);
+        
+        if (userData) {
+          // Atualiza o localStorage com os dados mais recentes
+          const updatedSession = {
+            ...userSession,
+            name: userData.name || userSession.name,
+            username: userData.username || userSession.username,
+            email: userData.email || userSession.email,
+            avatar: userData.avatar || userSession.avatar,
+            isAdmin: userData.isAdmin || userSession.isAdmin,
+            isPremium: userData.isPremium || userSession.isPremium
+          };
+          
+          localStorage.setItem('userSession', JSON.stringify(updatedSession));
+          
+          // Atualiza a UI com os dados do Firestore
+          this.updateUserPanel(userData);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar dados do usuário do Firestore:", error);
+      }
+    }
+    
+    // Inicializa os componentes que dependem dos dados do usuário
+    this.checkLoginStatus();
     this.initUserDropdown();
     this.initAuthDropdown();
-    this.initNavigationToggle();
+  }
+  
+  // Método para atualizar o painel do usuário com dados do Firestore
+  updateUserPanel(userData) {
+    // Atualiza o avatar do usuário na navbar
+    const avatarImg = document.querySelector('.user-avatar');
+    const infoAvatarImg = document.querySelector('.user-info-avatar');
+    const userName = document.querySelector('.user-name');
+    const userEmail = document.querySelector('.user-email');
+    const userType = document.querySelector('.user-type');
+    
+    if (avatarImg && userData.avatar) {
+      avatarImg.src = userData.avatar;
+    }
+    
+    if (infoAvatarImg && userData.avatar) {
+      infoAvatarImg.src = userData.avatar;
+    }
+    
+    if (userName) {
+      userName.textContent = userData.name || userData.username || 'Usuário';
+    }
+    
+    if (userEmail) {
+      userEmail.textContent = userData.email || '';
+    }
+    
+    if (userType) {
+      userType.textContent = userData.isAdmin ? 'Administrador' : (userData.isPremium ? 'Assinante Premium' : 'Conta Padrão');
+    }
   }
 
   // Marca o link ativo baseado na URL atual, tratando páginas normais e admin
@@ -559,7 +631,7 @@ class Navbar {
         </svg>
       ` : `
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-          <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+          <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73-4.39 6-7.5 11-7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
         </svg>
       `;
       

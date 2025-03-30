@@ -6,7 +6,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Animu - Sobre</title>
-  
+
   <!-- Importa fontes e estilos -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="src/css/animu.css">
@@ -40,8 +40,8 @@
           </div>
           <!-- Logo da plataforma -->
           <div class="flex-1 text-center mt-6 md:mt-0">
-            <img src="src/assets/images/favicon/web-app-manifest-512x512.png" alt="Animu Logo" 
-                 class="max-w-[150px] sm:max-w-[200px] mx-auto transition-transform hover:scale-105 duration-300">
+            <img src="src/assets/images/favicon/web-app-manifest-512x512.png" alt="Animu Logo"
+              class="max-w-[150px] sm:max-w-[200px] mx-auto transition-transform hover:scale-105 duration-300">
           </div>
         </div>
       </section>
@@ -91,15 +91,18 @@
       <section>
         <h2 class="gradient-text text-xl sm:text-2xl mb-4 sm:mb-6">Entre em Contato</h2>
         <div class="contact-section flex flex-col space-y-4 sm:space-y-3">
-          <a href="mailto:victorgabrielbarbosa88@gmail.com" class="contact-link flex items-center p-3 rounded-lg transition-colors">
+          <a href="mailto:victorgabrielbarbosa88@gmail.com"
+            class="contact-link flex items-center p-3 rounded-lg transition-colors">
             <i class="fas fa-envelope mr-2 text-lg"></i>
             <span class="text-sm sm:text-base truncate">victorgabrielbarbosa88@gmail.com</span>
           </a>
-          <a href="mailto:guilhermeepifanio14@gmail.com" class="contact-link flex items-center p-3 rounded-lg transition-colors">
+          <a href="mailto:guilhermeepifanio14@gmail.com"
+            class="contact-link flex items-center p-3 rounded-lg transition-colors">
             <i class="fas fa-envelope mr-2 text-lg"></i>
             <span class="text-sm sm:text-base truncate">guilhermeepifanio14@gmail.com</span>
           </a>
-          <a href="https://github.com/animu" target="_blank" class="contact-link flex items-center p-3 rounded-lg transition-colors">
+          <a href="https://github.com/animu" target="_blank"
+            class="contact-link flex items-center p-3 rounded-lg transition-colors">
             <i class="fab fa-github mr-2 text-lg"></i>
             <span class="text-sm sm:text-base">GitHub</span>
           </a>
@@ -113,6 +116,13 @@
       </div>
     </div>
   </div>
+
+  <!-- Scripts do Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <script src="src/js/db/firebase-config.js"></script>
+  <script src="src/js/db/users-manager.js"></script>
 
   <!-- Importa scripts -->
   <script src="src/js/mod/navbar.js"></script>

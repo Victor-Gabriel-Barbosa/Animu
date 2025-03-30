@@ -669,19 +669,16 @@ function setupEventListeners(user, isOwnProfile) {
       const newAvatar = previewAvatar.src;
 
       try {
-        // Primeiro atualiza o avatar usando o método específico
-        if (newAvatar !== user.avatar) {
-          await userManager.updateUserAvatar(user.id, newAvatar);
-        }
-        
-        // Atualiza os outros dados do usuário
+        // Atualiza os dados do usuário
         const updatedUser = {
           ...user,
           displayName,
           email,
-          favoriteGenres: selectedGenres
+          favoriteGenres: selectedGenres,
+          avatar: newAvatar 
         };
 
+        // Salva todos os dados de uma vez
         await userManager.saveUser(updatedUser);
 
         // Atualiza a página
