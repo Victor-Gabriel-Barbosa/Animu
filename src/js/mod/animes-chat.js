@@ -15,6 +15,45 @@ class AnimeChat {
     { max: Infinity, emoji: '🤩' }
   ];
 
+  // Novo construtor para inicializar estilos de votação
+  constructor() {
+    this.addVoteButtonStyles();
+  }
+
+  // Adiciona estilos CSS para os botões de votação
+  addVoteButtonStyles() {
+    const styleId = 'vote-button-styles';
+    if (document.getElementById(styleId)) return;
+    
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = `
+      .vote-btn.loading {
+        opacity: 0.7;
+        pointer-events: none;
+        position: relative;
+      }
+      
+      .vote-btn.loading::after {
+        content: '';
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 1s ease-in-out infinite;
+        top: calc(50% - 5px);
+        left: calc(50% - 5px);
+      }
+      
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
   // Gerenciamento de sistema de comentários
   async loadComments(animeTitle) {
     try {
@@ -166,7 +205,7 @@ class AnimeChat {
     }
   }
 
-  // Sistema de votação em comentários
+  // Sistema de votação em comentários - versão atualizada
   async voteComment(animeTitle, commentId, voteType) {
     try {
       const currentUser = JSON.parse(localStorage.getItem('userSession'))?.username;
@@ -175,16 +214,67 @@ class AnimeChat {
         return false;
       }
 
+      // Mostra indicador de carregamento
+      this.setVoteButtonLoading(commentId, voteType, true);
+
       // Usa o método do AnimeManager para votar no comentário
-      await animeManager.voteComment(commentId, currentUser, voteType);
+      const result = await animeManager.voteComment(commentId, currentUser, voteType);
+      
+      // Atualiza a UI apenas para este comentário específico
+      this.updateCommentInUI(commentId, result.comment);
       
       // Atualiza as estatísticas em tempo real
       this.updateAnimeStats(animeTitle);
       
+      // Remove indicador de carregamento
+      this.setVoteButtonLoading(commentId, voteType, false);
+      
       return true;
     } catch (e) {
       console.error('Erro ao votar:', e);
+      
+      // Remove indicador de carregamento em caso de erro
+      this.setVoteButtonLoading(commentId, voteType, false);
+      
       return false;
+    }
+  }
+
+  // Novo método para indicador de carregamento nos botões de voto
+  setVoteButtonLoading(commentId, voteType, isLoading) {
+    const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
+    if (!commentElement) return;
+    
+    const button = commentElement.querySelector(`.vote-btn-${voteType}`);
+    if (button) {
+      button.classList.toggle('loading', isLoading);
+      button.disabled = isLoading;
+    }
+  }
+
+  // Novo método para atualizar apenas um comentário específico no DOM
+  updateCommentInUI(commentId, updatedComment) {
+    const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
+    if (!commentElement) return;
+    
+    // Atualiza os contadores de likes/dislikes
+    const likesCount = commentElement.querySelector('.like-count');
+    const dislikesCount = commentElement.querySelector('.dislike-count');
+    
+    if (likesCount) likesCount.textContent = updatedComment.likes?.length || 0;
+    if (dislikesCount) dislikesCount.textContent = updatedComment.dislikes?.length || 0;
+    
+    // Atualiza o estado dos botões para o usuário atual
+    const currentUser = JSON.parse(localStorage.getItem('userSession'))?.username;
+    const likeButton = commentElement.querySelector('.vote-btn-like');
+    const dislikeButton = commentElement.querySelector('.vote-btn-dislike');
+    
+    if (likeButton) {
+      likeButton.classList.toggle('active', updatedComment.likes?.includes(currentUser) || false);
+    }
+    
+    if (dislikeButton) {
+      dislikeButton.classList.toggle('active', updatedComment.dislikes?.includes(currentUser) || false);
     }
   }
 
@@ -376,7 +466,7 @@ class AnimeChat {
     if (!updateInput && slider) slider.value = Math.round(value);
   }
 
-  // Renderiza comentário individual com controles de moderação
+  // Renderiza comentário individual com controles de moderação (atualizado)
   renderComment(comment, animeTitle) {
     const currentUser = JSON.parse(localStorage.getItem('userSession'))?.username;
     const isCommentOwner = currentUser === comment.username;
@@ -433,24 +523,24 @@ class AnimeChat {
             ` : ''}
             <div class="vote-buttons mt-2">
               <button 
-                class="vote-btn ${userVote === 'like' ? 'active' : ''}"
-                onclick="animeChat.voteComment('${animeTitle}', '${comment.id}', 'like') && animeChat.updateCommentsList('${animeTitle}')"
+                class="vote-btn vote-btn-like ${userVote === 'like' ? 'active' : ''}"
+                onclick="animeChat.voteComment('${animeTitle}', '${comment.id}', 'like')"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M7 10v12" />
                   <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z" />
                 </svg>
-                <span class="vote-count">${comment.likes?.length || 0}</span>
+                <span class="vote-count like-count">${comment.likes?.length || 0}</span>
               </button>
               <button 
-                class="vote-btn ${userVote === 'dislike' ? 'active' : ''}"
-                onclick="animeChat.voteComment('${animeTitle}', '${comment.id}', 'dislike') && animeChat.updateCommentsList('${animeTitle}')"
+                class="vote-btn vote-btn-dislike ${userVote === 'dislike' ? 'active' : ''}"
+                onclick="animeChat.voteComment('${animeTitle}', '${comment.id}', 'dislike')"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M17 14V2" />
                   <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22h0a3.13 3.13 0 0 1-3-3.88Z" />
                 </svg>
-                <span class="vote-count">${comment.dislikes?.length || 0}</span>
+                <span class="vote-count dislike-count">${comment.dislikes?.length || 0}</span>
               </button>
             </div>
           </div>
