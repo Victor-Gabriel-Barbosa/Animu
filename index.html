@@ -41,46 +41,46 @@
 
     <div class="container mx-auto px-4 max-w-6xl text-center">
       <div class="section-wrapper">
-        <div class="index-sections grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="index-sections grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
           <!-- Card: Reviews recentes -->
-          <div class="index-card">
-            <div class="index-card-header gradient-purple"></div>
-            <h2 class="index-card-title text-xl md:text-2xl">Últimos Reviews</h2>
-            <ul id="latest-reviews" class="index-card-list mt-4">
+          <div class="index-card p-4 sm:p-5 md:p-6 transition-all duration-300 hover:shadow-lg">
+            <div class="index-card-header gradient-purple h-2 sm:h-3 rounded-t-md"></div>
+            <h2 class="index-card-title text-lg sm:text-xl md:text-2xl mt-3 sm:mt-4 font-semibold">Últimos Reviews</h2>
+            <ul id="latest-reviews" class="index-card-list mt-3 sm:mt-4 space-y-2 sm:space-y-3">
               <!-- Preenchido via JS -->
             </ul>
           </div>
 
           <!-- Card: Categorias populares -->
-          <div class="index-card">
-            <div class="index-card-header gradient-green"></div>
-            <h2 class="index-card-title text-xl md:text-2xl">Categorias Populares</h2>
-            <ul id="popular-categories" class="index-card-list mt-4">
+          <div class="index-card p-4 sm:p-5 md:p-6 transition-all duration-300 hover:shadow-lg">
+            <div class="index-card-header gradient-green h-2 sm:h-3 rounded-t-md"></div>
+            <h2 class="index-card-title text-lg sm:text-xl md:text-2xl mt-3 sm:mt-4 font-semibold">Categorias Populares</h2>
+            <ul id="popular-categories" class="index-card-list mt-3 sm:mt-4 space-y-2 sm:space-y-3">
               <!-- Preenchido via JS -->
             </ul>
           </div>
 
           <!-- Card: Novidades e lançamentos -->
-          <div class="index-card md:col-span-2 lg:col-span-1">
-            <div class="index-card-header gradient-pink"></div>
-            <h2 class="index-card-title text-xl md:text-2xl">Novidades</h2>
-            <ul class="index-card-list mt-4">
-              <li class="index-card-item">
-                <a href="animes.html?status=Anunciado" class="index-card-link">
-                  <span class="index-card-link-title">Próximos Lançamentos</span>
-                  <p class="index-card-link-subtitle">Animes que vão estrear</p>
+          <div class="index-card md:col-span-2 lg:col-span-1 p-4 sm:p-5 md:p-6 transition-all duration-300 hover:shadow-lg flex flex-col">
+            <div class="index-card-header gradient-pink h-2 sm:h-3 rounded-t-md"></div>
+            <h2 class="index-card-title text-lg sm:text-xl md:text-2xl mt-3 sm:mt-4 font-semibold">Novidades</h2>
+            <ul class="index-card-list mt-3 sm:mt-4 space-y-2 sm:space-y-3 flex-1 flex flex-col justify-between">
+              <li class="index-card-item transition-all duration-200 hover:translate-x-1">
+                <a href="animes.html?status=Anunciado" class="index-card-link block p-2 sm:p-3 rounded-md hover:bg-opacity-10 hover:bg-white">
+                  <span class="index-card-link-title text-sm sm:text-base md:text-lg font-medium block">Próximos Lançamentos</span>
+                  <p class="index-card-link-subtitle text-xs sm:text-sm text-opacity-80 mt-1">Animes que vão estrear</p>
                 </a>
               </li>
-              <li class="index-card-item">
-                <a href="" id="current-season-link" class="index-card-link">
-                  <span class="index-card-link-title">Melhores da Temporada</span>
-                  <p class="index-card-link-subtitle" id="current-season-text">Top animes do momento</p>
+              <li class="index-card-item transition-all duration-200 hover:translate-x-1">
+                <a href="" id="current-season-link" class="index-card-link block p-2 sm:p-3 rounded-md hover:bg-opacity-10 hover:bg-white">
+                  <span class="index-card-link-title text-sm sm:text-base md:text-lg font-medium block">Melhores da Temporada</span>
+                  <p class="index-card-link-subtitle text-xs sm:text-sm text-opacity-80 mt-1" id="current-season-text">Top animes do momento</p>
                 </a>
               </li>
-              <li class="index-card-item">
-                <a href="recommendation.html" class="index-card-link">
-                  <span class="index-card-link-title">Recomendações</span>
-                  <p class="index-card-link-subtitle">Seleção especial</p>
+              <li class="index-card-item transition-all duration-200 hover:translate-x-1">
+                <a href="recommendation.html" class="index-card-link block p-2 sm:p-3 rounded-md hover:bg-opacity-10 hover:bg-white">
+                  <span class="index-card-link-title text-sm sm:text-base md:text-lg font-medium block">Recomendações</span>
+                  <p class="index-card-link-subtitle text-xs sm:text-sm text-opacity-80 mt-1">Seleção especial</p>
                 </a>
               </li>
             </ul>

@@ -282,7 +282,6 @@ tbody tr:nth-child(5) { animation-delay: 0.5s; }
   padding: 4rem 0;
   border-top: 2px solid var(--primary-color);
   border-bottom: 2px solid var(--primary-color);
-  border-radius: 20px;
 }
 
 .parallax-section::before {

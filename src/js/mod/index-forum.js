@@ -101,6 +101,7 @@ function renderTopics() {
   const categoryFilters = `
     <div class="category-filters mb-6 flex gap-2 overflow-x-auto pb-2 px-1 -mx-1 snap-x snap-mandatory scrollbar-hide">
       <button class="category-filter px-4 py-2 rounded-full border transition-colors hover:bg-purple-700 whitespace-nowrap flex-shrink-0 snap-start"
+              data-category="all"
               onclick="filterTopicsByCategory()">
         🔍 Todas
       </button>
@@ -114,27 +115,90 @@ function renderTopics() {
     </div>
   `;
 
+  // Obtém a categoria ativa do filtro
+  const activeCategory = localStorage.getItem('activeCategoryFilter') || 'all';
+  
+  // Verifica se não há tópicos e exibe mensagem apropriada
+  if (forumTopics.length === 0) {
+    const message = activeCategory === 'all' 
+      ? `<div class="text-center py-12">
+          <div class="text-6xl mb-4">🔍</div>
+          <h3 class="text-xl font-medium mb-2">Nenhuma discussão encontrada</h3>
+          <p class="text-gray-600">Seja o primeiro a iniciar uma discussão no fórum!</p>
+          <button onclick="document.getElementById('new-topic-btn').click()" 
+                  class="mt-4 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+            Criar discussão
+          </button>
+        </div>`
+      : `<div class="text-center py-12">
+          <div class="text-6xl mb-4">${FORUM_CONFIG.categories.find(c => c.id === activeCategory)?.icon || '🔍'}</div>
+          <h3 class="text-xl font-medium mb-2">Nenhuma discussão na categoria "${FORUM_CONFIG.categories.find(c => c.id === activeCategory)?.name || 'selecionada'}"</h3>
+          <p class="text-gray-600">Seja o primeiro a iniciar uma discussão nesta categoria!</p>
+          <div class="mt-4 flex justify-center gap-4">
+            <button onclick="filterTopicsByCategory('all')" 
+                    class="px-4 py-2 border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-600 hover:text-white transition-colors">
+              Ver todas as categorias
+            </button>
+            <button onclick="document.getElementById('new-topic-btn').click()" 
+                    class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+              Criar discussão
+            </button>
+          </div>
+        </div>`;
+    
+    forumTopicsContainer.innerHTML = categoryFilters + message;
+    highlightActiveCategory(activeCategory);
+    return;
+  }
+
   // Organiza tópicos por categoria
   const topicsByCategory = FORUM_CONFIG.categories.reduce((acc, cat) => {
     acc[cat.id] = forumTopics.filter(topic => topic.category === cat.id);
     return acc;
   }, {});
 
-  forumTopicsContainer.innerHTML = categoryFilters + Object.entries(topicsByCategory)
-    .map(([catId, topics]) => {
-      const category = FORUM_CONFIG.categories.find(c => c.id === catId);
-      return topics.length ? `
-        <div class="category-section mb-8">
-          <h3 class="text-2xl font-bold mb-4 px-1">${category.icon} ${category.name}</h3>
-          ${topics.map(topic => renderTopicCard(topic, userId)).join('')}
-        </div>
-      ` : '';
-    }).join('');
+  // Se estiver filtrando por uma categoria específica, mostrar apenas essa categoria
+  if (activeCategory !== 'all') {
+    const filteredCategory = FORUM_CONFIG.categories.find(c => c.id === activeCategory);
+    const topics = topicsByCategory[activeCategory] || [];
+    
+    forumTopicsContainer.innerHTML = categoryFilters + 
+      `<div class="category-section mb-8">
+        <h3 class="text-2xl font-bold mb-4 px-1">${filteredCategory.icon} ${filteredCategory.name}</h3>
+        ${topics.length 
+          ? topics.map(topic => renderTopicCard(topic, userId)).join('')
+          : `<div class="card p-8 text-center">
+              <div class="text-4xl mb-3">${filteredCategory.icon}</div>
+              <p class="text-lg mb-2">Nenhuma discussão nesta categoria</p>
+              <p class="text-gray-600 mb-4">Seja o primeiro a iniciar uma conversa sobre ${filteredCategory.name}!</p>
+              <button onclick="document.getElementById('new-topic-btn').click()" 
+                      class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                Criar discussão
+              </button>
+            </div>`
+        }
+      </div>`;
+  } else {
+    // Se não estiver filtrando, mostrar todas as categorias
+    forumTopicsContainer.innerHTML = categoryFilters + Object.entries(topicsByCategory)
+      .map(([catId, topics]) => {
+        const category = FORUM_CONFIG.categories.find(c => c.id === catId);
+        return `
+          <div class="category-section mb-8">
+            <h3 class="text-2xl font-bold mb-4 px-1">${category.icon} ${category.name}</h3>
+            ${topics.length 
+              ? topics.map(topic => renderTopicCard(topic, userId)).join('')
+              : `<div class="card p-5 text-center">
+                  <p class="text-gray-600">Nenhuma discussão em ${category.name}</p>
+                </div>`
+            }
+          </div>
+        `;
+      }).join('');
+  }
 
-  // Adiciona event listeners para filtros
-  document.querySelectorAll('.category-filter').forEach(btn => {
-    btn.addEventListener('click', () => filterTopicsByCategory(btn.dataset.category));
-  });
+  // Destacar a categoria selecionada após renderizar
+  highlightActiveCategory(activeCategory);
 }
 
 // Renderiza a lista de tópicos do fórum
@@ -223,9 +287,8 @@ function renderTopicCard(topic, userId) {
 
   return `
     <div class="card p-4 sm:p-6 mb-4 transform transition-all overflow-hidden rounded-lg shadow-sm hover:shadow-md" 
-         id="topic-${topic.id}"
-         onclick="incrementTopicViews('${topic.id}')">
-      <div class="topic-content overflow-hidden">
+         id="topic-${topic.id}">
+      <div class="topic-content overflow-hidden" onclick="incrementTopicViews('${topic.id}')">
         <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
           <!-- Avatar com tamanho adaptável -->
           <img class="h-10 w-10 sm:h-12 sm:w-12 rounded-full object-cover flex-shrink-0"
@@ -350,7 +413,7 @@ function renderTopicCard(topic, userId) {
       
       <!-- Estatísticas do tópico com melhor layout mobile -->
       <div class="flex flex-wrap gap-2 mt-4 text-sm text-gray-600">
-        <span class="badge">${topic.views || 0} 👀</span>
+        <span class="badge views-count">${topic.views || 0} 👀</span>
         <span class="badge">${topic.replies.length} 💬</span>
         <span class="badge">${topic.likes} 👍</span>
       </div>
@@ -962,30 +1025,35 @@ async function loadForumData(categoryId = null) {
   }
 }
 
-// Filtra tópicos por categoria com melhor UI responsiva
-async function filterTopicsByCategory(categoryId) {
-  // Remove a classe ativa de todos os botões
+// Destaca a categoria ativa nos filtros
+function highlightActiveCategory(categoryId, shouldScroll = false) {
   document.querySelectorAll('.category-filter').forEach(btn => {
     btn.classList.remove('bg-purple-700', 'text-white');
   });
 
-  // Adiciona classe ativa ao botão selecionado
-  if (categoryId) {
-    const selectedButton = document.querySelector(`[data-category="${categoryId}"]`);
-    if (selectedButton) {
-      selectedButton.classList.add('bg-purple-700', 'text-white');
-      // Garante que o botão selecionado fique visível (scroll)
-      selectedButton.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-    }
-  } else {
-    // Se não houver categoria selecionada, seleciona o botão "Todas"
-    const allButton = document.querySelector('.category-filter:not([data-category])');
-    if (allButton) allButton.classList.add('bg-purple-700', 'text-white');
+  const selector = categoryId === 'all' 
+    ? '[data-category="all"]' 
+    : `[data-category="${categoryId}"]`;
+    
+  const selectedButton = document.querySelector(selector);
+  if (selectedButton) {
+    selectedButton.classList.add('bg-purple-700', 'text-white');
+    // Rolagem suave apenas se explicitamente solicitado
+    if (shouldScroll) selectedButton.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
   }
+}
 
+// Filtra tópicos por categoria com melhor UI responsiva
+async function filterTopicsByCategory(categoryId = 'all') {
+  // Salva a categoria ativa no localStorage para persistência
+  localStorage.setItem('activeCategoryFilter', categoryId);
+  
   // Carrega tópicos com ou sem filtro de categoria
-  await loadForumData(categoryId);
+  await loadForumData(categoryId === 'all' ? null : categoryId);
   renderTopics();
+  
+  // Destaca a categoria selecionada após renderizar, com scroll ativado quando o usuário clica
+  highlightActiveCategory(categoryId, true);
 }
 
 /**
@@ -1001,10 +1069,20 @@ async function incrementTopicViews(topicId) {
     // Usa o ForumManager para incrementar visualização
     const wasIncremented = await forumManager.incrementTopicView(topicId, userId);
     
-    // Se a visualização foi contabilizada, atualiza a lista de tópicos
+    // Se a visualização foi contabilizada, atualiza apenas o contador deste tópico
     if (wasIncremented) {
-      await loadForumData();
-      renderTopics();
+      // Encontra o tópico na lista em memória
+      const topicIndex = forumTopics.findIndex(t => t.id === topicId);
+      if (topicIndex !== -1) {
+        // Incrementa o contador localmente
+        forumTopics[topicIndex].views = (forumTopics[topicIndex].views || 0) + 1;
+        
+        // Atualiza apenas o elemento de visualização no DOM
+        const viewCounter = document.querySelector(`#topic-${topicId} .badge:first-child`);
+        if (viewCounter) {
+          viewCounter.textContent = `${forumTopics[topicIndex].views} 👀`;
+        }
+      }
     }
   } catch (error) {
     console.error('Erro ao incrementar visualização:', error);
@@ -1024,8 +1102,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Carrega a lista de palavrões
     await loadBadWords();
     
-    // Carrega os tópicos usando o ForumManager
-    await loadForumData();
+    // Verifica se há um filtro ativo salvo
+    const activeCategory = localStorage.getItem('activeCategoryFilter') || 'all';
+    
+    // Carrega os tópicos usando o ForumManager com filtro se necessário
+    await loadForumData(activeCategory === 'all' ? null : activeCategory);
     
     // Inicialização do Quill
     initQuillEditor();
@@ -1033,6 +1114,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Renderiza tópicos e popula categorias
     renderTopics();
     populateCategories();
+    
+    // Garante que o filtro ativo seja destacado, mas SEM fazer scroll
+    highlightActiveCategory(activeCategory, false);
   } catch (error) {
     console.error('Erro ao inicializar o fórum:', error);
     alert('Houve um problema ao carregar o fórum. Por favor, atualize a página.');
