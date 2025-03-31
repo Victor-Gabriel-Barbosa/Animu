@@ -488,7 +488,7 @@ async function confirmShare(animeTitle, coverImage) {
       return;
     }
 
-    const chat = new FirestoreChat(); // Usando FirestoreChat em vez de Chat
+    const chat = new ProfileChatManager(); // Usando ProfileChatManager em vez de Chat
     const sessionData = JSON.parse(localStorage.getItem('userSession'));
 
     // Cria mensagem especial para compartilhamento de anime
@@ -1324,7 +1324,7 @@ function restoreChat(friendId) {
  */
 async function loadChatMessages(senderId, receiverId) {
   try {
-    const chat = new FirestoreChat(); // Usando FirestoreChat em vez de Chat
+    const chat = new ProfileChatManager(); // Usando ProfileChatManager em vez de Chat
     const messages = await chat.getMessages(senderId, receiverId); // Agora retorna Promise
     const container = document.getElementById(`chat-messages-${receiverId}`);
     
@@ -1427,7 +1427,7 @@ async function sendMessage(event, senderId, receiverId) {
 
   if (!message) return;
 
-  const chat = new FirestoreChat(); // Usando FirestoreChat em vez de Chat
+  const chat = new ProfileChatManager(); // Usando ProfileChatManager em vez de Chat
   await chat.sendMessage(senderId, receiverId, message);
 
   // A função loadChatMessages será chamada pelo listener em tempo real

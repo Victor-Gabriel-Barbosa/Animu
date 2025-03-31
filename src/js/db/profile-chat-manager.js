@@ -59,7 +59,7 @@ class Chat {
  * Implementa armazenamento no Firestore com fallback para localStorage
  * Estende a classe Chat original
  */
-class FirestoreChat extends Chat {
+class ProfileChatManager extends Chat {
   constructor() {
     super(); // Inicializa a classe base (Chat) com o localStorage
     
@@ -344,3 +344,6 @@ class FirestoreChat extends Chat {
     return unsubscribe;
   }
 }
+
+// Exporta a classe para uso em outros módulos
+window.ProfileChatManager = ProfileChatManager;
