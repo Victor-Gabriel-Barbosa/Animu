@@ -26,10 +26,10 @@ document.addEventListener('DOMContentLoaded', function () {
     theme: 'snow',
     modules: {
       toolbar: [
-        [{ 'header': [1, 2, 3, false] }],
-        ['bold', 'italic', 'underline'],
+        ['bold', 'italic', 'underline', 'strike'],
+        ['blockquote', 'code-block'],
         [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-        [{ 'align': [] }],
+        [{ 'header': [1, 2, false] }],
         ['link', 'image'],
         ['clean']
       ]

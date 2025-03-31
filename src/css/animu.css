@@ -270,6 +270,11 @@ tbody tr:nth-child(5) { animation-delay: 0.5s; }
   padding: 0 var(--spacing-lg);
 }
 
+.ql-editor.ql-blank::before {
+  color: var(--text-color) !important;
+  opacity: 0.6 !important;
+}
+
 .parallax-container {
   position: relative;
   width: 100%;

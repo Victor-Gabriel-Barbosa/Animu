@@ -17,7 +17,7 @@
   <script>
     // Verifica permissões de administrador
     (function () {
-      if (!Utils.isUserAdmin()) {
+      if (!AnimuUtils.isUserAdmin()) {
         alert('Acesso negado. Esta página é restrita a administradores.');
         window.location.href = 'index.html';
       }

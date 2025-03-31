@@ -1128,16 +1128,6 @@ let quillEditor;
 
 // Função de inicialização do editor Quill
 function initQuillEditor() {
-  // Adiciona estilos personalizados para o placeholder do Quill
-  const styleSheet = document.createElement('style');
-  styleSheet.textContent = `
-    .ql-editor.ql-blank::before {
-      color: var(--text-color);
-      opacity: 0.6;
-    }
-  `;
-  document.head.appendChild(styleSheet);
-
   quillEditor = new Quill('#topic-content', {
     theme: 'snow',
     modules: {
