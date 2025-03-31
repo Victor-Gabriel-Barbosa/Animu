@@ -419,11 +419,6 @@
   background: var(--card-shadow);
 }
 
-.admin-news-list {
-  display: grid;
-  gap: 1.5rem;
-}
-
 .admin-news-item {
   display: flex;
   gap: 1.5rem;

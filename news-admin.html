@@ -44,9 +44,8 @@
     <div class="mb-6 flex justify-center">
       <button id="add-news-btn" class="btn btn-primary group">
         <span class="flex items-center gap-2">
-          <svg class="w-5 h-5 transition-transform group-hover:rotate-90 duration-300" fill="none" viewBox="0 0 24 24"
-            stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          <svg class="w-5 h-5 transition-transform group-hover:rotate-90 duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
           </svg>
           Nova Notícia
         </span>
@@ -56,7 +55,7 @@
     <!-- Tabela de listagem de notícias -->
     <div class="rounded-xl shadow-lg">
       <div class="admin-news-list">
-        <div class="table-container">
+        <div>
           <table>
             <thead>
               <tr>
@@ -156,7 +155,7 @@
                   
                   <div class="upload-area p-8 text-center">
                     <div class="upload-prompt">
-                      <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="var(--primary-color)" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
@@ -200,29 +199,23 @@
             <!-- Botões de ação do formulário -->
             <div class="flex flex-col md:flex-row gap-3 mt-6">
               <button type="button" id="clear-btn" 
-                class="btn btn-secondary order-3 md:order-1 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
+                class="btn-action btn-secondary order-3 md:order-1 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
                 <span class="flex items-center justify-center gap-2">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
+                  <i class="fi fi-bs-trash"></i>
                   Limpar
                 </span>
               </button>
               <button type="button" id="cancel-btn"
-                class="btn btn-cancel order-2 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
+                class="btn-action btn-cancel order-2 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
                 <span class="flex items-center justify-center gap-2">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <i class="fi fi-br-circle-xmark"></i>
                   Cancelar
                 </span>
               </button>
               <button type="submit" id="save-btn"
-                class="btn btn-primary order-1 md:order-3 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
+                class="btn-action btn-primary order-1 md:order-3 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
                 <span class="flex items-center justify-center gap-2">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
+                  <i class="fi fi-br-checkbox"></i>
                   Salvar Notícia
                 </span>
               </button>

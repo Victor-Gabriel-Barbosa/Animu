@@ -1,3 +1,9 @@
+@import url('https://cdn-uicons.flaticon.com/2.6.0/uicons-bold-straight/css/uicons-bold-straight.css');
+@import url('https://cdn-uicons.flaticon.com/2.6.0/uicons-bold-rounded/css/uicons-bold-rounded.css');
+@import url('https://cdn-uicons.flaticon.com/2.6.0/uicons-regular-rounded/css/uicons-regular-rounded.css');
+@import url('https://cdn-uicons.flaticon.com/2.6.0/uicons-solid-rounded/css/uicons-solid-rounded.css');
+@import url('https://cdn-uicons.flaticon.com/2.6.0/uicons-regular-chubby/css/uicons-regular-chubby.css');
+
 /* ==========================================================================
   Índice:
   1. Variáveis e Configurações Base
@@ -129,28 +135,6 @@ h1, h2, h3, h4, h5, h6 {
 .tag-remove {
   cursor: pointer;
   color: #ff4444;
-}
-
-.table-container {
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  padding: 2rem;
-  max-width: 100%;
-  width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  position: relative;
-  margin-bottom: var(--spacing-lg);
-}
-
-.table-container::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 5px;
-  background: var(--primary-gradient);
 }
 
 table {
@@ -396,6 +380,15 @@ tbody tr:nth-child(5) { animation-delay: 0.5s; }
 .btn-action svg {
   width: 20px;
   height: 20px;
+}
+
+.fi {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-edit {

@@ -181,29 +181,23 @@ class CategoryAdmin {
         <!-- Botões -->
         <div class="flex flex-col md:flex-row gap-3 mt-6">
           <button type="button" onclick="categoryManager.clearForm()" 
-            class="btn btn-secondary order-3 md:order-1 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
+            class="btn-action btn-secondary order-3 md:order-1 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
             <span class="flex items-center justify-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
+              <i class="fi fi-bs-trash"></i>
               Limpar
             </span>
           </button>
           <button type="button" onclick="categoryManager.closeModal()" 
-            class="btn btn-cancel order-2 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
+            class="btn-action btn-cancel order-2 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
             <span class="flex items-center justify-center gap-2">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <i class="fi fi-br-circle-xmark"></i>
               Cancelar
             </span>
           </button>
           <button type="submit" 
-            class="btn btn-primary order-1 md:order-3 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
+            class="btn-action btn-primary order-1 md:order-3 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
             <span class="flex items-center justify-center gap-2">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
+              <i class="fi fi-br-checkbox"></i>
               Adicionar Categoria
             </span>
           </button>
@@ -561,8 +555,8 @@ class CategoryAdmin {
                   </td>
                   <td>
                     ${category.isSubcategory ?
-          '<span class="px-2 py-1 text-xs text-white bg-purple-100 dark:bg-purple-900 rounded-full">Subcategoria</span>' :
-          '<span class="px-2 py-1 text-xs text-white bg-blue-100 dark:bg-blue-900 rounded-full">Principal</span>'}
+                      '<span class="px-2 py-1 text-xs text-white bg-purple-100 dark:bg-purple-900 rounded-full">Subcategoria</span>' :
+                      '<span class="px-2 py-1 text-xs text-white bg-blue-100 dark:bg-blue-900 rounded-full">Principal</span>'}
                   </td>
                   <td>
                     ${category.description}
@@ -570,18 +564,10 @@ class CategoryAdmin {
                   <td>
                     <div class="action-buttons">
                       <button class="btn-action btn-edit" title="Editar" onclick="categoryManager.editCategory(${category.id})">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                        </svg>
+                        <i class="fi fi-bs-edit"></i>
                       </button>
                       <button class="btn-action btn-delete" title="Remover" onclick="categoryManager.deleteCategory(${category.id})">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <path d="M3 6h18"></path>
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                          <line x1="10" y1="11" x2="10" y2="17"></line>
-                          <line x1="14" y1="11" x2="14" y2="17"></line>
-                        </svg>
+                        <i class="fi fi-bs-trash"></i>
                       </button>
                     </div>
                   </td>

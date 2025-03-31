@@ -63,14 +63,17 @@ document.addEventListener('DOMContentLoaded', function () {
       </td>
       <td>${AnimuUtils.formatDate(user.createdAt)}</td>
       <td>
-        <div class="class="flex flex-col md:flex-row gap-3 mt-6">
+        <div class="action-buttons">
           <button onclick="toggleAdminStatus('${user.id}')"
-                  class="order-2 flex-1 w-full py-3 md:py-2 text-sm md:text-base bg-purple-600 text-white px-3 rounded hover:bg-purple-700 transition-colors">
-                  ${user.isAdmin ? 'Remover Admin' : 'Tornar Admin'}
+                  class="btn-action btn-edit"
+                  title="${user.isAdmin ? 'Remover Admin' : 'Tornar Admin'}">
+                  ${user.isAdmin ? 
+                    `<i class="fi fi-bs-shield-check"></i>` : 
+                    `<i class="fi fi-bs-shield-slash"></i>`
+                  }
           </button>
-          <button onclick="deleteUser('${user.id}')"
-                  class="mt-2 order-2 flex-1 w-full py-3 md:py-2 text-sm md:text-base bg-red-600 text-white px-3 rounded hover:bg-red-700 transition-colors">
-            Excluir
+          <button class="btn-action btn-delete" title="Remover" onclick="deleteUser('${user.id}')">
+            <i class="fi fi-bs-trash"></i>
           </button>
         </div>
       </td>
