@@ -790,7 +790,7 @@ async function loadFriends(user) {
               </a>
             </div>
             
-            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div class="flex items-center gap-2">
               <button onclick="openChat('${friend.id}')" 
                       class="action-btn text-purple-600 hover:text-purple-700"
                       title="Iniciar chat">
