@@ -2,6 +2,8 @@
 const userManager = new UserManager();
 // Inicializa o gerenciador de categorias
 const categoryManager = new CategoryManager();
+// Inicializa o gerenciador de chats para operações de chat
+const chatManager = new ProfileChatManager();
 
 document.addEventListener('DOMContentLoaded', async function () {
   // Obtém ID do usuário da URL se existir
@@ -488,7 +490,6 @@ async function confirmShare(animeTitle, coverImage) {
       return;
     }
 
-    const chat = new ProfileChatManager(); // Usando ProfileChatManager em vez de Chat
     const sessionData = JSON.parse(localStorage.getItem('userSession'));
 
     // Cria mensagem especial para compartilhamento de anime
@@ -500,9 +501,7 @@ async function confirmShare(animeTitle, coverImage) {
     };
 
     // Envia para cada amigo selecionado
-    for (const friendId of selectedFriends) {
-      await chat.sendMessage(sessionData.userId, friendId, JSON.stringify(message));
-    }
+    for (const friendId of selectedFriends) await chatManager.sendMessage(sessionData.userId, friendId, JSON.stringify(message));
 
     closeShareModal();
 
@@ -1324,8 +1323,7 @@ function restoreChat(friendId) {
  */
 async function loadChatMessages(senderId, receiverId) {
   try {
-    const chat = new ProfileChatManager(); // Usando ProfileChatManager em vez de Chat
-    const messages = await chat.getMessages(senderId, receiverId); // Agora retorna Promise
+    const messages = await chatManager.getMessages(senderId, receiverId); // Agora retorna Promise
     const container = document.getElementById(`chat-messages-${receiverId}`);
     
     // Usa userManager para obter usuários
@@ -1403,7 +1401,7 @@ async function loadChatMessages(senderId, receiverId) {
     container.scrollTop = container.scrollHeight;
     
     // Configura listener em tempo real
-    chat.listenToMessages(senderId, receiverId, updatedMessages => {
+    chatManager.listenToMessages(senderId, receiverId, updatedMessages => {
       if (updatedMessages.length > messages.length) {
         // Atualiza apenas se houver novas mensagens
         loadChatMessages(senderId, receiverId);
@@ -1427,8 +1425,7 @@ async function sendMessage(event, senderId, receiverId) {
 
   if (!message) return;
 
-  const chat = new ProfileChatManager(); // Usando ProfileChatManager em vez de Chat
-  await chat.sendMessage(senderId, receiverId, message);
+  await chatManager.sendMessage(senderId, receiverId, message);
 
   // A função loadChatMessages será chamada pelo listener em tempo real
   // mas chamamos explicitamente para garantir atualização imediata
