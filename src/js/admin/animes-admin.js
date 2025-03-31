@@ -63,7 +63,7 @@ async function loadAnimesList() {
   }
 }
 
-// Função auxiliar para renderizar a lista de animes
+// Renderiza a lista de animes
 function renderAnimesList(animes) {
   const tbody = document.getElementById('animesList');
   
@@ -117,7 +117,7 @@ function renderAnimesList(animes) {
   `).join('');
 }
 
-// Retorna classe CSS baseada no status do anime
+// Retorna a classe CSS baseada no status do anime
 function getStatusClass(status) {
   switch (status?.toLowerCase()) {
     case 'em exibição': return 'bg-green-100 text-green-800';
@@ -182,7 +182,7 @@ function showAnimeForm() {
   }, 100);
 }
 
-// Fecha formulário
+// Fecha o formulário de anime
 function closeAnimeForm() {
   const form = document.getElementById('animeForm');
 
@@ -262,7 +262,7 @@ function updateGenresList() {
   `).join('');
 }
 
-// Remove gênero
+// Remove gênero da lista
 function removeGenre(index) {
   genres.splice(index, 1);
   updateGenresList();
@@ -293,7 +293,7 @@ function initializeCategorySelector() {
   genreInput.parentNode.replaceChild(select, genreInput);
 }
 
-// Adiciona produtor ao array
+// Adiciona produtor à lista
 function addProducer() {
   const input = document.getElementById('producerInput');
   const producer = input.value.trim();
@@ -320,13 +320,13 @@ function updateProducersList() {
   `).join('');
 }
 
-// Remove produtor do array
+// Remove produtor da lista
 function removeProducer(index) {
   producers.splice(index, 1);
   updateProducersList();
 }
 
-// Adiciona licenciante ao array
+// Adiciona licenciante à lista
 function addLicensor() {
   const input = document.getElementById('licensorInput');
   const licensor = input.value.trim();
@@ -352,13 +352,13 @@ function updateLicensorsList() {
   `).join('');
 }
 
-// Remove licenciador do array
+// Remove licenciador da lista
 function removeLicensor(index) {
   licensors.splice(index, 1);
   updateLicensorsList();
 }
 
-// Carrega dados do anime para edição a partir do Firebase
+// Carrega dados do anime para edição a partir do Firestore
 async function editAnime(animeId) {
   try {
     console.log('Iniciando edição do anime com ID:', animeId);
@@ -438,7 +438,7 @@ async function editAnime(animeId) {
   }
 }
 
-// Salva anime (novo ou editado) no Firebase
+// Salva anime (novo ou editado) no Firestore
 document.getElementById('animeForm').addEventListener('submit', async function (e) {
   e.preventDefault();
   isFormSaving = true; // Define a flag antes de salvar
@@ -543,7 +543,7 @@ document.getElementById('animeForm').addEventListener('submit', async function (
   }
 });
 
-// Exclui anime do Firebase
+// Exclui anime do Firestore
 async function deleteAnime(animeId) {
   if (confirm('Tem certeza que deseja excluir este anime? Todos os comentários associados também serão excluídos.')) {
     try {
@@ -565,7 +565,7 @@ async function deleteAnime(animeId) {
   }
 }
 
-// Exporta dados dos animes do Firebase
+// Exporta dados dos animes do Firestore
 async function exportAnimes() {
   try {
     document.body.classList.add('loading');
@@ -578,7 +578,7 @@ async function exportAnimes() {
   }
 }
 
-// Importa dados dos animes para o Firebase
+// Importa dados dos animes para o Firestore
 async function importAnimes(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -838,7 +838,8 @@ function extractYouTubeId(url) {
   return null;
 }
 
-document.getElementById('trailerUrl').addEventListener('input', function (e) {
+// Configura a área de arrastar e soltar para o trailer
+document.getElementById('trailerUrl').addEventListener('input', function (e) { 
   const url = e.target.value.trim();
   if (url) handleYoutubeUrl(url, e.target, document.getElementById('trailerPreview'));
 });
@@ -858,7 +859,7 @@ function setupMediaRemoval() {
     document.getElementById('coverImageInput').value = '';
   });
 
-  // Setup para remover trailer - Atualizado
+  // Setup para remover trailer
   const removeTrailerBtn = document.getElementById('removeTrailer');
   removeTrailerBtn?.addEventListener('click', (e) => {
     e.stopPropagation();

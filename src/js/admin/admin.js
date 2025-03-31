@@ -9,7 +9,7 @@ function checkAdminAccess() {
   return true;
 }
 
-// Inicialização da página administrativa
+// Inicializa a página administrativa
 document.addEventListener('DOMContentLoaded', function () {
   if (!checkAdminAccess()) return;
 });

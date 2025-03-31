@@ -8,7 +8,7 @@ class Navbar {
           <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
         </svg>
       </button>
-      <nav class="fixed top-0 left-0 right-0" style="z-index: 100">
+      <nav class="fixed top-0 left-0 right-0" style="z-index:100">
         <div class="mx-auto px-4">
           <div class="flex items-center justify-between h-14">
             <!-- Espaço reservado para o menu e logo -->
@@ -269,25 +269,15 @@ class Navbar {
     const userEmail = document.querySelector('.user-email');
     const userType = document.querySelector('.user-type');
     
-    if (avatarImg && userData.avatar) {
-      avatarImg.src = userData.avatar;
-    }
+    if (avatarImg && userData.avatar) avatarImg.src = userData.avatar;
     
-    if (infoAvatarImg && userData.avatar) {
-      infoAvatarImg.src = userData.avatar;
-    }
+    if (infoAvatarImg && userData.avatar) infoAvatarImg.src = userData.avatar;
     
-    if (userName) {
-      userName.textContent = userData.name || userData.username || 'Usuário';
-    }
+    if (userName) userName.textContent = userData.name || userData.username || 'Usuário';
     
-    if (userEmail) {
-      userEmail.textContent = userData.email || '';
-    }
+    if (userEmail) userEmail.textContent = userData.email || '';
     
-    if (userType) {
-      userType.textContent = userData.isAdmin ? 'Administrador' : (userData.isPremium ? 'Assinante Premium' : 'Conta Padrão');
-    }
+    if (userType) userType.textContent = userData.isAdmin ? 'Administrador' : (userData.isPremium ? 'Assinante Premium' : 'Conta Padrão');
   }
 
   // Marca o link ativo baseado na URL atual, tratando páginas normais e admin
@@ -431,7 +421,7 @@ class Navbar {
         dropdown.classList.toggle('hidden');
       });
 
-      // Agora usa o ThemeManager global para eventos de tema
+      // Usa o ThemeManager global para eventos de tema
       themeOptions?.forEach(option => {
         option.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -440,6 +430,7 @@ class Navbar {
         });
       });
 
+      // Fecha o dropdown ao clicar fora dele
       document.addEventListener('click', (e) => {
         if (!dropdownBtn.contains(e.target) && !dropdown.contains(e.target)) dropdown.classList.add('hidden'); 
       });
@@ -485,6 +476,7 @@ class Navbar {
     }
   }
 
+  // Configura navegação pelo teclado
   setupKeyboardNav() {
     document.addEventListener('keydown', (e) => {
       // ESC fecha menus
@@ -506,6 +498,7 @@ class Navbar {
     });
   }
 
+  // Configura gestos de toque para abrir/fechar o menu lateral
   setupTouchGestures() {
     let touchStartX = 0;
     let touchEndX = 0;
@@ -550,6 +543,7 @@ class Navbar {
     }
   }
 
+  // Configura observador de conexão para atualizar links
   setupConnectionObserver() {
     // Monitora estado da conexão
     window.addEventListener('online', () => { 
@@ -578,6 +572,7 @@ class Navbar {
     });
   }
 
+  // Fecha todos os menus abertos
   closeAllMenus() {
     // Fecha menu lateral
     const sideMenu = document.getElementById('side-menu');
@@ -597,6 +592,7 @@ class Navbar {
     document.querySelectorAll('.user-dropdown, .theme-menu').forEach(menu => menu.classList.add('hidden'));
   }
 
+  // Inicializa o botão de alternância de navegação
   initNavigationToggle() {
     const toggleBtn = document.getElementById('toggle-navigation');
     const navbar = document.querySelector('nav');
