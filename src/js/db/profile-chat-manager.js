@@ -65,7 +65,7 @@ class ProfileChatManager extends Chat {
     
     // Obtém referência do Firestore do firebase-config.js
     this.db = firebase.firestore();
-    this.chatsCollection = this.db.collection('chats');
+    this.chatsCollection = this.db.collection('profileChats');
     
     // Flag para rastrear disponibilidade do Firestore
     this.isFirestoreAvailable = true;
