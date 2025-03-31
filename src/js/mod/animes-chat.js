@@ -376,8 +376,18 @@ class AnimeChat {
           <small id="edit-comment-count-${commentId}" class="text-right block mt-1">0/${AnimeChat.MAX_COMMENT_LENGTH}</small>
         </div>
         <div class="flex gap-2 mt-2">
-          <button type="submit" class="btn btn-primary">Salvar</button>
-          <button type="button" onclick="animeChat.toggleEditMode('${commentId}')" class="btn btn-cancel">Cancelar</button>
+          <button type="submit" class="btn-action btn-primary order-1 sm:order-2 w-full py-2 text-sm">
+            <span class="flex items-center justify-center gap-2">
+              <i class="fi fi-br-checkbox"></i>
+              Salvar
+            </span>
+          </button>
+          <button type="button" onclick="animeChat.toggleEditMode('${commentId}')" class="btn-action btn-cancel order-2 sm:order-1 w-full py-2 text-sm">
+            <span class="flex items-center justify-center gap-2">
+              <i class="fi fi-br-circle-xmark"></i>
+              Cancelar
+            </span>
+          </button>
         </div>
       `;
 
@@ -489,14 +499,10 @@ class AnimeChat {
               </div>
               <div class="action-buttons">
                 ${isCommentOwner ? `
-                  <button 
-                    class="btn-action btn-edit" 
-                    onclick="animeChat.toggleEditMode('${comment.id}')"
-                    title="Editar comentário"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
+                  <button class="btn-action btn-edit" 
+                          onclick="animeChat.toggleEditMode('${comment.id}')"
+                          title="Editar comentário">
+                    <i class="fi fi-bs-edit"></i>
                   </button>
                 ` : ''}
                 ${canDelete ? `
@@ -508,9 +514,7 @@ class AnimeChat {
                     }"
                     title="${isAdmin && !isCommentOwner ? 'Excluir como administrador' : 'Excluir comentário'}"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
+                    <i class="fi fi-bs-trash"></i>
                   </button>
                 ` : ''}
               </div>

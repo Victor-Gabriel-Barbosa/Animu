@@ -218,20 +218,19 @@ function renderReplies(replies, topicId, userId) {
             </p>
             <div class="flex items-center gap-2">
               ${(AnimuUtils.isAuthor(reply.author) || AnimuUtils.isUserAdmin()) ? `
-                <button onclick="editReply('${topicId}', '${reply.id}')" class="text-blue-600 hover:text-blue-800">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
-                  </svg>
+                <button onclick="editReply('${topicId}', '${reply.id}')" 
+                        class="btn-action text-blue-600 hover:text-blue-800">
+                  <i class="fi fi-bs-edit"></i>
                 </button>
-                <button onclick="deleteReply('${topicId}', '${reply.id}')" class="text-red-600 hover:text-red-800">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                  </svg>
+                <button onclick="deleteReply('${topicId}', '${reply.id}')" 
+                        class="btn-action text-red-600 hover:text-red-800">
+                  <i class="fi fi-bs-trash"></i>
                 </button>
               ` : ''}
               <button onclick="likeReply('${topicId}', '${reply.id}')" 
-                      class="text-sm ${reply.likedBy && reply.likedBy.includes(userId) ? 'text-purple-600' : 'text-gray-400'} transition-colors">
-                ${reply.likes || 0} ❤️
+                      class="btn-action text-sm gap-1 p-1 ${reply.likedBy && reply.likedBy.includes(userId) ? 'text-purple-600' : 'text-gray-400'} transition-colors">
+                <i class="fi fi-ss-heart"></i>
+                ${reply.likes || 0}
               </button>
             </div>
           </div>
@@ -247,19 +246,16 @@ function renderReplies(replies, topicId, userId) {
                 <small id="reply-edit-count-${reply.id}" class="text-right block mt-1">0/${FORUM_CONFIG.maxReplyLength}</small>
               </div>
               <div class="flex flex-col sm:flex-row justify-end gap-2">
-                <button type="button" onclick="cancelReplyEdit('${reply.id}')" class="btn btn-cancel order-2 sm:order-1 w-full py-2 text-sm">
+                <button type="button" onclick="cancelReplyEdit('${reply.id}')" 
+                        class="btn-action btn-cancel order-2 sm:order-1 w-full py-2 text-sm">
                   <span class="flex items-center justify-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <i class="fi fi-br-circle-xmark"></i>
                     Cancelar
                   </span>
                 </button>
-                <button type="submit" class="btn btn-primary order-1 sm:order-2 w-full py-2 text-sm">
+                <button type="submit" class="btn-action btn-primary order-1 sm:order-2 w-full py-2 text-sm">
                   <span class="flex items-center justify-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
+                    <i class="fi fi-br-checkbox"></i>
                     Salvar
                   </span>
                 </button>
@@ -311,23 +307,17 @@ function renderTopicCard(topic, userId) {
           <div class="flex items-center justify-end gap-2 flex-shrink-0 mt-2 sm:mt-0">
             ${(AnimuUtils.isAuthor(topic.author) || AnimuUtils.isUserAdmin()) ? `
               <button onclick="editTopic('${topic.id}'); event.stopPropagation();" 
-                      class="edit-topic-btn text-blue-600 hover:text-blue-800 p-1">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
-                </svg>
+                      class="btn-action text-blue-600 hover:text-blue-800 p-1">
+                <i class="fi fi-bs-edit"></i>
               </button>
               <button onclick="deleteTopic('${topic.id}'); event.stopPropagation();" 
-                      class="text-red-600 hover:text-red-800 p-1">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                </svg>
+                      class="btn-action text-red-600 hover:text-red-800 p-1">
+                <i class="fi fi-bs-trash"></i>
               </button>
             ` : ''}
             <button onclick="likeTopic('${topic.id}'); event.stopPropagation();" 
-                    class="like-button flex items-center gap-1 p-1 rounded-full ${topic.likedBy && topic.likedBy.includes(userId) ? 'text-purple-600' : 'text-gray-400'} transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z"/>
-              </svg>
+                    class="btn-action flex items-center gap-1 p-1 rounded-full ${topic.likedBy && topic.likedBy.includes(userId) ? 'text-purple-600' : 'text-gray-400'} transition-colors">
+              <i class="fi fi-ss-social-network"></i>
               ${topic.likes}
             </button>
           </div>
@@ -358,20 +348,16 @@ function renderTopicCard(topic, userId) {
           </div>
           <div class="flex flex-col sm:flex-row justify-end gap-2">
             <button type="button" onclick="cancelTopicEdit('${topic.id}')" 
-                    class="btn btn-cancel order-2 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
+                    class="btn-action btn-cancel order-2 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
               <span class="flex items-center justify-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <i class="fi fi-br-circle-xmark"></i>
                 Cancelar
               </span>
             </button>
             <button type="submit" 
-                    class="btn btn-primary order-1 md:order-3 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
+                    class="btn-action btn-primary order-1 md:order-3 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
               <span class="flex items-center justify-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
+                <i class="fi fi-br-checkbox"></i>
                 Salvar
               </span>
             </button>
