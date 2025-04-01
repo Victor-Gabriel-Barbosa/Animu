@@ -387,11 +387,8 @@ tbody tr:nth-child(5) { animation-delay: 0.5s; }
 
 .fi {
   font-size: 20px;
-  width: 20px;
-  height: 20px;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
 }
 
 .btn-edit {
@@ -512,9 +509,8 @@ tbody tr:nth-child(5) { animation-delay: 0.5s; }
     height: 42px;
   }
 
-  .back-to-top svg {
-    width: 24px;
-    height: 24px;
+  .back-to-top .f1 {
+    font-size: 24px;
   }
 }
 

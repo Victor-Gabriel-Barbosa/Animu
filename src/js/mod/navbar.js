@@ -173,8 +173,8 @@ class Navbar {
   // Inicializa todos os componentes da navbar
   init() {
     // Insere a navbar no início do body
-    document.body.insertAdjacentHTML('afterbegin', this.navHTML);
-    document.body.classList.add('has-navbar');
+    $('body').prepend(this.navHTML);
+    $('body').addClass('has-navbar');
 
     // Destaca o link da página atual
     this.highlightCurrentPage();
@@ -227,21 +227,14 @@ class Navbar {
   // Método para atualizar o painel do usuário com dados do Firestore
   updateUserPanel(userData) {
     // Atualiza o avatar do usuário na navbar
-    const avatarImg = document.querySelector('.user-avatar');
-    const infoAvatarImg = document.querySelector('.user-info-avatar');
-    const userName = document.querySelector('.user-name');
-    const userEmail = document.querySelector('.user-email');
-    const userType = document.querySelector('.user-type');
+    if (userData.avatar) {
+      $('.user-avatar').attr('src', userData.avatar);
+      $('.user-info-avatar').attr('src', userData.avatar);
+    }
     
-    if (avatarImg && userData.avatar) avatarImg.src = userData.avatar;
-    
-    if (infoAvatarImg && userData.avatar) infoAvatarImg.src = userData.avatar;
-    
-    if (userName) userName.textContent = userData.name || userData.username || 'Usuário';
-    
-    if (userEmail) userEmail.textContent = userData.email || '';
-    
-    if (userType) userType.textContent = userData.isAdmin ? 'Administrador' : (userData.isPremium ? 'Assinante Premium' : 'Conta Padrão');
+    $('.user-name').text(userData.name || userData.username || 'Usuário');
+    $('.user-email').text(userData.email || '');
+    $('.user-type').text(userData.isAdmin ? 'Administrador' : (userData.isPremium ? 'Assinante Premium' : 'Conta Padrão'));
   }
 
   // Marca o link ativo baseado na URL atual, tratando páginas normais e admin
@@ -249,25 +242,23 @@ class Navbar {
     const currentPath = window.location.pathname;
     const currentPage = currentPath.split('/').pop().split('?')[0]; // Ignora parâmetros após o .html
 
-    const navLinks = document.querySelectorAll('.nav-link');
-
-    navLinks.forEach(link => {
-      const href = link.getAttribute('href').split('?')[0]; // Ignora parâmetros do href também
+    $('.nav-link').each(function() {
+      const href = $(this).attr('href').split('?')[0]; // Ignora parâmetros do href também
       const isAdminPage = currentPage.includes('-admin');
       const isAdminLink = href.includes('-admin');
 
       // Verifica se é uma página de administração
       if (isAdminPage && isAdminLink) {
-        if (currentPage === href.replace('./', '')) link.classList.add('active');
-        else link.classList.remove('active');
+        if (currentPage === href.replace('./', '')) $(this).addClass('active');
+        else $(this).removeClass('active');
       }
       // Verifica páginas normais
       else if (!isAdminPage && !isAdminLink) {
         if (currentPage === href.replace('./', '') ||
           (currentPage.includes('anime') && href === 'animes.html') ||
           (currentPage === '' && href === 'index.html')) {
-          link.classList.add('active');
-        } else link.classList.remove('active');
+          $(this).addClass('active');
+        } else $(this).removeClass('active');
       }
     });
   }
@@ -277,46 +268,38 @@ class Navbar {
     const userSession = JSON.parse(localStorage.getItem('userSession'));
 
     if (userSession) {
-      const adminOptions = document.getElementById('admin-options');
-      const userPanel = document.getElementById('user-panel');
-
       // Atualiza o avatar se disponível
-      if (userSession.avatar && userPanel) {
-        const avatarImg = userPanel.querySelector('img');
-        if (avatarImg) avatarImg.src = userSession.avatar;
-      }
+      if (userSession.avatar && $('#user-panel').length) $('#user-panel img').attr('src', userSession.avatar);
 
       // Mostra as opções de admin no menu lateral se o usuário for admin
-      if (adminOptions && userSession.isAdmin) {
+      if ($('#admin-options').length && userSession.isAdmin) {
         console.log('Usuário é admin, mostrando opções de admin');
-        adminOptions.classList.remove('hidden');
-        // Adiciona classe específica para links de admin
-        const adminLinks = adminOptions.querySelectorAll('.nav-link');
-        adminLinks.forEach(link => { link.classList.add('admin-link'); });
+        $('#admin-options').removeClass('hidden');
+        $('#admin-options .nav-link').addClass('admin-link');
       }
     }
   }
 
   // Gerencia o menu de administração dropdown
   initAdminMenu() {
-    const adminButton = document.getElementById('admin-menu-button');
-    const adminMenu = document.getElementById('admin-menu-items');
+    const $adminButton = $('#admin-menu-button');
+    const $adminMenu = $('#admin-menu-items');
 
-    if (adminButton && adminMenu) {
+    if ($adminButton.length && $adminMenu.length) {
       // Adiciona manipulador de clique ao botão
-      adminButton.addEventListener('click', (e) => {
+      $adminButton.on('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        adminMenu.classList.toggle('hidden');
+        $adminMenu.toggleClass('hidden');
       });
 
       // Fecha o menu ao clicar em qualquer lugar fora
-      document.addEventListener('click', (e) => {
-        if (!adminButton.contains(e.target) && !adminMenu.contains(e.target)) adminMenu.classList.add('hidden');
+      $(document).on('click', (e) => {
+        if (!$adminButton[0].contains(e.target) && !$adminMenu[0].contains(e.target)) $adminMenu.addClass('hidden');
       });
 
       // Previne que cliques dentro do menu o fechem
-      adminMenu.addEventListener('click', (e) => { 
+      $adminMenu.on('click', (e) => { 
         e.stopPropagation(); 
       });
     }
@@ -324,83 +307,84 @@ class Navbar {
 
   // Gerencia estados e eventos do menu lateral, incluindo persistência
   initSideMenu() {
-    const menuToggle = document.getElementById('menu-toggle');
-    const sideMenu = document.getElementById('side-menu');
-    const menuOverlay = document.getElementById('menu-overlay');
+    const $menuToggle = $('#menu-toggle');
+    const $sideMenu = $('#side-menu');
+    const $menuOverlay = $('#menu-overlay');
 
     // Verifica o estado do menu ao carregar a página
     const menuState = localStorage.getItem('sideMenuState');
     if (menuState === 'open') {
-      sideMenu.classList.add('open');
-      menuOverlay.classList.add('show');
-      document.body.classList.add('menu-open');
+      $sideMenu.addClass('open');
+      $menuOverlay.addClass('show');
+      $('body').addClass('menu-open');
     }
 
-    menuToggle.addEventListener('click', () => {
-      sideMenu.classList.toggle('open');
-      menuOverlay.classList.toggle('show');
-      document.body.classList.toggle('menu-open');
+    $menuToggle.on('click', () => {
+      $sideMenu.toggleClass('open');
+      $menuOverlay.toggleClass('show');
+      $('body').toggleClass('menu-open');
 
       // Salva o estado do menu
-      const isOpen = sideMenu.classList.contains('open');
+      const isOpen = $sideMenu.hasClass('open');
       localStorage.setItem('sideMenuState', isOpen ? 'open' : 'closed');
 
       // Adiciona ou remove listener de clique fora baseado no estado do menu
-      if (isOpen && window.innerWidth <= 768) document.addEventListener('click', this.handleOutsideClick);
-      else document.removeEventListener('click', this.handleOutsideClick);
+      if (isOpen && $(window).width() <= 768) $(document).on('click', this.handleOutsideClick);
+      else $(document).off('click', this.handleOutsideClick);
     });
 
     // Adiciona listener para mudanças no tamanho da tela
-    window.addEventListener('resize', () => {
-      if (window.innerWidth > 768) document.removeEventListener('click', this.handleOutsideClick);
-      else if (sideMenu.classList.contains('open')) document.addEventListener('click', this.handleOutsideClick);
+    $(window).on('resize', () => {
+      if ($(window).width() > 768) $(document).off('click', this.handleOutsideClick);
+      else if ($sideMenu.hasClass('open')) $(document).on('click', this.handleOutsideClick);
     });
   }
 
+  // Fecha o menu se o clique for fora do menu e do botão de toggle
   handleOutsideClick(event) {
-    const sideMenu = document.getElementById('side-menu');
-    const menuToggle = document.getElementById('menu-toggle');
-    const menuOverlay = document.getElementById('menu-overlay');
+    const $sideMenu = $('#side-menu');
+    const $menuToggle = $('#menu-toggle');
+    const $menuOverlay = $('#menu-overlay');
 
     // Verifica se o clique foi fora do menu e do botão de toggle
-    if (!sideMenu.contains(event.target) && !menuToggle.contains(event.target)) {
-      sideMenu.classList.remove('open');
-      menuOverlay.classList.remove('show');
-      document.body.classList.remove('menu-open');
+    if (!$sideMenu[0].contains(event.target) && !$menuToggle[0].contains(event.target)) {
+      $sideMenu.removeClass('open');
+      $menuOverlay.removeClass('show');
+      $('body').removeClass('menu-open');
       localStorage.setItem('sideMenuState', 'closed');
-      document.removeEventListener('click', this.handleOutsideClick);
+      $(document).off('click', this.handleOutsideClick);
     }
   }
 
   // Inicializa o dropdown do usuário
   initUserDropdown() {
-    const dropdownBtn = document.getElementById('user-dropdown-btn');
-    const dropdown = document.getElementById('user-dropdown');
-    const logoutBtn = document.getElementById('logout-btn');
-    const themeOptions = dropdown?.querySelectorAll('.theme-option');
+    const $dropdownBtn = $('#user-dropdown-btn');
+    const $dropdown = $('#user-dropdown');
+    const $logoutBtn = $('#logout-btn');
+    const $themeOptions = $dropdown.find('.theme-option');
 
-    if (dropdownBtn && dropdown) {
-      dropdownBtn.addEventListener('click', (e) => {
+    if ($dropdownBtn.length && $dropdown.length) {
+      $dropdownBtn.on('click', (e) => {
         e.stopPropagation();
-        dropdown.classList.toggle('hidden');
+        $dropdown.toggleClass('hidden');
       });
 
       // Usa o ThemeManager global para eventos de tema
-      themeOptions?.forEach(option => {
-        option.addEventListener('click', (e) => {
+      $themeOptions.each(function() {
+        $(this).on('click', (e) => {
           e.stopPropagation();
-          const theme = option.dataset.theme;
+          const theme = $(this).data('theme');
           window.ThemeManager.applyTheme(theme);
         });
       });
 
       // Fecha o dropdown ao clicar fora dele
-      document.addEventListener('click', (e) => {
-        if (!dropdownBtn.contains(e.target) && !dropdown.contains(e.target)) dropdown.classList.add('hidden'); 
+      $(document).on('click', (e) => {
+        if (!$dropdownBtn[0].contains(e.target) && !$dropdown[0].contains(e.target)) $dropdown.addClass('hidden');
       });
     }
 
-    if (logoutBtn) logoutBtn.addEventListener('click', this.handleLogout);
+    if ($logoutBtn.length) $logoutBtn.on('click', this.handleLogout);
   }
 
   // Limpa sessão e redireciona para login
@@ -412,21 +396,21 @@ class Navbar {
 
   // Inicializa o dropdown de autenticação
   initAuthDropdown() {
-    const authBtn = document.getElementById('auth-dropdown-btn');
-    const authDropdown = document.getElementById('auth-dropdown');
-    const themeOptions = authDropdown?.querySelectorAll('.theme-option');
+    const $authBtn = $('#auth-dropdown-btn');
+    const $authDropdown = $('#auth-dropdown');
+    const $themeOptions = $authDropdown.find('.theme-option');
 
-    if (authBtn && authDropdown) {
-      authBtn.addEventListener('click', (e) => {
+    if ($authBtn.length && $authDropdown.length) {
+      $authBtn.on('click', (e) => {
         e.stopPropagation();
-        authDropdown.classList.toggle('hidden');
+        $authDropdown.toggleClass('hidden');
       });
 
       // Configura opções de tema
-      themeOptions?.forEach(option => {
-        option.addEventListener('click', (e) => {
+      $themeOptions.each(function() {
+        $(this).on('click', (e) => {
           e.stopPropagation();
-          const theme = option.dataset.theme;
+          const theme = $(this).data('theme');
           // Usa as funções globais do sistema de temas
           window.applyTheme(theme);
           window.updateActiveTheme(theme);
@@ -434,31 +418,28 @@ class Navbar {
         });
       });
 
-      document.addEventListener('click', (e) => {
-        if (!authBtn.contains(e.target) && !authDropdown.contains(e.target))  authDropdown.classList.add('hidden');
+      $(document).on('click', (e) => {
+        if (!$authBtn[0].contains(e.target) && !$authDropdown[0].contains(e.target)) $authDropdown.addClass('hidden');
       });
     }
   }
 
   // Configura navegação pelo teclado
   setupKeyboardNav() {
-    document.addEventListener('keydown', (e) => {
+    $(document).on('keydown', (e) => {
       // ESC fecha menus
       if (e.key === 'Escape') this.closeAllMenus();
 
       // Alt + M toggle menu lateral
-      if (e.key === 'm' && e.altKey) document.getElementById('menu-toggle').click();
+      if (e.key === 'm' && e.altKey) $('#menu-toggle').click();
       
       // Alt + H toggle visibilidade da navegação
-      if (e.key === 'h' && e.altKey) document.getElementById('toggle-navigation').click();
+      if (e.key === 'h' && e.altKey) $('#toggle-navigation').click();
     });
 
     // Navegação por Tab nos menus
-    const menuItems = document.querySelectorAll('.nav-link, .dropdown-item');
-    menuItems.forEach(item => {
-      item.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') e.target.click();
-      });
+    $('.nav-link, .dropdown-item').on('keydown', (e) => {
+      if (e.key === 'Enter') $(e.target).click();
     });
   }
 
@@ -468,40 +449,44 @@ class Navbar {
     let touchEndX = 0;
     const edgeThreshold = 30; // Define uma área de 30px da borda esquerda
 
-    document.addEventListener('touchstart', (e) => { 
-      touchStartX = e.touches[0].clientX; 
-    }, false);
+    $(document).on('touchstart', (e) => { 
+      touchStartX = e.originalEvent.touches[0].clientX; 
+    });
 
-    document.addEventListener('touchend', (e) => {
-      touchEndX = e.changedTouches[0].clientX;
+    $(document).on('touchend', (e) => {
+      touchEndX = e.originalEvent.changedTouches[0].clientX;
       this.handleSwipe();
-    }, false);
+    });
 
     this.handleSwipe = () => {
       const swipeDistance = touchEndX - touchStartX;
-      const sideMenu = document.getElementById('side-menu');
-      const menuOverlay = document.getElementById('menu-overlay');
+      const $sideMenu = $('#side-menu');
+      const $menuOverlay = $('#menu-overlay');
       const startedAtLeftEdge = touchStartX <= edgeThreshold;
 
       if (Math.abs(swipeDistance) > 50) { // Mínimo de 50px
         if (swipeDistance > 0 && startedAtLeftEdge) {
-          // Swipe direita a partir da borda esquerda - Abre o menu
-          sideMenu.classList.add('open');
-          menuOverlay.classList.add('show');
-          document.body.classList.add('menu-open');
+          // Swipe direita - Abre o menu se estiver fechado
+          $sideMenu.addClass('open'); // 
+          $menuOverlay.addClass('show');
+          $('body').addClass('menu-open');
+
           // Salva o estado do menu
           localStorage.setItem('sideMenuState', 'open');
+
           // Adiciona listener para dispositivos móveis
-          if (window.innerWidth <= 768) document.addEventListener('click', this.handleOutsideClick);
-        } else if (swipeDistance < 0 && sideMenu.classList.contains('open')) {
+          if ($(window).width() <= 768) $(document).on('click', this.handleOutsideClick);
+        } else if (swipeDistance < 0 && $sideMenu.hasClass('open')) {
           // Swipe esquerda (qualquer posição) - Fecha o menu se estiver aberto
-          sideMenu.classList.remove('open');
-          menuOverlay.classList.remove('show');
-          document.body.classList.remove('menu-open');
+          $sideMenu.removeClass('open');
+          $menuOverlay.removeClass('show');
+          $('body').removeClass('menu-open');
+
           // Atualiza estado no localStorage
           localStorage.setItem('sideMenuState', 'closed');
+
           // Remove listener
-          document.removeEventListener('click', this.handleOutsideClick);
+          $(document).off('click', this.handleOutsideClick);
         }
       }
     }
@@ -510,28 +495,26 @@ class Navbar {
   // Configura observador de conexão para atualizar links
   setupConnectionObserver() {
     // Monitora estado da conexão
-    window.addEventListener('online', () => { 
+    $(window).on('online', () => { 
       this.updateConnectionStatus(true); 
     });
 
-    window.addEventListener('offline', () => { 
+    $(window).on('offline', () => { 
       this.updateConnectionStatus(false); 
     });
   }
 
   // Atualiza o estado da conexão e estiliza links de acordo
   updateConnectionStatus(isOnline) {
-    const navLinks = document.querySelectorAll('.nav-link');
-
-    navLinks.forEach(link => {
+    $('.nav-link').each(function() {
       if (!isOnline) {
-        link.setAttribute('data-offline', 'true');
-        link.style.opacity = '0.5';
-        link.title += ' (Offline)';
+        $(this).attr('data-offline', 'true');
+        $(this).css('opacity', '0.5');
+        $(this).attr('title', $(this).attr('title') + ' (Offline)');
       } else {
-        link.removeAttribute('data-offline');
-        link.style.opacity = '';
-        link.title = link.title.replace(' (Offline)', '');
+        $(this).removeAttr('data-offline');
+        $(this).css('opacity', '');
+        $(this).attr('title', $(this).attr('title').replace(' (Offline)', ''));
       }
     });
   }
@@ -539,55 +522,46 @@ class Navbar {
   // Fecha todos os menus abertos
   closeAllMenus() {
     // Fecha menu lateral
-    const sideMenu = document.getElementById('side-menu');
-    const menuOverlay = document.getElementById('menu-overlay');
-    
-    sideMenu.classList.remove('open');
-    menuOverlay.classList.remove('show');
-    document.body.classList.remove('menu-open');
+    $('#side-menu').removeClass('open');
+    $('#menu-overlay').removeClass('show');
+    $('body').removeClass('menu-open');
     
     // Atualiza estado no localStorage
     localStorage.setItem('sideMenuState', 'closed');
     
     // Remove listener de clique caso esteja ativo
-    document.removeEventListener('click', this.handleOutsideClick);
+    $(document).off('click', this.handleOutsideClick);
 
     // Fecha dropdowns
-    document.querySelectorAll('.user-dropdown, .theme-menu').forEach(menu => menu.classList.add('hidden'));
+    $('.user-dropdown, .theme-menu').addClass('hidden');
   }
 
   // Inicializa o botão de alternância de navegação
   initNavigationToggle() {
-    const toggleBtn = document.getElementById('toggle-navigation');
-    const navbar = document.querySelector('nav');
-    const sideMenu = document.getElementById('side-menu');
+    const $toggleBtn = $('#toggle-navigation');
+    const $navbar = $('nav');
+    const $sideMenu = $('#side-menu');
     
     // Verifica estado salvo
     const navHidden = localStorage.getItem('navigationHidden') === 'true';
     if (navHidden) {
-      navbar.classList.add('nav-hidden');
-      sideMenu.classList.add('nav-hidden');
-      document.body.classList.add('nav-hidden');
-      toggleBtn.classList.add('rotated');
+      $navbar.addClass('nav-hidden');
+      $sideMenu.addClass('nav-hidden');
+      $('body').addClass('nav-hidden');
+      $toggleBtn.addClass('rotated');
       // Atualiza o SVG para olho fechado quando oculto
-      toggleBtn.innerHTML = `
-        <i class="fi fi-ss-layer-minus"></i>
-      `;
+      $toggleBtn.html('<i class="fi fi-ss-layer-plus"></i>');
     }
 
-    toggleBtn.addEventListener('click', () => {
-      navbar.classList.toggle('nav-hidden');
-      sideMenu.classList.toggle('nav-hidden');
-      document.body.classList.toggle('nav-hidden');
-      toggleBtn.classList.toggle('rotated');
+    $toggleBtn.on('click', () => {
+      $navbar.toggleClass('nav-hidden');
+      $sideMenu.toggleClass('nav-hidden');
+      $('body').toggleClass('nav-hidden');
+      $toggleBtn.toggleClass('rotated');
       
       // Alterna entre olho aberto e fechado
-      const isHidden = navbar.classList.contains('nav-hidden');
-      toggleBtn.innerHTML = isHidden ? `
-        <i class="fi fi-ss-layer-plus"></i>
-      ` : `
-        <i class="fi fi-ss-layer-minus"></i>
-      `;
+      const isHidden = $navbar.hasClass('nav-hidden');
+      $toggleBtn.html(isHidden ? '<i class="fi fi-ss-layer-plus"></i>' : '<i class="fi fi-ss-layer-minus"></i>');
       
       // Salva estado
       localStorage.setItem('navigationHidden', isHidden);
@@ -596,7 +570,7 @@ class Navbar {
 }
 
 // Inicializa quando DOM estiver pronto
-document.addEventListener('DOMContentLoaded', () => {
+$(document).ready(function() {
   const navbar = new Navbar();
   navbar.init();
 });

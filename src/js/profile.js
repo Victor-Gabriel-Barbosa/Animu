@@ -794,19 +794,13 @@ async function loadFriends(user) {
               <button onclick="openChat('${friend.id}')" 
                       class="action-btn text-purple-600 hover:text-purple-700"
                       title="Iniciar chat">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-                </svg>
+                <i class="fi fi-rr-comment-dots"></i>
               </button>
               
               <button onclick="removeFriend('${friend.id}')" 
                       class="action-btn text-red-600 hover:text-red-700"
                       title="Remover amigo">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                </svg>
+                <i class="fi fi-bs-trash"></i>
               </button>
             </div>
           </div>
@@ -1158,19 +1152,13 @@ async function openChat(friendId) {
         </div>
         <div class="flex items-center gap-1">
           <button onclick="minimizeChat('${friendId}')" class="text-white hover:text-gray-200 transition-colors p-1" title="Minimizar">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 12H6" />
-            </svg>
+            <i class="fi fi-rr-window-minimize"></i>
           </button>
           <button onclick="maximizeChat('${friendId}')" class="text-white hover:text-gray-200 transition-colors p-1" title="Maximizar">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-            </svg>
+            <i class="fi fi-rr-expand"></i>
           </button>
           <button onclick="closeChat('${friendId}')" class="text-white hover:text-gray-200 transition-colors p-1" title="Fechar">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <i class="fi fi-rr-x"></i>
           </button>
         </div>
       </div>
@@ -1184,9 +1172,7 @@ async function openChat(friendId) {
                    class="flex-1 p-2 rounded-lg border border-gray-300 dark:border-gray-600">
             <button type="submit" 
                     class="p-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors">
-              <svg class="w-5 h-5 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-              </svg>
+              <i class="fi fi-ss-paper-plane mt-1"></i>
             </button>
           </form>
         </div>
@@ -1217,19 +1203,13 @@ function maximizeChat(friendId) {
   const headerButtons = chatWindow.querySelector('.flex.items-center.gap-1');
   headerButtons.innerHTML = `
     <button onclick="minimizeChat('${friendId}')" class="text-white hover:text-gray-200 transition-colors p-1" title="Minimizar">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 12H6" />
-      </svg>
+      <i class="fi fi-rr-window-minimize"></i>
     </button>
     <button onclick="restoreChat('${friendId}')" class="text-white hover:text-gray-200 transition-colors p-1" title="Restaurar">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8v8a4 4 0 004 4h8m4-4v-8a4 4 0 00-4-4H8" />
-      </svg>
+      <i class="fi fi-rr-expand"></i>
     </button>
     <button onclick="closeChat('${friendId}')" class="text-white hover:text-gray-200 transition-colors p-1" title="Fechar">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-      </svg>
+      <i class="fi fi-rr-x"></i>
     </button>
   `;
   
@@ -1261,19 +1241,13 @@ function minimizeChat(friendId) {
   const headerButtons = chatWindow.querySelector('.flex.items-center.gap-1');
   headerButtons.innerHTML = `
     <button onclick="restoreChat('${friendId}')" class="text-white hover:text-gray-200 transition-colors p-1" title="Restaurar">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-      </svg>
+      <i class="fi fi-rr-angle-down"></i>
     </button>
     <button onclick="maximizeChat('${friendId}')" class="text-white hover:text-gray-200 transition-colors p-1" title="Maximizar">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-      </svg>
+      <i class="fi fi-rr-expand"></i>
     </button>
     <button onclick="closeChat('${friendId}')" class="text-white hover:text-gray-200 transition-colors p-1" title="Fechar">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-      </svg>
+      <i class="fi fi-rr-x"></i>
     </button>
   `;
 }
@@ -1295,19 +1269,13 @@ function restoreChat(friendId) {
   const headerButtons = chatWindow.querySelector('.flex.items-center.gap-1');
   headerButtons.innerHTML = `
     <button onclick="minimizeChat('${friendId}')" class="text-white hover:text-gray-200 transition-colors p-1" title="Minimizar">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 12H6" />
-      </svg>
+      <i class="fi fi-rr-window-minimize"></i>
     </button>
     <button onclick="maximizeChat('${friendId}')" class="text-white hover:text-gray-200 transition-colors p-1" title="Maximizar">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-      </svg>
+      <i class="fi fi-rr-expand"></i>
     </button>
     <button onclick="closeChat('${friendId}')" class="text-white hover:text-gray-200 transition-colors p-1" title="Fechar">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-      </svg>
+      <i class="fi fi-rr-x"></i>
     </button>
   `;
   

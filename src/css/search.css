@@ -258,8 +258,7 @@
 }
 
 .clear-filters-btn .fi {
-  width: 16px;
-  height: 16px;
+  font-size: 16px;
   color: currentColor;
 }
 
@@ -281,8 +280,7 @@
     min-width: 120px;
   }
 
-  .search-button,
-  .filter-btn {
+  .search-button, .filter-btn {
     height: 32px; 
     padding: 0 6px;
     min-width: 32px; 
@@ -339,15 +337,13 @@
     min-width: 80px; 
   }
 
-  .search-button,
-  .filter-btn {
+  .search-button, .filter-btn {
     height: 30px;
     padding: 0 4px;
   }
 
   .search-button .fi, .filter-btn .fi {
-    width: 14px; 
-    height: 14px;
+    font-size: 14px;
   }
 
   .filter-menu {

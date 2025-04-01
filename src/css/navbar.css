@@ -11,6 +11,7 @@
   z-index: 51;
 }
 
+/* === SEÇÃO DE LOGO === */
 .logo-container {
   display: flex;
   align-items: center;
@@ -44,18 +45,6 @@
   letter-spacing: -0.5px;
 }
 
-/* Ajustes responsivos */
-@media (max-width: 480px) {
-  .logo-icon {
-    width: 24px;
-    height: 24px;
-  }
-  
-  .logo-text {
-    font-size: 1.25rem;
-  }
-}
-
 .logo-container a {
   font-size: 1.5rem;
   font-weight: bold;
@@ -68,12 +57,26 @@
   color: var(--text-color);
 }
 
-/* Navegação Principal */
+/* === NAVEGAÇÃO PRINCIPAL === */
 nav {
   background-color: var(--background);
   transform: translateY(0);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   padding: 0;
+}
+
+nav.nav-hidden {
+  transform: translateY(-100%);
+}
+
+nav .ml-10 a:hover::after,
+nav .ml-10 a.active::after {
+  width: 100%;
+  left: 0;
+}
+
+nav .ml-10 a.active {
+  color: var(--primary-color);
 }
 
 /* Otimiza espaço da barra de pesquisa */
@@ -88,16 +91,8 @@ nav {
   gap: 8px;
 }
 
-nav .ml-10 a:hover::after,
-nav .ml-10 a.active::after {
-  width: 100%;
-  left: 0;
-}
-
-nav .ml-10 a.active {
-  color: var(--primary-color);
-}
-
+/* === LINKS DE NAVEGAÇÃO (NAV-LINK) === */
+/* Estilo base para todos os nav-links */
 .nav-link {
   position: relative;
   padding: 8px 12px;
@@ -139,7 +134,7 @@ nav .ml-10 a.active {
   opacity: 0.1;
 }
 
-/* Estado ativo */
+/* Estado ativo global */
 .nav-link.active {
   color: var(--primary-color);
   font-weight: 600;
@@ -150,7 +145,29 @@ nav .ml-10 a.active {
   opacity: 1;
 }
 
-/* Barra Lateral */
+/* Efeito de loading */
+.nav-loading::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  height: 2px;
+  width: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--primary-color) 50%,
+    transparent 100%
+  );
+  animation: loadingBar 1s infinite;
+}
+
+@keyframes loadingBar {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+
+/* === MENU LATERAL (SIDE MENU) === */
 .menu-toggle-btn {
   padding: 4.9px;
   background: transparent;
@@ -180,7 +197,7 @@ nav .ml-10 a.active {
   color: var(--text-color);
 }
 
-/* Menu lateral com largura fixa e animação */
+/* Container do menu lateral */
 .side-menu {
   position: fixed;
   top: 56px;
@@ -193,14 +210,23 @@ nav .ml-10 a.active {
   overflow: hidden;
   transform: translateZ(0);
   backface-visibility: hidden;
+  will-change: transform, width;
 }
 
-/* Mostra a barra de rolagem apenas quando o mouse estiver sobre o menu */
+/* Estado quando o menu está recolhido */
+.side-menu:not(.open) {
+  width: 65px;
+}
+
+.side-menu.nav-hidden {
+  transform: translateX(-100%);
+}
+
+/* Estilização da rolagem */
 .side-menu:hover {
   overflow-y: auto;
 }
 
-/* Estilização da barra de rolagem */
 .side-menu::-webkit-scrollbar {
   width: 6px;
   background: transparent;
@@ -217,9 +243,8 @@ nav .ml-10 a.active {
   opacity: 1;
 }
 
-/* Ajuste para Firefox */
 .side-menu {
-  scrollbar-width: none;
+  scrollbar-width: none; /* Firefox */
 }
 
 .side-menu:hover {
@@ -227,31 +252,7 @@ nav .ml-10 a.active {
   scrollbar-color: var(--primary-color) transparent;
 }
 
-/* Estado recolhido do menu - transição suavizada */
-.side-menu:not(.open) {
-  width: 70px; 
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.side-menu:not(.open) .nav-link span,
-.side-menu:not(.open) .admin-section-divider {
-  display: none;
-  opacity: 0;
-}
-
-.side-menu:not(.open) .nav-link {
-  padding: 10px; 
-  justify-content: flex-start;
-  width: 70px;
-}
-
-.side-menu:not(.open) .nav-link .fi {
-  margin-left: 12px; 
-  width: 22px; 
-  height: 22px;
-  min-width: 22px; 
-}
-
+/* Links específicos do menu lateral */
 .side-menu .nav-link {
   display: flex;
   align-items: center;
@@ -263,7 +264,44 @@ nav .ml-10 a.active {
   position: relative;
 }
 
-/* Novo efeito de hover com gradiente */
+/* Ícones no menu lateral */
+.side-menu .nav-link .fi {
+  min-width: 20px;
+  width: 20px;
+  height: 20px;
+  margin-left: 20.5px;
+  color: var(--text-color);
+  opacity: 0.7;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+/* Texto nos links do menu */
+.side-menu .nav-link span {
+  padding-left: 12px;
+  opacity: 1;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  white-space: nowrap;
+}
+
+/* Comportamento quando o menu está recolhido */
+.side-menu:not(.open) .nav-link {
+  padding: 10px 0;
+  width: 65px;
+  justify-content: flex-start;
+}
+
+.side-menu:not(.open) .nav-link span,
+.side-menu:not(.open) .admin-section-divider {
+  display: none;
+  opacity: 0;
+}
+
+.side-menu:not(.open) .nav-link .fi {
+  margin-left: 20.5px;
+}
+
+/* Efeito de hover com gradiente */
 .side-menu .nav-link::before {
   content: '';
   position: absolute;
@@ -307,79 +345,24 @@ nav .ml-10 a.active {
   z-index: 1;
 }
 
-/* Efeito dos ícones */
-.side-menu .nav-link .fi {
-  color: var(--text-color);
-  opacity: 0.7;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  min-width: 22px; 
-  height: 22px; 
-  width: 22px;
-}
-
+/* Efeitos de hover */
 .side-menu .nav-link:hover .fi {
   color: var(--primary-color);
   opacity: 1;
   transform: scale(1.1);
-}
-
-/* Efeito no texto */
-.side-menu .nav-link span {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  transition: opacity 0.3s ease 0.1s;
-  opacity: 1;
-  white-space: nowrap;
 }
 
 .side-menu .nav-link:hover span {
   color: var(--primary-color);
 }
 
-.side-menu:not(.open) .nav-link span {
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-/* Estado ativo */
+/* Estado ativo no menu lateral */
 .side-menu .nav-link.active {
   color: var(--primary-color);
 }
 
 .side-menu .nav-link.active::after {
   transform: scaleY(1);
-}
-
-.side-menu .nav-link.active .fi {
-  color: var(--primary-color);
-  opacity: 1;
-  transform: scale(1.1);
-}
-
-/* Efeito de pressionar */
-.side-menu .nav-link:active {
-  transform: scale(0.98);
-}
-
-.side-menu .nav-link:hover {
-  color: var(--primary-color);
-}
-
-.side-menu .nav-link .fi {
-  color: var(--text-color);
-  opacity: 0.7;
-  transition: fill 0.3s ease, opacity 0.3s ease;
-  min-width: 20px; 
-  height: 20px; 
-  width: 20px;
-}
-
-.side-menu .nav-link:hover .fi {
-  color: var(--primary-color);
-  opacity: 1;
-}
-
-.side-menu .nav-link.active {
-  color: var(--primary-color);
 }
 
 .side-menu .nav-link.active::before {
@@ -389,9 +372,15 @@ nav .ml-10 a.active {
 .side-menu .nav-link.active .fi {
   color: var(--primary-color);
   opacity: 1;
+  transform: scale(1.1);
 }
 
-/* Seção Admin */
+/* Efeito ao pressionar */
+.side-menu .nav-link:active {
+  transform: scale(0.98);
+}
+
+/* === SEÇÃO ADMIN === */
 #admin-options {
   position: relative;
   margin-top: 16px;
@@ -412,7 +401,7 @@ nav .ml-10 a.active {
   display: none;
 }
 
-/* Overlay do Menu */
+/* === MENU OVERLAY === */
 .menu-overlay {
   position: fixed;
   top: 0;
@@ -432,11 +421,7 @@ nav .ml-10 a.active {
   visibility: visible;
 }
 
-body.menu-open {
-  overflow: auto !important;
-}
-
-/* Estilos do Dropdown do Usuário */
+/* === DROPDOWN DO USUÁRIO === */
 .user-dropdown {
   position: absolute;
   top: calc(100% + 8px);
@@ -482,6 +467,50 @@ body.menu-open {
 
 .dropdown-item .fi {
   color: currentColor;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: var(--card-shadow);
+  margin: 8px 0;
+}
+
+/* === INFORMAÇÕES DO USUÁRIO === */
+.user-info-section {
+  padding: 12px;
+}
+
+.user-info-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-info-text {
+  overflow: hidden;
+}
+
+.user-name {
+  font-weight: bold;
+  font-size: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-email {
+  font-size: 14px;
+  opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-type {
+  font-size: 12px;
+  opacity: 0.7;
+  margin-top: 2px;
+  font-style: italic;
 }
 
 #user-dropdown-btn {
@@ -534,12 +563,7 @@ body.menu-open {
   color: currentColor;
 }
 
-.dropdown-divider {
-  height: 1px;
-  background: var(--card-shadow);
-  margin: 8px 0;
-}
-
+/* === OPÇÕES DE TEMA === */
 .dropdown-theme-section {
   padding: 12px 16px;
   display: flex;
@@ -560,127 +584,78 @@ body.menu-open {
   font-size: 0.95rem;
 }
 
-@media (max-width: 768px) {
-  .menu-overlay.show {
-    background: rgba(0, 0, 0, 0.5);
-    pointer-events: auto;
-    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1),
-                visibility 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  body.menu-open {
-    overflow: hidden;
-  }
-
-  .flex-shrink-0.ml-4 {
-    display: none; 
-  }
-
-  .nav-menu-container {
-    top: 6px;
-  }
-
-  .w-48 {
-    width: 24px;
-  }
-
-  .flex-1.max-w-xl {
-    margin: 0 4px;
-  }
-
-  .nav-menu-container {
-    top: 8px;
-  }
-
-  .nav-menu-container {
-    top: 6px;
-  }
-
-  .logo-container {
-    margin-left: 2px;
-  }
-
-  .logo-icon {
-    width: 24px;
-    height: 24px;
-  }
-
-  .logo-text {
-    font-size: 1.25rem;
-  }
-
-  .flex-1.max-w-xl {
-    margin: 0 4px;
-    max-width: calc(100vw - 120px);
-  }
-
-  .user-dropdown {
-    right: 4px;
-    min-width: 180px;
-  }
+.theme-option.active {
+  background: var(--primary-color);
+  color: white;
 }
 
-@media (max-width: 480px) {
-  .nav-link {
-    padding: 14px 16px;
-    margin: 2px 0;
-    font-size: 0.9375rem; 
-  }
-
-  .theme-toggle-container {
-    transform: scale(0.9);
-  }
-
-  #user-panel img {
-    width: 32px;
-    height: 32px;
-  }
-
-  .nav-menu-container {
-    top: 8px;
-  }
-
-  .nav-menu-container {
-    top: 4px;
-  }
-
-  .logo-icon {
-    width: 22px;
-    height: 22px;
-  }
-
-  .logo-text {
-    font-size: 1.125rem;
-  }
-
-  .flex-1.max-w-xl {
-    max-width: calc(100vw - 100px);
-  }
-
-  #user-panel img {
-    width: 32px;
-    height: 32px;
-  }
-
-  .auth-btn {
-    width: 36px;
-    height: 36px;
-  }
+.theme-option.active .fi {
+  color: white;
 }
 
-/* Oculta barra lateral minimizada em telas pequenas */
-@media (max-width: 480px) {
-  .side-menu:not(.open) {
-    transform: translateX(-100%);
-    visibility: hidden;
-  }
-
-  /* Ajusta padding do conteúdo quando menu está fechado */
-  body.has-navbar:not(.menu-open) {
-    padding-left: 0 !important;
-  }
+/* === BOTÃO PARA TOGGLE NAVEGAÇÃO === */
+.toggle-nav-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 25px;
+  width: 40px;
+  height: 40px;
+  background: var(--primary-gradient);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
 }
 
+.toggle-nav-btn .fi {
+  color: currentColor;
+  transition: all 0.3s ease;
+  width: 24px;
+  height: 24px;
+}
+
+.toggle-nav-btn:hover .fi {
+  transform: scale(1.1);
+  transition: transform 0.2s ease;
+}
+
+/* === AJUSTES PARA O CORPO DA PÁGINA === */
+body.has-navbar {
+  padding-top: 55px; 
+  padding-left: 0;
+  transition: padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body.has-navbar.menu-open:not(.nav-hidden) {
+  padding-left: 225px;
+}
+
+body.has-navbar.nav-hidden {
+  padding: 0 !important;
+}
+
+body.menu-open {
+  overflow: auto !important;
+}
+
+main {
+  transition: margin 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body.has-navbar.nav-hidden main {
+  margin-top: 0;
+  margin-left: 0;
+}
+
+/* === MEDIA QUERIES === */
+/* Dispositivos móveis pequenos */
 @media (max-width: 360px) {
   .nav-link {
     padding: 12px 8px;
@@ -714,12 +689,129 @@ body.menu-open {
   }
 }
 
+/* Dispositivos móveis */
+@media (max-width: 480px) {
+  .nav-link {
+    padding: 14px 16px;
+    margin: 2px 0;
+    font-size: 0.9375rem; 
+  }
+
+  .theme-toggle-container {
+    transform: scale(0.9);
+  }
+
+  #user-panel img {
+    width: 32px;
+    height: 32px;
+  }
+
+  .nav-menu-container {
+    top: 4px;
+  }
+
+  .logo-icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .logo-text {
+    font-size: 1.125rem;
+  }
+
+  .flex-1.max-w-xl {
+    max-width: calc(100vw - 100px);
+  }
+
+  .auth-btn {
+    width: 36px;
+    height: 36px;
+  }
+  
+  /* Oculta barra lateral minimizada */
+  .side-menu:not(.open) {
+    transform: translateX(-100%);
+    visibility: hidden;
+  }
+
+  /* Ajusta padding do conteúdo quando menu está fechado */
+  body.has-navbar:not(.menu-open) {
+    padding-left: 0 !important;
+  }
+}
+
+/* Tablets e dispositivos médios */
+@media (max-width: 768px) {
+  .menu-overlay.show {
+    background: rgba(0, 0, 0, 0.5);
+    pointer-events: auto;
+    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                visibility 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  body.menu-open {
+    overflow: hidden;
+  }
+
+  .flex-shrink-0.ml-4 {
+    display: none; 
+  }
+
+  .w-48 {
+    width: 24px;
+  }
+
+  .flex-1.max-w-xl {
+    margin: 0 4px;
+  }
+
+  .logo-container {
+    margin-left: 2px;
+  }
+
+  .logo-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .logo-text {
+    font-size: 1.25rem;
+  }
+
+  .flex-1.max-w-xl {
+    margin: 0 4px;
+    max-width: calc(100vw - 120px);
+  }
+
+  .user-dropdown {
+    right: 4px;
+    min-width: 180px;
+  }
+  
+  .toggle-nav-btn {
+    bottom: 16px;
+    width: 42px;
+    height: 42px;
+  }
+
+  .toggle-nav-btn .fi {
+    width: 24px;
+    height: 24px;
+  }
+  
+  body.has-navbar.menu-open:not(.nav-hidden) {
+    padding-left: 0;
+  }
+}
+
+/* Tablets grandes e desktops pequenos */
 @media (min-width: 769px) and (max-width: 1024px) {
   body.has-navbar.menu-open {
     padding-left: 225px;
   }
 }
 
+/* Desktops médios */
 @media (min-width: 1024px) {
   .nav-menu-container {
     top: 12px;
@@ -740,18 +832,21 @@ body.menu-open {
   }
 }
 
+/* Desktops grandes */
 @media (min-width: 1025px) {
   body.has-navbar.menu-open {
     padding-left: 225px;
   }
 }
 
+/* Telas largas */
 @media (min-width: 1200px) {
   .flex-1.max-w-xl {
     max-width: 800px;
   }
 }
 
+/* Telas muito largas */
 @media (min-width: 1440px) {
   .flex-1.max-w-xl {
     max-width: 1000px;
@@ -759,7 +854,7 @@ body.menu-open {
   }
 }
 
-/* Ajustes para telas muito grandes */
+/* Telas extra largas */
 @media (min-width: 1600px) {
   .side-menu {
     width: min(220px, 12vw); 
@@ -770,7 +865,7 @@ body.menu-open {
   }
 }
 
-/* Suporte para orientação paisagem em dispositivos móveis */
+/* Suporte para modo paisagem em dispositivos móveis */
 @media (max-height: 480px) and (orientation: landscape) {
   .nav-link {
     padding: 8px 12px;
@@ -780,223 +875,4 @@ body.menu-open {
   .nav-link .fi {
     font-size: 20px;
   }
-}
-
-/* Adiciona indicador de loading */
-.nav-loading::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: -2px;
-  height: 2px;
-  width: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    var(--primary-color) 50%,
-    transparent 100%
-  );
-  animation: loadingBar 1s infinite;
-}
-
-@keyframes loadingBar {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(100%); }
-}
-
-/* Otimizações de performance */
-.side-menu, .side-menu-content, .nav-link {
-  will-change: transform, width;
-}
-
-/* Ajuste para padding do conteúdo principal */
-body.has-navbar {
-  padding-top: 55px; 
-  transition: padding-left 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Posicionamento fixo do ícone */
-.side-menu .nav-link .fi {
-  min-width: 20px;
-  width: 20px;
-  height: 20px;
-  margin-left: 20.5px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  flex-shrink: 0;
-}
-
-/* Ajuste do texto */
-.side-menu .nav-link span {
-  padding-left: 12px;
-  opacity: 1;
-  transition: opacity 0.3s ease, transform 0.3s ease;
-  white-space: nowrap;
-}
-
-/* Estado recolhido - mantém ícone na mesma posição */
-.side-menu:not(.open) {
-  width: 65px;
-}
-
-.side-menu:not(.open) .nav-link {
-  padding: 10px 0;
-  width: 65px;
-}
-
-.side-menu:not(.open) .nav-link .fi {
-  margin-left: 20.5px; 
-}
-
-/* Adiciona estilos para o tema ativo */
-.theme-option.active {
-  background: var(--primary-color);
-  color: white;
-}
-
-.theme-option.active .fi {
-  color: white;
-}
-
-/* Botão para ocultar navegação */
-.toggle-nav-btn {
-  position: fixed;
-  bottom: 20px;
-  right: 25px;
-  width: 40px;
-  height: 40px;
-  background: var(--primary-gradient);
-  color: white;
-  border: none;
-  border-radius: 50%;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  overflow: hidden;
-}
-
-.toggle-nav-btn .fi {
-  color: currentColor;
-  transition: all 0.3s ease;
-  width: 24px;
-  height: 24px;
-}
-
-.toggle-nav-btn:hover .fi {
-  transform: scale(1.1);
-  transition: transform 0.2s ease;
-}
-
-/* Ajustes responsivos para o botão */
-@media (max-width: 768px) {
-  .toggle-nav-btn {
-    bottom: 16px;
-    width: 42px;
-    height: 42px;
-  }
-
-  .toggle-nav-btn .fi {
-    width: 24px;
-    height: 24px;
-  }
-}
-
-@media (max-width: 480px) {
-  .toggle-nav-btn {
-    bottom: 12px;
-    width: 40px;
-    height: 40px;
-  }
-}
-
-/* Estados ocultos */
-nav.nav-hidden {
-  transform: translateY(-100%);
-}
-
-.side-menu.nav-hidden {
-  transform: translateX(-100%);
-}
-
-/* Ajuste do padding quando navegação está oculta */
-body.has-navbar {
-  padding-top: 55px;
-  padding-left: 0;
-  transition: padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-body.has-navbar.menu-open:not(.nav-hidden) {
-  padding-left: 225px;
-}
-
-/* Quando a navegação está oculta, remove todos os paddings */
-body.has-navbar.nav-hidden {
-  padding: 0 !important;
-}
-
-/* Ajusta a transição do conteúdo principal */
-main {
-  transition: margin 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Remove margens quando navegação está oculta */
-body.has-navbar.nav-hidden main {
-  margin-top: 0;
-  margin-left: 0;
-}
-
-/* Ajuste responsivo para o padding lateral */
-@media (max-width: 768px) {
-  body.has-navbar.menu-open:not(.nav-hidden) {
-    padding-left: 0;
-  }
-}
-
-/* Ajuste do padding quando navegação está oculta */
-body.has-navbar {
-  transition: padding-top 0.3s ease;
-}
-
-nav.nav-hidden + body.has-navbar {
-  padding-top: 0;
-}
-
-.user-info-section {
-  padding: 12px;
-}
-
-.user-info-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.user-info-text {
-  overflow: hidden;
-}
-
-.user-name {
-  font-weight: bold;
-  font-size: 16px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.user-email {
-  font-size: 14px;
-  opacity: 0.8;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.user-type {
-  font-size: 12px;
-  opacity: 0.7;
-  margin-top: 2px;
-  font-style: italic;
 }

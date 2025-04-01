@@ -4,9 +4,10 @@
  */
 class AnimeSearchBar {
   constructor(options = {}) {
-    // Carregar categorias do localStorage
+    // Carrega as categorias do localStorage
     const categories = this.loadCategories();
 
+    // Configurações padrão da barra de busca
     this.options = {
       containerId: 'search-area',
       inputId: 'search-input',
@@ -22,7 +23,7 @@ class AnimeSearchBar {
             ...this.formatCategoriesToOptions(categories)
           ]
         },
-        date: {  // Alterado de 'year' para 'date'
+        date: { 
           label: 'Data de Lançamento',
           options: [
             { value: '', label: 'Todas' },
@@ -87,7 +88,7 @@ class AnimeSearchBar {
       source: ''
     };
 
-    this.container = document.getElementById(this.options.containerId);
+    this.$container = $(`#${this.options.containerId}`);
     this.setupSearchBar();
     this.setupEventListeners();
     
@@ -95,7 +96,7 @@ class AnimeSearchBar {
     this.loadPreviousSearch();
 
     // Adiciona listener para atualização de categorias
-    window.addEventListener('categoriesUpdated', () => {
+    $(window).on('categoriesUpdated', () => {
       this.updateGenreFilter();
     });
   }
@@ -116,18 +117,19 @@ class AnimeSearchBar {
   // Atualiza o filtro de gêneros quando as categorias são modificadas
   updateGenreFilter() {
     const categories = this.loadCategories();
-    const genreSelect = this.container.querySelector('#genre-filter');
+    const $genreSelect = this.$container.find('#genre-filter');
 
-    if (genreSelect) {
-      const currentValue = genreSelect.value;
+    if ($genreSelect.length) {
+      const currentValue = $genreSelect.val();
       const options = [
         { value: '', label: 'Todos' },
         ...this.formatCategoriesToOptions(categories)
       ];
 
-      genreSelect.innerHTML = options.map(option =>
+      // Atualiza as opções do select de gêneros
+      $genreSelect.html(options.map(option =>
         `<option value="${option.value}" ${currentValue === option.value ? 'selected' : ''}>${option.label}</option>`
-      ).join('');
+      ).join('')); 
     }
   }
 
@@ -172,9 +174,9 @@ class AnimeSearchBar {
 
   // Inicializa a estrutura HTML da barra de busca e seus componentes
   setupSearchBar() {
-    if (!this.container) return;
+    if (this.$container.length === 0) return;
 
-    this.container.innerHTML = `
+    this.$container.html(`
       <div class="search-container">
         <div class="search-input-wrapper">
           <input type="text" 
@@ -206,21 +208,21 @@ class AnimeSearchBar {
         </div>
 
         <button class="search-button">
-          <i class="fi fi-rr-search"></i>
+          <i class="fi fi-rr-search mt-1"></i>
         </button>
         <div id="${this.options.resultsId}" class="search-results"></div>
       </div>
-    `;
+    `);
 
-    this.input = document.getElementById(this.options.inputId);
-    this.results = document.getElementById(this.options.resultsId);
-    this.searchButton = this.container.querySelector('.search-button');
-    this.filterBtn = this.container.querySelector('.filter-btn');
-    this.filterMenu = this.container.querySelector('.filter-menu');
-    this.clearFiltersBtn = this.container.querySelector('#clear-filters-btn');
+    this.$input = $(`#${this.options.inputId}`);
+    this.$results = $(`#${this.options.resultsId}`);
+    this.$searchButton = this.$container.find('.search-button');
+    this.$filterBtn = this.$container.find('.filter-btn');
+    this.$filterMenu = this.$container.find('.filter-menu');
+    this.$clearFiltersBtn = this.$container.find('#clear-filters-btn');
 
     // Adiciona referência ao botão de limpar
-    this.clearButton = this.container.querySelector('.clear-input');
+    this.$clearButton = this.$container.find('.clear-input');
 
     // Atualiza visibilidade inicial do botão
     this.updateClearButtonVisibility();
@@ -231,103 +233,101 @@ class AnimeSearchBar {
 
   // Configura listeners para input de busca e interações do usuário
   setupEventListeners() {
-    if (!this.input || !this.results) return;
+    if (this.$input.length === 0 || this.$results.length === 0) return;
 
     // Debounce para evitar múltiplas requisições durante digitação
     let timeout = null;
-    this.input.addEventListener('input', () => {
+    this.$input.on('input', () => {
       clearTimeout(timeout);
       timeout = setTimeout(() => this.handleSearch(false), this.options.debounceTime);
     });
 
-    this.input.addEventListener('keydown', (e) => {
+    this.$input.on('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
         this.handleSearch(true);
       }
     });
 
-    this.searchButton.addEventListener('click', () => this.handleSearch(true));
+    this.$searchButton.on('click', () => this.handleSearch(true));
 
     // Fecha resultados ao clicar fora
-    document.addEventListener('click', (e) => { 
-      if (!this.container.contains(e.target)) this.hideResults(); 
+    $(document).on('click', (e) => { 
+      if (!this.$container.has(e.target).length) this.hideResults(); 
     });
 
     // Adiciona evento para o botão de limpar
-    this.clearButton.addEventListener('click', () => {
-      this.input.value = '';
+    this.$clearButton.on('click', () => {
+      this.$input.val('');
       this.hideResults();
       this.updateClearButtonVisibility();
-      this.input.focus();
+      this.$input.focus();
     });
 
     // Atualiza visibilidade do botão ao digitar
-    this.input.addEventListener('input', () => { 
+    this.$input.on('input', () => { 
       this.updateClearButtonVisibility(); 
     });
   }
 
   // Controla a visibilidade do botão de limpar
   updateClearButtonVisibility() {
-    if (this.input.value.length > 0) this.clearButton.style.display = 'block';
-    else this.clearButton.style.display = 'none';
+    if (this.$input.val().length > 0) this.$clearButton.show();
+    else this.$clearButton.hide();
   }
 
   // Configura eventos para interação com filtros de busca
   setupFilterEvents() {
     // Toggle do menu de filtros
-    this.filterBtn.addEventListener('click', () => { 
-      this.filterMenu.classList.toggle('show'); 
+    this.$filterBtn.on('click', () => { 
+      this.$filterMenu.toggleClass('show'); 
     });
 
     // Fecha filtros ao clicar fora
-    document.addEventListener('click', (e) => {
-      if (!this.container.contains(e.target)) this.filterMenu.classList.remove('show'); 
+    $(document).on('click', (e) => {
+      if (!this.$container.has(e.target).length) this.$filterMenu.removeClass('show'); 
     });
 
     // Adiciona listeners para cada select de filtro
-    const filterSelects = this.container.querySelectorAll('.filter-group select');
-    filterSelects.forEach(select => {
-      select.addEventListener('change', () => {
-        this.filters = {
-          genre: this.container.querySelector('#genre-filter').value,
-          date: this.container.querySelector('#date-filter').value,
-          rating: this.container.querySelector('#rating-filter').value,
-          status: this.container.querySelector('#status-filter').value,
-          season: this.container.querySelector('#season-filter').value,
-          source: this.container.querySelector('#source-filter').value
-        };
-        
-        // Atualiza visibilidade do botão de limpar filtros
-        this.updateClearFiltersButtonVisibility();
-        
-        // Salva os filtros no localStorage para persistência
-        localStorage.setItem('searchFilters', JSON.stringify(this.filters));
-        
-        this.handleSearch();
-      });
+    const $filterSelects = this.$container.find('.filter-group select');
+    $filterSelects.on('change', () => {
+      this.filters = {
+        genre: this.$container.find('#genre-filter').val(),
+        date: this.$container.find('#date-filter').val(),
+        rating: this.$container.find('#rating-filter').val(),
+        status: this.$container.find('#status-filter').val(),
+        season: this.$container.find('#season-filter').val(),
+        source: this.$container.find('#source-filter').val()
+      };
+      
+      // Atualiza visibilidade do botão de limpar filtros
+      this.updateClearFiltersButtonVisibility();
+      
+      // Salva os filtros no localStorage para persistência
+      localStorage.setItem('searchFilters', JSON.stringify(this.filters));
+      
+      this.handleSearch();
     });
 
     // Adiciona evento para o botão de limpar filtros
-    if (this.clearFiltersBtn) {
-      this.clearFiltersBtn.addEventListener('click', () => {
+    if (this.$clearFiltersBtn.length) {
+      this.$clearFiltersBtn.on('click', () => {
         this.clearAllFilters();
       });
     }
 
     // Adiciona listener específico para o filtro de data
-    const dateFilter = this.container.querySelector('#date-filter');
-    const customDateFilter = this.container.querySelector('#custom-date-filter');
+    const $dateFilter = this.$container.find('#date-filter');
+    const $customDateFilter = this.$container.find('#custom-date-filter');
 
-    if (dateFilter && customDateFilter) {
-      dateFilter.addEventListener('change', () => {
-        if (dateFilter.value === 'custom') customDateFilter.classList.remove('hidden');
-        else customDateFilter.classList.add('hidden');
+    if ($dateFilter.length && $customDateFilter.length) {
+      $dateFilter.on('change', () => {
+        if ($dateFilter.val() === 'custom') $customDateFilter.removeClass('hidden');
+        else $customDateFilter.addClass('hidden');
       });
 
-      customDateFilter.addEventListener('change', () => {
-        this.filters.customDate = customDateFilter.value;
+      $customDateFilter.on('change', () => {
+        this.filters.customDate = $customDateFilter.val();
         // Salva os filtros atualizados no localStorage
         localStorage.setItem('searchFilters', JSON.stringify(this.filters));
         this.handleSearch();
@@ -337,68 +337,64 @@ class AnimeSearchBar {
     // Adiciona tratamento especial para dispositivos móveis
     if (window.innerWidth <= 480) {
       // Fecha o menu de filtros ao tocar fora
-      document.addEventListener('touchstart', (e) => {
-        if (this.filterMenu.classList.contains('show') &&
-          !this.filterMenu.contains(e.target) &&
-          !this.filterBtn.contains(e.target)) {
-          this.filterMenu.classList.remove('show');
-        }
+      $(document).on('touchstart', (e) => {
+        if (this.$filterMenu.hasClass('show') &&
+            !this.$filterMenu.has(e.target).length &&
+            !this.$filterBtn.has(e.target).length) this.$filterMenu.removeClass('show');
       });
 
       // Adiciona gesto de swipe down para fechar os filtros
       let touchStartY = 0;
       let touchEndY = 0;
 
-      this.filterMenu.addEventListener('touchstart', (e) => { 
+      this.$filterMenu.on('touchstart', (e) => { 
         touchStartY = e.touches[0].clientY; 
       });
 
-      this.filterMenu.addEventListener('touchmove', (e) => {
+      this.$filterMenu.on('touchmove', (e) => {
         touchEndY = e.touches[0].clientY;
         const diffY = touchEndY - touchStartY;
 
         // Se arrastar mais de 50px para baixo
-        if (diffY > 50) this.filterMenu.classList.remove('show');
+        if (diffY > 50) this.$filterMenu.removeClass('show');
       });
     }
 
     // Ajusta posição dos resultados baseado no viewport
-    window.addEventListener('resize', () => {
-      if (this.results) {
-        const rect = this.input.getBoundingClientRect();
+    $(window).on('resize', () => {
+      if (this.$results.length) {
+        const rect = this.$input[0].getBoundingClientRect();
         const spaceBelow = window.innerHeight - rect.bottom;
 
         // Se houver pouco espaço abaixo
-        if (spaceBelow < 300) this.results.style.maxHeight = `${spaceBelow - 10}px`;
-        else this.results.style.maxHeight = '400px';
+        if (spaceBelow < 300) this.$results.css('maxHeight', `${spaceBelow - 10}px`);
+        else this.$results.css('maxHeight', '400px');
       }
     });
   }
 
   // Atualiza a visibilidade do botão de limpar filtros
   updateClearFiltersButtonVisibility() {
-    if (!this.clearFiltersBtn) return;
+    if (!this.$clearFiltersBtn.length) return;
     
     // Verifica se algum filtro está aplicado
     const hasActiveFilters = Object.values(this.filters).some(value => value !== '');
     
-    if (hasActiveFilters) this.clearFiltersBtn.classList.remove('hidden');
-    else this.clearFiltersBtn.classList.add('hidden');
+    if (hasActiveFilters) this.$clearFiltersBtn.removeClass('hidden');
+    else this.$clearFiltersBtn.addClass('hidden');
   }
 
   // Limpa todos os filtros aplicados
   clearAllFilters() {
     // Reseta todos os valores dos selects
-    const filterSelects = this.container.querySelectorAll('.filter-group select');
-    filterSelects.forEach(select => {
-      select.value = '';
-    });
+    const $filterSelects = this.$container.find('.filter-group select');
+    $filterSelects.val('');
     
     // Oculta o campo de data personalizada se estiver visível
-    const customDateFilter = this.container.querySelector('#custom-date-filter');
-    if (customDateFilter) {
-      customDateFilter.classList.add('hidden');
-      customDateFilter.value = '';
+    const $customDateFilter = this.$container.find('#custom-date-filter');
+    if ($customDateFilter.length) {
+      $customDateFilter.addClass('hidden');
+      $customDateFilter.val('');
     }
     
     // Reseta o objeto de filtros
@@ -426,7 +422,7 @@ class AnimeSearchBar {
    * @param {boolean} redirect - Se true, redireciona para página de resultados
    */
   async handleSearch(redirect = false) {
-    const query = this.input.value.trim();
+    const query = this.$input.val().trim();
 
     if (query.length < this.options.minChars) {
       this.hideResults();
@@ -558,20 +554,15 @@ class AnimeSearchBar {
       }
     })();
 
-    const statusMatch = !this.filters.status ||
-      this.normalizeText(anime.status) === this.normalizeText(this.filters.status);
+    const statusMatch = !this.filters.status || this.normalizeText(anime.status) === this.normalizeText(this.filters.status);
 
-    const seasonMatch = !this.filters.season ||
-      (anime.season && this.normalizeText(anime.season.period) === this.normalizeText(this.filters.season));
+    const seasonMatch = !this.filters.season || (anime.season && this.normalizeText(anime.season.period) === this.normalizeText(this.filters.season));
 
-    const ratingMatch = !this.filters.rating ||
-      (anime.score && parseFloat(anime.score) >= parseFloat(this.filters.rating));
+    const ratingMatch = !this.filters.rating || (anime.score && parseFloat(anime.score) >= parseFloat(this.filters.rating));
 
-    const sourceMatch = !this.filters.source ||
-      (anime.source && this.normalizeText(anime.source) === this.normalizeText(this.filters.source));
+    const sourceMatch = !this.filters.source || (anime.source && this.normalizeText(anime.source) === this.normalizeText(this.filters.source));
 
-    return genreMatch && dateMatch && statusMatch &&
-      seasonMatch && ratingMatch && sourceMatch;
+    return genreMatch && dateMatch && statusMatch && seasonMatch && ratingMatch && sourceMatch;
   }
 
   /**
@@ -579,18 +570,18 @@ class AnimeSearchBar {
    * @param {Array} results - Array de animes encontrados
    */
   displayResults(results) {
-    if (!this.results) return;
+    if (this.$results.length === 0) return;
 
     if (results.length === 0) {
-      this.results.innerHTML = `
+      this.$results.html(`
         <div class="no-results">
           Nenhum anime encontrado
         </div>
-      `;
+      `);
     } else {
-      this.results.innerHTML = results
+      this.$results.html(results
         .map(anime => this.createResultItem(anime))
-        .join('');
+        .join(''));
     }
 
     this.showResults();
@@ -624,26 +615,26 @@ class AnimeSearchBar {
 
   // Exibe mensagem de erro na interface
   displayError() {
-    if (!this.results) return;
+    if (this.$results.length === 0) return;
 
-    this.results.innerHTML = `
+    this.$results.html(`
       <div class="no-results">
         Ocorreu um erro na busca
       </div>
-    `;
+    `);
     this.showResults();
   }
 
   // Métodos auxiliares para controle de visibilidade
   showResults() {
-    if (this.results) this.results.style.display = 'block';
+    if (this.$results.length) this.$results.show();
   }
 
   hideResults() {
-    if (this.results) this.results.style.display = 'none';
+    if (this.$results.length) this.$results.hide();
   }
 
-  // Função para carregar busca anterior e filtros aplicados
+  // Carrega busca anterior e filtros aplicados
   loadPreviousSearch() {
     // Verifica se há filtros salvos
     const savedFilters = localStorage.getItem('searchFilters');
@@ -660,29 +651,29 @@ class AnimeSearchBar {
     const urlParams = new URLSearchParams(window.location.search);
     const searchQuery = urlParams.get('search');
     
-    if (searchQuery && this.input) {
+    if (searchQuery && this.$input.length) {
       // Aplica o termo de busca da URL
-      this.input.value = decodeURIComponent(searchQuery);
+      this.$input.val(decodeURIComponent(searchQuery));
       this.updateClearButtonVisibility();
     }
   }
 
   // Aplica valores dos filtros aos elementos de interface
   applyFilterValues() {
-    if (!this.container) return;
+    if (this.$container.length === 0) return;
 
     // Aplica cada filtro ao seu respectivo elemento de interface
     Object.keys(this.filters).forEach(key => {
-      const filterSelect = this.container.querySelector(`#${key}-filter`);
-      if (filterSelect && this.filters[key]) filterSelect.value = this.filters[key];
+      const $filterSelect = this.$container.find(`#${key}-filter`);
+      if ($filterSelect.length && this.filters[key]) $filterSelect.val(this.filters[key]);
     });
 
     // Trata caso especial do filtro de data personalizada
     if (this.filters.date === 'custom') {
-      const customDateFilter = this.container.querySelector('#custom-date-filter');
-      if (customDateFilter) {
-        customDateFilter.classList.remove('hidden');
-        if (this.filters.customDate) customDateFilter.value = this.filters.customDate;
+      const $customDateFilter = this.$container.find('#custom-date-filter');
+      if ($customDateFilter.length) {
+        $customDateFilter.removeClass('hidden');
+        if (this.filters.customDate) $customDateFilter.val(this.filters.customDate);
       }
     }
 
@@ -692,7 +683,7 @@ class AnimeSearchBar {
 }
 
 // Inicializa barra de busca com configurações personalizadas
-document.addEventListener('DOMContentLoaded', () => {
+$(document).ready(() => {
   new AnimeSearchBar({
     debounceTime: 400,
     maxResults: 8
