@@ -4,9 +4,7 @@ class Navbar {
     // Template HTML principal da navbar com menu lateral e painel de usuário
     this.navHTML = `
       <button id="toggle-navigation" class="toggle-nav-btn" title="Ocultar Navegação (ALT + H)">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-          <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
-        </svg>
+        <i class="fi fi-ss-layer-minus"></i>
       </button>
       <nav class="fixed top-0 left-0 right-0" style="z-index:100">
         <div class="mx-auto px-4">
@@ -15,9 +13,7 @@ class Navbar {
             <div class="nav-menu-container">
               <!-- Menu Toggle Button -->
               <button id="menu-toggle" class="menu-toggle-btn" title="Expandir Menu (ALT + M)">
-                <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24">
-                  <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
-                </svg>
+                <i class="fi fi-ss-menu-burger"></i>
               </button>
               
               <!-- Logo -->
@@ -48,71 +44,49 @@ class Navbar {
       <div id="side-menu" class="side-menu">
         <div class="side-menu-content">
           <a href="index.html" class="nav-link" title="Ir para página inicial">
-            <svg xmlns="http://www.w3.org/2000/svg" height="34" viewBox="0 0 24 24">
-              <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-            </svg>
+            <i class="fi fi-ss-house-chimney"></i>
             <span>Início</span>
           </a>
           <a href="animes.html" class="nav-link" title="Ver lista de animes">
-            <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24">
-              <path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/>
-            </svg>
+            <i class="fi fi-ss-graphic-style"></i>
             <span>Animes</span>
           </a>
           <a href="recommendation.html" class="nav-link" title="Ver recomendações de animes">
-            <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24">
-              <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-            </svg>
+            <i class="fi fi-ss-sparkles"></i>
             <span>Recomendações</span>
           </a>
           <a href="news.html" class="nav-link" title="Ver notícias sobre animes">
-            <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24">
-              <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-5 14H4v-6h11v6zm0-8H4V6h11v4zm5 8h-4V6h4v12z"/>
-            </svg>
+            <i class="fi fi-ss-book-open-cover"></i>
             <span>Notícias</span>
           </a>
           <a href="profile.html" class="nav-link" title="Acessar perfil do usuário">
-            <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24">
-              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-            </svg>
+            <i class="fi fi-ss-user-pen"></i>
             <span>Perfil</span>
           </a>
           <a href="category.html" class="nav-link" title="Explorar categorias de animes">
-            <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24">
-              <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
-            </svg>
+            <i class="fi fi-ss-palette"></i>
             <span>Categorias</span>
           </a>
           <a href="about.html" class="nav-link" title="Informações sobre o site">
-            <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
-            </svg>
+            <i class="fi fi-ss-comment-info"></i>
             <span>Sobre</span>
           </a>
           <!-- Opções de Admin (inicialmente ocultas) -->
           <div id="admin-options" class="hidden">
             <a href="./users-admin.html" class="nav-link admin-link" title="Gerenciar usuários do sistema">
-              <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24">
-                <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
-              </svg>
+              <i class="fi fi-ss-user-gear"></i>
               <span>Gerenciar Usuários</span>
             </a>
             <a href="./category-admin.html" class="nav-link admin-link" title="Gerenciar categorias de animes">
-              <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24">
-                <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
-              </svg>
+              <i class="fi fi-ss-customize-computer"></i>
               <span>Gerenciar Categorias</span>
             </a>
             <a href="./animes-admin.html" class="nav-link admin-link" title="Gerenciar catálogo de animes">
-              <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24">
-                <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12zM12 5.5v9l6-4.5z"/>
-              </svg>
+              <i class="fi fi-ss-add-image"></i>
               <span>Gerenciar Animes</span>
             </a>
             <a href="./news-admin.html" class="nav-link admin-link" title="Gerenciar notícias do site">
-              <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24">
-                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-5 14H4v-6h11v6zm0-8H4V6h11v4zm5 8h-4V6h4v12z"/>
-              </svg>
+              <i class="fi fi-ss-books-medical"></i>
               <span>Gerenciar Notícias</span>
             </a>
           </div>
@@ -162,17 +136,13 @@ class Navbar {
             </div>
             <div class="dropdown-divider"></div>
             <a href="./profile.html" class="dropdown-item">
-              <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 0 24 24">
-                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-              </svg>
+              <i class="fi fi-ss-user-pen"></i>
               <span>Perfil</span>
             </a>
             ${themeSection}
             <div class="dropdown-divider"></div>
             <button class="dropdown-item text-red-600" id="logout-btn">
-              <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 0 24 24">
-                <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
-              </svg>
+              <i class="fi fi-ss-leave"></i>
               <span>Sair</span>
             </button>
           </div>
@@ -182,21 +152,15 @@ class Navbar {
       return `
         <div class="relative">
           <button id="auth-dropdown-btn" class="auth-btn focus:outline-none" title="Opções de Login">
-            <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24">
-              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-            </svg>
+            <i class="fi fi-ss-user"></i>
           </button>
           <div id="auth-dropdown" class="user-dropdown hidden">
             <a href="./signin.html" class="dropdown-item">
-              <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 0 24 24">
-                <path d="M11 7L9.6 8.4l2.6 2.6H2v2h10.2l-2.6 2.6L11 17l5-5-5-5zm9 12h-8v2h8c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-8v2h8v14z"/>
-              </svg>
+              <i class="fi fi-ss-address-card"></i>
               <span>Entrar</span>
             </a>
             <a href="./signup.html" class="dropdown-item">
-              <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 0 24 24">
-                <path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-              </svg>
+              <i class="fi fi-ss-user-add"></i>
               <span>Criar Conta</span>
             </a>
             ${themeSection}
@@ -607,9 +571,7 @@ class Navbar {
       toggleBtn.classList.add('rotated');
       // Atualiza o SVG para olho fechado quando oculto
       toggleBtn.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-          <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/>
-        </svg>
+        <i class="fi fi-ss-layer-minus"></i>
       `;
     }
 
@@ -622,13 +584,9 @@ class Navbar {
       // Alterna entre olho aberto e fechado
       const isHidden = navbar.classList.contains('nav-hidden');
       toggleBtn.innerHTML = isHidden ? `
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-          <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/>
-        </svg>
+        <i class="fi fi-ss-layer-plus"></i>
       ` : `
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-          <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73-4.39 6-7.5 11-7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
-        </svg>
+        <i class="fi fi-ss-layer-minus"></i>
       `;
       
       // Salva estado

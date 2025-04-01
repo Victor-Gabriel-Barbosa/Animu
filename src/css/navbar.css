@@ -145,8 +145,8 @@ nav .ml-10 a.active {
   font-weight: 600;
 }
 
-.nav-link.active svg {
-  fill: var(--primary-color);
+.nav-link.active .fi {
+  color: var(--primary-color);
   opacity: 1;
 }
 
@@ -169,15 +169,15 @@ nav .ml-10 a.active {
 .menu-toggle-btn:hover {
   transform: scale(1.1);
   background: var(--card-shadow);
-  fill: var(--primary-color);
+  color: var(--primary-color);
 }
 
-.menu-toggle-btn:hover svg {
-  fill: var(--primary-color);
+.menu-toggle-btn:hover .fi {
+  color: var(--primary-color);
 }
 
-.menu-toggle-btn svg {
-  fill: var(--text-color);
+.menu-toggle-btn .fi {
+  color: var(--text-color);
 }
 
 /* Menu lateral com largura fixa e animação */
@@ -245,7 +245,7 @@ nav .ml-10 a.active {
   width: 70px;
 }
 
-.side-menu:not(.open) .nav-link svg {
+.side-menu:not(.open) .nav-link .fi {
   margin-left: 12px; 
   width: 22px; 
   height: 22px;
@@ -255,11 +255,10 @@ nav .ml-10 a.active {
 .side-menu .nav-link {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px; 
+  padding: 10px 0; 
   width: 100%;
-  font-size: 0.8125rem;
-  margin: 2px 0; 
+  font-size: 0.8125rem; 
+  margin-bottom: 6px;
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
 }
@@ -309,8 +308,8 @@ nav .ml-10 a.active {
 }
 
 /* Efeito dos ícones */
-.side-menu .nav-link svg {
-  fill: var(--text-color);
+.side-menu .nav-link .fi {
+  color: var(--text-color);
   opacity: 0.7;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   min-width: 22px; 
@@ -318,8 +317,8 @@ nav .ml-10 a.active {
   width: 22px;
 }
 
-.side-menu .nav-link:hover svg {
-  fill: var(--primary-color);
+.side-menu .nav-link:hover .fi {
+  color: var(--primary-color);
   opacity: 1;
   transform: scale(1.1);
 }
@@ -350,8 +349,8 @@ nav .ml-10 a.active {
   transform: scaleY(1);
 }
 
-.side-menu .nav-link.active svg {
-  fill: var(--primary-color);
+.side-menu .nav-link.active .fi {
+  color: var(--primary-color);
   opacity: 1;
   transform: scale(1.1);
 }
@@ -365,8 +364,8 @@ nav .ml-10 a.active {
   color: var(--primary-color);
 }
 
-.side-menu .nav-link svg {
-  fill: var(--text-color);
+.side-menu .nav-link .fi {
+  color: var(--text-color);
   opacity: 0.7;
   transition: fill 0.3s ease, opacity 0.3s ease;
   min-width: 20px; 
@@ -374,8 +373,8 @@ nav .ml-10 a.active {
   width: 20px;
 }
 
-.side-menu .nav-link:hover svg {
-  fill: var(--primary-color);
+.side-menu .nav-link:hover .fi {
+  color: var(--primary-color);
   opacity: 1;
 }
 
@@ -387,8 +386,8 @@ nav .ml-10 a.active {
   transform: translateX(0);
 }
 
-.side-menu .nav-link.active svg {
-  fill: var(--primary-color);
+.side-menu .nav-link.active .fi {
+  color: var(--primary-color);
   opacity: 1;
 }
 
@@ -467,7 +466,7 @@ body.menu-open {
   align-items: center;
   gap: 12px;
   width: 100%;
-  padding: 12px;
+  padding: 20px;
   border: none;
   background: transparent;
   color: var(--text-color);
@@ -481,8 +480,8 @@ body.menu-open {
   background: var(--primary-color-alpha);
 }
 
-.dropdown-item svg {
-  fill: currentColor;
+.dropdown-item .fi {
+  color: currentColor;
 }
 
 #user-dropdown-btn {
@@ -530,10 +529,9 @@ body.menu-open {
   color: white;
 }
 
-.auth-btn svg {
-  width: 24px;
-  height: 24px;
-  fill: currentColor;
+.auth-btn .fi {
+  font-size: 20px;
+  color: currentColor;
 }
 
 .dropdown-divider {
@@ -779,9 +777,8 @@ body.menu-open {
     margin: 1px 0;
   }
 
-  .nav-link svg {
-    width: 20px;
-    height: 20px;
+  .nav-link .fi {
+    font-size: 20px;
   }
 }
 
@@ -808,9 +805,7 @@ body.menu-open {
 }
 
 /* Otimizações de performance */
-.side-menu, 
-.side-menu-content,
-.nav-link {
+.side-menu, .side-menu-content, .nav-link {
   will-change: transform, width;
 }
 
@@ -820,24 +815,12 @@ body.has-navbar {
   transition: padding-left 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Ajuste base para os links do menu lateral */
-.side-menu .nav-link {
-  display: flex;
-  align-items: center;
-  padding: 10px 0; 
-  width: 100%;
-  font-size: 0.8125rem; 
-  margin: 2px 0;
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-}
-
 /* Posicionamento fixo do ícone */
-.side-menu .nav-link svg {
-  min-width: 22px;
-  width: 22px;
-  height: 22px;
-  margin-left: 22px;
+.side-menu .nav-link .fi {
+  min-width: 20px;
+  width: 20px;
+  height: 20px;
+  margin-left: 20.5px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
 }
@@ -860,8 +843,8 @@ body.has-navbar {
   width: 65px;
 }
 
-.side-menu:not(.open) .nav-link svg {
-  margin-left: 22px; 
+.side-menu:not(.open) .nav-link .fi {
+  margin-left: 20.5px; 
 }
 
 /* Adiciona estilos para o tema ativo */
@@ -870,8 +853,8 @@ body.has-navbar {
   color: white;
 }
 
-.theme-option.active svg {
-  fill: white;
+.theme-option.active .fi {
+  color: white;
 }
 
 /* Botão para ocultar navegação */
@@ -895,14 +878,14 @@ body.has-navbar {
   overflow: hidden;
 }
 
-.toggle-nav-btn svg {
-  fill: currentColor;
+.toggle-nav-btn .fi {
+  color: currentColor;
   transition: all 0.3s ease;
   width: 24px;
   height: 24px;
 }
 
-.toggle-nav-btn:hover svg {
+.toggle-nav-btn:hover .fi {
   transform: scale(1.1);
   transition: transform 0.2s ease;
 }
@@ -915,7 +898,7 @@ body.has-navbar {
     height: 42px;
   }
 
-  .toggle-nav-btn svg {
+  .toggle-nav-btn .fi {
     width: 24px;
     height: 24px;
   }

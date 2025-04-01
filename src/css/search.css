@@ -159,9 +159,8 @@
   background: var(--card-shadow);
 }
 
-.filter-btn svg,
-.search-button svg {
-  fill: var(--primary-color);
+.filter-btn .fi, .search-button .fi {
+  color: var(--primary-color);
 }
 
 .filter-menu {
@@ -258,10 +257,10 @@
   color: white;
 }
 
-.clear-filters-btn svg {
+.clear-filters-btn .fi {
   width: 16px;
   height: 16px;
-  fill: currentColor;
+  color: currentColor;
 }
 
 .clear-filters-btn.hidden {
@@ -293,11 +292,8 @@
     left: 8px;
   }
 
-  .search-icon svg,
-  .search-button svg,
-  .filter-btn svg {
-    width: 20px;
-    height: 20px;
+  .search-icon .fi, .search-button .fi, .filter-btn .fi {
+    font-size: 16px;
   }
 
   .search-results {
@@ -326,9 +322,8 @@
     right: 6px;
   }
 
-  .clear-input svg {
-    width: 18px;
-    height: 18px;
+  .clear-input .fi {
+    font-size: 16px;
   }
 }
 
@@ -350,10 +345,9 @@
     padding: 0 4px;
   }
 
-  .search-button svg,
-  .filter-btn svg {
-    width: 18px; 
-    height: 18px;
+  .search-button .fi, .filter-btn .fi {
+    width: 14px; 
+    height: 14px;
   }
 
   .filter-menu {
@@ -461,12 +455,12 @@
   background-color: var(--card-shadow);
 }
 
-.clear-input svg {
-  fill: var(--text-color);
+.clear-input .fi {
+  color: var(--text-color);
   opacity: 0.6;
   transition: opacity 0.2s ease;
 }
 
-.clear-input:hover svg {
+.clear-input:hover .fi {
   opacity: 1;
 }

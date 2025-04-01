@@ -4,6 +4,8 @@
 @import url('https://cdn-uicons.flaticon.com/2.6.0/uicons-solid-rounded/css/uicons-solid-rounded.css');
 @import url('https://cdn-uicons.flaticon.com/2.6.0/uicons-regular-chubby/css/uicons-regular-chubby.css');
 @import url('https://cdn-uicons.flaticon.com/2.6.0/uicons-solid-straight/css/uicons-solid-straight.css');
+@import url('https://cdn-uicons.flaticon.com/2.6.0/uicons-brands/css/uicons-brands.css');
+@import url('https://cdn-uicons.flaticon.com/2.6.0/uicons-solid-chubby/css/uicons-solid-chubby.css');
 
 /* ==========================================================================
   Índice:
@@ -489,16 +491,15 @@ tbody tr:nth-child(5) { animation-delay: 0.5s; }
   transform: translateY(0);
 }
 
-.back-to-top svg {
-  width: 24px;
-  height: 24px;
+.back-to-top .fi {
+  font-size: 20px;
   stroke-width: 2;
   stroke: white;
   fill: none;
   transition: transform 0.2s ease;
 }
 
-.back-to-top:hover svg {
+.back-to-top:hover .fi {
   transform: translateY(-4px);
   transition: transform 0.2s ease;
 }
