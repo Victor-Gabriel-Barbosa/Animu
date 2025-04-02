@@ -132,7 +132,7 @@
               <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 mb-3 sm:mb-4">
                 <h2 class="text-xs sm:text-sm font-semibold">Amigos</h2>
                 <!-- Botão para abrir modal de adição de amigos -->
-                <button id="add-friend-btn" class="btn btn-primary group text-xs sm:text-sm py-1 sm:py-1.5 px-2 sm:px-3">
+                <button id="add-friend-btn" class="btn-action btn-primary group text-xs sm:text-sm py-1 sm:py-1.5 px-2 sm:px-3">
                   <span class="flex items-center gap-1 sm:gap-2">
                     <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-5 lg:h-5 transition-transform group-hover:rotate-90 duration-300" fill="none" viewBox="0 0 24 24"
                       stroke="currentColor">
@@ -326,19 +326,15 @@
           </div>
           <!-- Botões de ação do formulário -->
           <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4 sm:mt-6">
-            <button type="submit" class="btn btn-primary order-1 sm:order-3 flex-1 w-full py-2 sm:py-2.5 text-sm">
-              <span class="flex items-center justify-center gap-1.5 sm:gap-2">
-                <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
+            <button type="submit" class="btn-action btn-primary order-1 md:order-3 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
+              <span class="flex items-center justify-center gap-2">
+                <i class="fi fi-br-checkbox"></i>
                 Salvar Alterações
               </span>
             </button>
-            <button type="button" id="cancel-edit" class="btn btn-cancel order-2 flex-1 w-full py-2 sm:py-2.5 text-sm">
-              <span class="flex items-center justify-center gap-1.5 sm:gap-2">
-                <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+            <button type="button" id="cancel-edit" class="btn-action btn-cancel order-2 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
+              <span class="flex items-center justify-center gap-2">
+                <i class="fi fi-br-circle-xmark"></i>
                 Cancelar
               </span>
             </button>

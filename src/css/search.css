@@ -283,7 +283,6 @@
   .search-button, .filter-btn {
     height: 32px; 
     padding: 0 6px;
-    min-width: 32px; 
   }
 
   .search-icon {
