@@ -1,11 +1,4 @@
-@import url('https://cdn-uicons.flaticon.com/2.6.0/uicons-bold-straight/css/uicons-bold-straight.css');
-@import url('https://cdn-uicons.flaticon.com/2.6.0/uicons-bold-rounded/css/uicons-bold-rounded.css');
-@import url('https://cdn-uicons.flaticon.com/2.6.0/uicons-regular-rounded/css/uicons-regular-rounded.css');
-@import url('https://cdn-uicons.flaticon.com/2.6.0/uicons-solid-rounded/css/uicons-solid-rounded.css');
-@import url('https://cdn-uicons.flaticon.com/2.6.0/uicons-regular-chubby/css/uicons-regular-chubby.css');
-@import url('https://cdn-uicons.flaticon.com/2.6.0/uicons-solid-straight/css/uicons-solid-straight.css');
-@import url('https://cdn-uicons.flaticon.com/2.6.0/uicons-brands/css/uicons-brands.css');
-@import url('https://cdn-uicons.flaticon.com/2.6.0/uicons-solid-chubby/css/uicons-solid-chubby.css');
+@import url('https://cdn.jsdelivr.net/npm/@flaticon/flaticon-uicons@3.3.1/css/all/all.min.css');
 
 /* ==========================================================================
   Índice:
@@ -385,10 +378,11 @@ tbody tr:nth-child(5) { animation-delay: 0.5s; }
   height: 20px;
 }
 
-.fi {
+i {
   font-size: 20px;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
 }
 
 .btn-edit {
@@ -488,7 +482,7 @@ tbody tr:nth-child(5) { animation-delay: 0.5s; }
   transform: translateY(0);
 }
 
-.back-to-top .fi {
+.back-to-top i {
   font-size: 20px;
   stroke-width: 2;
   stroke: white;
@@ -496,7 +490,7 @@ tbody tr:nth-child(5) { animation-delay: 0.5s; }
   transition: transform 0.2s ease;
 }
 
-.back-to-top:hover .fi {
+.back-to-top:hover i {
   transform: translateY(-4px);
   transition: transform 0.2s ease;
 }

@@ -1,4 +1,4 @@
-/* Importações */
+/* Importa o estilo da barra de pesquisa */
 @import "search.css";
 
 /* Container fixo do menu de navegação principal */
@@ -140,7 +140,7 @@ nav .ml-10 a.active {
   font-weight: 600;
 }
 
-.nav-link.active .fi {
+.nav-link.active i {
   color: var(--primary-color);
   opacity: 1;
 }
@@ -189,11 +189,11 @@ nav .ml-10 a.active {
   color: var(--primary-color);
 }
 
-.menu-toggle-btn:hover .fi {
+.menu-toggle-btn:hover i {
   color: var(--primary-color);
 }
 
-.menu-toggle-btn .fi {
+.menu-toggle-btn i {
   color: var(--text-color);
 }
 
@@ -256,7 +256,8 @@ nav .ml-10 a.active {
 .side-menu .nav-link {
   display: flex;
   align-items: center;
-  padding: 10px 0; 
+  padding: 0 0;
+  height: 40px;
   width: 100%;
   font-size: 0.8125rem; 
   margin-bottom: 6px;
@@ -265,11 +266,8 @@ nav .ml-10 a.active {
 }
 
 /* Ícones no menu lateral */
-.side-menu .nav-link .fi {
-  min-width: 20px;
-  width: 20px;
-  height: 20px;
-  margin-left: 20.5px;
+.side-menu .nav-link i {
+  margin-left: 20.8px;
   color: var(--text-color);
   opacity: 0.7;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -278,7 +276,7 @@ nav .ml-10 a.active {
 
 /* Texto nos links do menu */
 .side-menu .nav-link span {
-  padding-left: 12px;
+  padding-left: 10px;
   opacity: 1;
   transition: opacity 0.3s ease, transform 0.3s ease;
   white-space: nowrap;
@@ -295,10 +293,6 @@ nav .ml-10 a.active {
 .side-menu:not(.open) .admin-section-divider {
   display: none;
   opacity: 0;
-}
-
-.side-menu:not(.open) .nav-link .fi {
-  margin-left: 20.5px;
 }
 
 /* Efeito de hover com gradiente */
@@ -346,10 +340,9 @@ nav .ml-10 a.active {
 }
 
 /* Efeitos de hover */
-.side-menu .nav-link:hover .fi {
+.side-menu .nav-link:hover i {
   color: var(--primary-color);
   opacity: 1;
-  transform: scale(1.1);
 }
 
 .side-menu .nav-link:hover span {
@@ -369,10 +362,9 @@ nav .ml-10 a.active {
   transform: translateX(0);
 }
 
-.side-menu .nav-link.active .fi {
+.side-menu .nav-link.active i {
   color: var(--primary-color);
   opacity: 1;
-  transform: scale(1.1);
 }
 
 /* Efeito ao pressionar */
@@ -465,7 +457,7 @@ nav .ml-10 a.active {
   background: var(--primary-color-alpha);
 }
 
-.dropdown-item .fi {
+.dropdown-item i {
   color: currentColor;
 }
 
@@ -558,7 +550,7 @@ nav .ml-10 a.active {
   color: white;
 }
 
-.auth-btn .fi {
+.auth-btn i {
   font-size: 20px;
   color: currentColor;
 }
@@ -589,7 +581,7 @@ nav .ml-10 a.active {
   color: white;
 }
 
-.theme-option.active .fi {
+.theme-option.active i {
   color: white;
 }
 
@@ -614,14 +606,13 @@ nav .ml-10 a.active {
   overflow: hidden;
 }
 
-.toggle-nav-btn .fi {
+.toggle-nav-btn i {
   color: currentColor;
   transition: all 0.3s ease;
-  width: 24px;
-  height: 24px;
+  font-size: 20px;
 }
 
-.toggle-nav-btn:hover .fi {
+.toggle-nav-btn:hover i {
   transform: scale(1.1);
   transition: transform 0.2s ease;
 }
@@ -794,9 +785,8 @@ body.has-navbar.nav-hidden main {
     height: 42px;
   }
 
-  .toggle-nav-btn .fi {
-    width: 24px;
-    height: 24px;
+  .toggle-nav-btn i {
+    font-size: 22px;
   }
   
   body.has-navbar.menu-open:not(.nav-hidden) {
@@ -872,7 +862,7 @@ body.has-navbar.nav-hidden main {
     margin: 1px 0;
   }
 
-  .nav-link .fi {
+  .nav-link i {
     font-size: 20px;
   }
 }

@@ -60,6 +60,7 @@ class ContentModerator {
     let censoredText = text;
     const censorChar = MODERATION_CONFIG.moderation.censorCharacter;
     
+    // Censura os spans encontrados
     for (const span of sortedSpans) {
       const { begin, end } = span;
       const replacement = censorChar.repeat(end - begin);

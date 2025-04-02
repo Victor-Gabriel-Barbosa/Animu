@@ -4,7 +4,7 @@ class Navbar {
     // Template HTML principal da navbar com menu lateral e painel de usuário
     this.navHTML = `
       <button id="toggle-navigation" class="toggle-nav-btn" title="Ocultar Navegação (ALT + H)">
-        <i class="fi fi-ss-layer-minus"></i>
+        <i class="fi fi-sr-layer-minus"></i>
       </button>
       <nav class="fixed top-0 left-0 right-0" style="z-index:100">
         <div class="mx-auto px-4">
@@ -13,7 +13,7 @@ class Navbar {
             <div class="nav-menu-container">
               <!-- Menu Toggle Button -->
               <button id="menu-toggle" class="menu-toggle-btn" title="Expandir Menu (ALT + M)">
-                <i class="fi fi-ss-menu-burger"></i>
+                <i class="fi fi-sr-menu-burger"></i>
               </button>
               
               <!-- Logo -->
@@ -42,54 +42,52 @@ class Navbar {
 
       <!-- Menu Lateral -->
       <div id="side-menu" class="side-menu">
-        <div class="side-menu-content">
-          <a href="index.html" class="nav-link" title="Ir para página inicial">
-            <i class="fi fi-ss-house-chimney"></i>
-            <span>Início</span>
+        <a href="index.html" class="nav-link" title="Ir para página inicial">
+          <i class="fi fi-sr-house-chimney"></i>
+          <span>Início</span>
+        </a>
+        <a href="animes.html" class="nav-link" title="Ver lista de animes">
+          <i class="fi fi-sr-graphic-style"></i>
+          <span>Animes</span>
+        </a>
+        <a href="recommendation.html" class="nav-link" title="Ver recomendações de animes">
+          <i class="fi fi-sr-sparkles"></i>
+          <span>Recomendações</span>
+        </a>
+        <a href="news.html" class="nav-link" title="Ver notícias sobre animes">
+          <i class="fi fi-sr-book-open-cover"></i>
+          <span>Notícias</span>
+        </a>
+        <a href="profile.html" class="nav-link" title="Acessar perfil do usuário">
+          <i class="fi fi-sr-user-pen"></i>
+          <span>Perfil</span>
+        </a>
+        <a href="category.html" class="nav-link" title="Explorar categorias de animes">
+          <i class="fi fi-sr-palette"></i>
+          <span>Categorias</span>
+        </a>
+        <a href="about.html" class="nav-link" title="Informações sobre o site">
+          <i class="fi fi-sr-comment-info"></i>
+          <span>Sobre</span>
+        </a>
+        <!-- Opções de Admin (inicialmente ocultas) -->
+        <div id="admin-options" class="hidden">
+          <a href="./users-admin.html" class="nav-link admin-link" title="Gerenciar usuários do sistema">
+            <i class="fi fi-sr-user-gear"></i>
+            <span>Gerenciar Usuários</span>
           </a>
-          <a href="animes.html" class="nav-link" title="Ver lista de animes">
-            <i class="fi fi-ss-graphic-style"></i>
-            <span>Animes</span>
+          <a href="./category-admin.html" class="nav-link admin-link" title="Gerenciar categorias de animes">
+            <i class="fi fi-sr-customize-computer"></i>
+            <span>Gerenciar Categorias</span>
           </a>
-          <a href="recommendation.html" class="nav-link" title="Ver recomendações de animes">
-            <i class="fi fi-ss-sparkles"></i>
-            <span>Recomendações</span>
+          <a href="./animes-admin.html" class="nav-link admin-link" title="Gerenciar catálogo de animes">
+            <i class="fi fi-sr-add-image"></i>
+            <span>Gerenciar Animes</span>
           </a>
-          <a href="news.html" class="nav-link" title="Ver notícias sobre animes">
-            <i class="fi fi-ss-book-open-cover"></i>
-            <span>Notícias</span>
+          <a href="./news-admin.html" class="nav-link admin-link" title="Gerenciar notícias do site">
+            <i class="fi fi-sr-books-medical"></i>
+            <span>Gerenciar Notícias</span>
           </a>
-          <a href="profile.html" class="nav-link" title="Acessar perfil do usuário">
-            <i class="fi fi-ss-user-pen"></i>
-            <span>Perfil</span>
-          </a>
-          <a href="category.html" class="nav-link" title="Explorar categorias de animes">
-            <i class="fi fi-ss-palette"></i>
-            <span>Categorias</span>
-          </a>
-          <a href="about.html" class="nav-link" title="Informações sobre o site">
-            <i class="fi fi-ss-comment-info"></i>
-            <span>Sobre</span>
-          </a>
-          <!-- Opções de Admin (inicialmente ocultas) -->
-          <div id="admin-options" class="hidden">
-            <a href="./users-admin.html" class="nav-link admin-link" title="Gerenciar usuários do sistema">
-              <i class="fi fi-ss-user-gear"></i>
-              <span>Gerenciar Usuários</span>
-            </a>
-            <a href="./category-admin.html" class="nav-link admin-link" title="Gerenciar categorias de animes">
-              <i class="fi fi-ss-customize-computer"></i>
-              <span>Gerenciar Categorias</span>
-            </a>
-            <a href="./animes-admin.html" class="nav-link admin-link" title="Gerenciar catálogo de animes">
-              <i class="fi fi-ss-add-image"></i>
-              <span>Gerenciar Animes</span>
-            </a>
-            <a href="./news-admin.html" class="nav-link admin-link" title="Gerenciar notícias do site">
-              <i class="fi fi-ss-books-medical"></i>
-              <span>Gerenciar Notícias</span>
-            </a>
-          </div>
         </div>
       </div>
       <div id="menu-overlay" class="menu-overlay"></div>
@@ -136,13 +134,13 @@ class Navbar {
             </div>
             <div class="dropdown-divider"></div>
             <a href="./profile.html" class="dropdown-item">
-              <i class="fi fi-ss-user-pen"></i>
+              <i class="fi fi-sr-user-pen"></i>
               <span>Perfil</span>
             </a>
             ${themeSection}
             <div class="dropdown-divider"></div>
             <button class="dropdown-item text-red-600" id="logout-btn">
-              <i class="fi fi-ss-leave"></i>
+              <i class="fi fi-sr-leave"></i>
               <span>Sair</span>
             </button>
           </div>
@@ -152,15 +150,15 @@ class Navbar {
       return `
         <div class="relative">
           <button id="auth-dropdown-btn" class="auth-btn focus:outline-none" title="Opções de Login">
-            <i class="fi fi-ss-user"></i>
+            <i class="fi fi-sr-user"></i>
           </button>
           <div id="auth-dropdown" class="user-dropdown hidden">
             <a href="./signin.html" class="dropdown-item">
-              <i class="fi fi-ss-address-card"></i>
+              <i class="fi fi-sr-address-card"></i>
               <span>Entrar</span>
             </a>
             <a href="./signup.html" class="dropdown-item">
-              <i class="fi fi-ss-user-add"></i>
+              <i class="fi fi-sr-user-add"></i>
               <span>Criar Conta</span>
             </a>
             ${themeSection}
@@ -550,7 +548,7 @@ class Navbar {
       $('body').addClass('nav-hidden');
       $toggleBtn.addClass('rotated');
       // Atualiza o SVG para olho fechado quando oculto
-      $toggleBtn.html('<i class="fi fi-ss-layer-plus"></i>');
+      $toggleBtn.html('<i class="fi fi-sr-layer-plus"></i>');
     }
 
     $toggleBtn.on('click', () => {
@@ -561,7 +559,7 @@ class Navbar {
       
       // Alterna entre olho aberto e fechado
       const isHidden = $navbar.hasClass('nav-hidden');
-      $toggleBtn.html(isHidden ? '<i class="fi fi-ss-layer-plus"></i>' : '<i class="fi fi-ss-layer-minus"></i>');
+      $toggleBtn.html(isHidden ? '<i class="fi fi-sr-layer-plus"></i>' : '<i class="fi fi-sr-layer-minus"></i>');
       
       // Salva estado
       localStorage.setItem('navigationHidden', isHidden);

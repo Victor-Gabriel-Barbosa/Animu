@@ -1,5 +1,7 @@
-document.addEventListener('DOMContentLoaded', async function () {
-  class AuthManager {
+// Aguarda o carregamento do DOM
+$(document).ready(async function () { 
+  // Classe responsável pela autenticação e gerenciamento de usuários
+  class AuthManager { 
     constructor() {
       this.loginAttempts = {};
       this.maxAttempts = 3;
@@ -206,35 +208,31 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     // Atualizar painel de usuário
     updateUserPanel() {
-      const userPanel = document.getElementById('user-panel');
-      const userNameSpan = document.getElementById('user-name');
-      const userAvatar = userPanel ? userPanel.querySelector('img') : null;
-      const logoutLink = document.getElementById('logout-link');
-
       const sessionData = JSON.parse(localStorage.getItem('userSession'));
 
-      if (sessionData && userPanel) {
+      if (sessionData && $('#user-panel').length) {
         // Mostra painel de usuário
-        userPanel.classList.remove('hidden');
+        $('#user-panel').removeClass('hidden');
 
         // Atualiza nome de usuário com link para o perfil
-        userNameSpan.innerHTML = `<a href="perfil.html" class="hover:text-purple-600 transition-colors">${sessionData.username}</a>`;
+        $('#user-name').html(`<a href="perfil.html" class="hover:text-purple-600 transition-colors">${sessionData.username}</a>`);
 
         // Mostra link de logout
-        logoutLink.classList.remove('hidden');
+        $('#logout-link').removeClass('hidden');
 
         // Usa o avatar salvo no objeto de sessão
-        if (userAvatar && sessionData.avatar) {
-          userAvatar.src = sessionData.avatar;
-          userAvatar.style.cursor = 'pointer';
-          userAvatar.onclick = () => window.location.href = 'perfil.html';
-          userAvatar.title = 'Ver perfil';
+        if (sessionData.avatar) {
+          const $userAvatar = $('#user-panel img');
+          $userAvatar.attr('src', sessionData.avatar);
+          $userAvatar.css('cursor', 'pointer');
+          $userAvatar.attr('title', 'Ver perfil');
+          $userAvatar.on('click', () => window.location.href = 'perfil.html');
         }
 
         return true;
-      } else if (userNameSpan) {
-        userNameSpan.innerHTML = '<a href="signin.html">Login</a>';
-        if (logoutLink) logoutLink.classList.add('hidden');
+      } else if ($('#user-name').length) {
+        $('#user-name').html('<a href="signin.html">Login</a>');
+        $('#logout-link').addClass('hidden');
       }
 
       return false;
@@ -284,55 +282,64 @@ document.addEventListener('DOMContentLoaded', async function () {
       // Remove qualquer mensagem de erro existente
       this.clearErrors();
 
-      const errorDiv = document.createElement('div');
-      errorDiv.className = 'error-message';
-      errorDiv.textContent = message;
-      errorDiv.style.cssText = `
-        background-color: #ff5757;
-        color: white;
-        padding: 12px 20px;
-        border-radius: 8px;
-        margin-bottom: 16px;
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 1000;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        animation: slideDown 0.3s ease-out;
-        max-width: 90%;
-        text-align: center;
-      `;
+      // Adiciona estilo para a animação se não existir
+      if (!$('#error-animation-style').length) {
+        $('head').append(
+          $('<style id="error-animation-style"></style>').text(`
+            @keyframes slideDown {
+              from {
+                transform: translate(-50%, -100%);
+                opacity: 0;
+              }
+              to {
+                transform: translate(-50%, 0);
+                opacity: 1;
+              }
+            }
+            @keyframes fadeOut {
+              from {
+                opacity: 1;
+              }
+              to {
+                opacity: 0;
+              }
+            }
+          `)
+        );
+      }
 
-      // Adiciona estilo para a animação
-      const style = document.createElement('style');
-      style.textContent = `
-        @keyframes slideDown {
-          from {
-            transform: translate(-50%, -100%);
-            opacity: 0;
-          }
-          to {
-            transform: translate(-50%, 0);
-            opacity: 1;
-          }
-        }
-      `;
-      document.head.appendChild(style);
-
-      document.body.appendChild(errorDiv);
+      // Cria o elemento de erro com jQuery
+      const $errorDiv = $('<div></div>')
+        .addClass('error-message')
+        .text(message)
+        .css({
+          'background-color': '#ff5757',
+          'color': 'white',
+          'padding': '12px 20px',
+          'border-radius': '8px',
+          'margin-bottom': '16px',
+          'position': 'fixed',
+          'top': '20px',
+          'left': '50%',
+          'transform': 'translateX(-50%)',
+          'z-index': '1000',
+          'box-shadow': '0 4px 6px rgba(0, 0, 0, 0.1)',
+          'animation': 'slideDown 0.3s ease-out',
+          'max-width': '90%',
+          'text-align': 'center'
+        })
+        .appendTo('body');
 
       // Remove a mensagem após 5 segundos com animação de fade out
       setTimeout(() => {
-        errorDiv.style.animation = 'fadeOut 0.3s ease-out';
-        setTimeout(() => errorDiv.remove(), 300);
+        $errorDiv.css('animation', 'fadeOut 0.3s ease-out');
+        setTimeout(() => $errorDiv.remove(), 300);
       }, 5000);
     }
 
     // Método para limpar mensagens de erro existentes
     clearErrors() {
-      const existingErrors = document.querySelectorAll('.error-message');
-      existingErrors.forEach(error => error.remove());
+      $('.error-message').remove();
     }
   }
 
@@ -346,22 +353,23 @@ document.addEventListener('DOMContentLoaded', async function () {
   // Armazena a página anterior quando o usuário acessa as páginas de login/registro
   if (window.location.pathname.includes('signin.html') || window.location.pathname.includes('signup.html')) {
     const referrer = document.referrer;
-    if (referrer && !referrer.includes('signin.html') && !referrer.includes('signup.html')) sessionStorage.setItem('previousPage', referrer);
+    if (referrer && !referrer.includes('signin.html') && !referrer.includes('signup.html')) {
+      sessionStorage.setItem('previousPage', referrer);
+    }
   }
 
-  // Aguarda o DOM estar completamente carregado antes de atualizar o painel
-  document.addEventListener('DOMContentLoaded', () => { authManager.updateUserPanel(); });
+  // Atualiza o painel de usuário quando o documento estiver pronto
+  authManager.updateUserPanel();
 
   // Registro de usuário
-  const registerForm = document.getElementById('register-form');
-  if (registerForm) {
-    registerForm.addEventListener('submit', async function (event) {
+  if ($('#register-form').length) {
+    $('#register-form').on('submit', async function (event) {
       event.preventDefault();
       try {
-        const username = document.getElementById('username').value;
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const confirmPassword = document.getElementById('confirm-password').value;
+        const username = $('#username').val();
+        const email = $('#email').val();
+        const password = $('#password').val();
+        const confirmPassword = $('#confirm-password').val();
 
         const success = await authManager.registerUser(
           username,
@@ -371,23 +379,23 @@ document.addEventListener('DOMContentLoaded', async function () {
         );
 
         if (success) {
-          const message = document.createElement('div');
-          message.className = 'success-message';
-          message.textContent = 'Conta criada com sucesso! Redirecionando...';
-          message.style.cssText = `
-              background-color: #4CAF50;
-              color: white;
-              padding: 12px 20px;
-              border-radius: 8px;
-              position: fixed;
-              top: 20px;
-              left: 50%;
-              transform: translateX(-50%);
-              z-index: 1000;
-              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-              animation: slideDown 0.3s ease-out;
-          `;
-          document.body.appendChild(message);
+          const $message = $('<div></div>')
+            .addClass('success-message')
+            .text('Conta criada com sucesso! Redirecionando...')
+            .css({
+              'background-color': '#4CAF50',
+              'color': 'white',
+              'padding': '12px 20px',
+              'border-radius': '8px',
+              'position': 'fixed',
+              'top': '20px',
+              'left': '50%',
+              'transform': 'translateX(-50%)',
+              'z-index': '1000',
+              'box-shadow': '0 4px 6px rgba(0, 0, 0, 0.1)',
+              'animation': 'slideDown 0.3s ease-out'
+            })
+            .appendTo('body');
 
           // Redireciona para a página anterior ou index.html após o registro
           setTimeout(() => {
@@ -403,24 +411,25 @@ document.addEventListener('DOMContentLoaded', async function () {
   }
 
   // Login de usuário
-  const loginForm = document.getElementById('login-form');
-  if (loginForm) {
+  if ($('#login-form').length) {
     const savedCredentials = authManager.loadSavedCredentials();
     if (savedCredentials && authManager.validateSavedCredentials(savedCredentials)) {
-      document.getElementById('username').value = savedCredentials.username;
-      document.getElementById('password').value = savedCredentials.password;
-      document.getElementById('remember-me').checked = true;
-    } else authManager.clearSavedCredentials(); // Limpa credenciais expiradas
+      $('#username').val(savedCredentials.username);
+      $('#password').val(savedCredentials.password);
+      $('#remember-me').prop('checked', true);
+    } else {
+      authManager.clearSavedCredentials(); // Limpa credenciais expiradas
+    }
 
-    loginForm.addEventListener('submit', async function (event) {
+    $('#login-form').on('submit', async function (event) {
       event.preventDefault();
-      const submitButton = this.querySelector('button[type="submit"]');
-      submitButton.disabled = true;
+      const $submitButton = $(this).find('button[type="submit"]');
+      $submitButton.prop('disabled', true);
 
       try {
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-        const remember = document.getElementById('remember-me').checked;
+        const username = $('#username').val();
+        const password = $('#password').val();
+        const remember = $('#remember-me').is(':checked');
 
         await authManager.loginUser(username, password, remember);
         authManager.updateUserPanel();
@@ -432,47 +441,37 @@ document.addEventListener('DOMContentLoaded', async function () {
       } catch (error) {
         authManager.showError(error.message);
       } finally {
-        submitButton.disabled = false;
+        $submitButton.prop('disabled', false);
       }
     });
   }
 
   // Adiciona botão/link de logout (se existir)
-  const logoutLink = document.getElementById('logout-link');
-  if (logoutLink) {
-    logoutLink.addEventListener('click', function (event) {
-      event.preventDefault();
-      authManager.logout();
-    });
-  }
+  $('#logout-link').on('click', function (event) {
+    event.preventDefault();
+    authManager.logout();
+  });
 
   // Configura o toggle de visibilidade da senha
-  const passwordToggles = document.querySelectorAll('.password-toggle');
+  $('.password-toggle').on('click', function () {
+    const $input = $(this).closest('.password-input-wrapper').find('input');
+    const type = $input.attr('type') === 'password' ? 'text' : 'password';
+    $input.attr('type', type);
 
-  passwordToggles.forEach(toggle => {
-    toggle.addEventListener('click', function () {
-      const input = this.closest('.password-input-wrapper').querySelector('input');
-      const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
-      input.setAttribute('type', type);
-
-      // Toggle ícones
-      const eyeIcon = this.querySelector('.eye-icon');
-      const eyeOffIcon = this.querySelector('.eye-off-icon');
-      eyeIcon.classList.toggle('hidden');
-      eyeOffIcon.classList.toggle('hidden');
-    });
+    // Toggle ícones
+    const $eyeIcon = $(this).find('.eye-icon');
+    const $eyeOffIcon = $(this).find('.eye-off-icon');
+    $eyeIcon.toggleClass('hidden');
+    $eyeOffIcon.toggleClass('hidden');
   });
 
   // Configura o botão de voltar
-  const backButton = document.getElementById('back-button');
-  if (backButton) {
-    backButton.addEventListener('click', () => {
-      if (document.referrer) {
-        // Verifica se o referrer é uma URL do projeto Animu
-        const referrer = new URL(document.referrer);
-        if (referrer.pathname.includes('/PW_1/Animu/')) window.history.back();
-        else window.location.href = 'index.html';
-      } else window.location.href = 'index.html';
-    });
-  }
+  $('#back-button').on('click', function() {
+    if (document.referrer) {
+      // Verifica se o referrer é uma URL do projeto Animu
+      const referrer = new URL(document.referrer);
+      if (referrer.pathname.includes('/PW_1/Animu/')) window.history.back();
+      else window.location.href = 'index.html';
+    } else window.location.href = 'index.html';
+  });
 });

@@ -330,9 +330,15 @@
 .back-button:hover {
   transform: translateX(-3px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  background: var(--accent-color);
+  background: var(--primary-gradient);
+  transition: all 0.3s ease;
 }
 
 .back-button i {
+  color: var(--primary-color);
   font-size: 1.2em;
+}
+
+.back-button:hover i {
+  color: white;
 }

@@ -15,43 +15,70 @@ class AnimeChat {
     { max: Infinity, emoji: '🤩' }
   ];
 
-  // Novo construtor para inicializar estilos de votação
+  // Construtor para inicializar estilos de votação
   constructor() {
     this.addVoteButtonStyles();
+    this.initListeners();
+  }
+
+  // Método para inicializar os event listeners
+  initListeners() {
+    // Inicializa listeners globais
+    $(document).on('input', '#rating-slider', (e) => {
+      this.updateRatingEmoji($(e.target).val());
+    });
+    
+    $(document).on('input', '#rating-display', (e) => {
+      let value = parseFloat($(e.target).val());
+      
+      // Valida o valor
+      if (isNaN(value)) value = 0;
+      if (value < 0) value = 0;
+      if (value > 10) value = 10;
+      
+      // Multiplica por 10 para a escala do slider
+      this.updateRatingEmoji(value * 10, false);
+    });
+    
+    // Formata o valor quando o input perde o foco
+    $(document).on('blur', '#rating-display', (e) => {
+      let value = parseFloat($(e.target).val() || 0);
+      $(e.target).val((Math.round(value * 10) / 10).toFixed(1));
+    });
   }
 
   // Adiciona estilos CSS para os botões de votação
   addVoteButtonStyles() {
     const styleId = 'vote-button-styles';
-    if (document.getElementById(styleId)) return;
+    if ($('#' + styleId).length) return;
     
-    const style = document.createElement('style');
-    style.id = styleId;
-    style.textContent = `
-      .vote-btn.loading {
-        opacity: 0.7;
-        pointer-events: none;
-        position: relative;
-      }
-      
-      .vote-btn.loading::after {
-        content: '';
-        position: absolute;
-        width: 10px;
-        height: 10px;
-        border: 2px solid rgba(255,255,255,0.3);
-        border-radius: 50%;
-        border-top-color: #fff;
-        animation: spin 1s ease-in-out infinite;
-        top: calc(50% - 5px);
-        left: calc(50% - 5px);
-      }
-      
-      @keyframes spin {
-        to { transform: rotate(360deg); }
-      }
-    `;
-    document.head.appendChild(style);
+    $('<style>', {
+      id: styleId,
+      html: `
+        .vote-btn.loading {
+          opacity: 0.7;
+          pointer-events: none;
+          position: relative;
+        }
+        
+        .vote-btn.loading::after {
+          content: '';
+          position: absolute;
+          width: 10px;
+          height: 10px;
+          border: 2px solid rgba(255,255,255,0.3);
+          border-radius: 50%;
+          border-top-color: #fff;
+          animation: spin 1s ease-in-out infinite;
+          top: calc(50% - 5px);
+          left: calc(50% - 5px);
+        }
+        
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `
+    }).appendTo('head');
   }
 
   // Gerenciamento de sistema de comentários
@@ -106,7 +133,7 @@ class AnimeChat {
       // Determina qual texto usar (censurado ou original)
       const textToUse = validationResult.wasCensored ? validationResult.censoredText : commentText;
 
-      const sliderRating = document.getElementById('rating-slider').value / 10;
+      const sliderRating = $('#rating-slider').val() / 10;
 
       // Formata o texto usando await para obter o resultado formatado
       const formattedText = await TextFormatter.format(textToUse);
@@ -186,9 +213,8 @@ class AnimeChat {
       if (result) {
         console.log(`Comentário ID ${commentId} excluído com sucesso`);
         
-        // Atualiza a interface imediatamente removendo o elemento DOM
-        const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
-        if (commentElement) commentElement.remove();
+        // Atualiza a interface imediatamente removendo o elemento
+        $(`[data-comment-id="${commentId}"]`).remove();
         
         // Atualiza as estatísticas do anime
         this.updateAnimeStats(animeTitle);
@@ -240,42 +266,33 @@ class AnimeChat {
     }
   }
 
-  // Novo método para indicador de carregamento nos botões de voto
+  // Método para indicador de carregamento nos botões de voto
   setVoteButtonLoading(commentId, voteType, isLoading) {
-    const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
-    if (!commentElement) return;
+    const $button = $(`[data-comment-id="${commentId}"] .vote-btn-${voteType}`);
     
-    const button = commentElement.querySelector(`.vote-btn-${voteType}`);
-    if (button) {
-      button.classList.toggle('loading', isLoading);
-      button.disabled = isLoading;
+    if ($button.length) {
+      $button.toggleClass('loading', isLoading);
+      $button.prop('disabled', isLoading);
     }
   }
 
-  // Novo método para atualizar apenas um comentário específico no DOM
+  // Método para atualizar apenas um comentário específico no DOM
   updateCommentInUI(commentId, updatedComment) {
-    const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
-    if (!commentElement) return;
+    const $commentElement = $(`[data-comment-id="${commentId}"]`);
+    if (!$commentElement.length) return;
     
     // Atualiza os contadores de likes/dislikes
-    const likesCount = commentElement.querySelector('.like-count');
-    const dislikesCount = commentElement.querySelector('.dislike-count');
-    
-    if (likesCount) likesCount.textContent = updatedComment.likes?.length || 0;
-    if (dislikesCount) dislikesCount.textContent = updatedComment.dislikes?.length || 0;
+    $commentElement.find('.like-count').text(updatedComment.likes?.length || 0);
+    $commentElement.find('.dislike-count').text(updatedComment.dislikes?.length || 0);
     
     // Atualiza o estado dos botões para o usuário atual
     const currentUser = JSON.parse(localStorage.getItem('userSession'))?.username;
-    const likeButton = commentElement.querySelector('.vote-btn-like');
-    const dislikeButton = commentElement.querySelector('.vote-btn-dislike');
     
-    if (likeButton) {
-      likeButton.classList.toggle('active', updatedComment.likes?.includes(currentUser) || false);
-    }
+    $commentElement.find('.vote-btn-like')
+      .toggleClass('active', updatedComment.likes?.includes(currentUser) || false);
     
-    if (dislikeButton) {
-      dislikeButton.classList.toggle('active', updatedComment.dislikes?.includes(currentUser) || false);
-    }
+    $commentElement.find('.vote-btn-dislike')
+      .toggleClass('active', updatedComment.dislikes?.includes(currentUser) || false);
   }
 
   // Verifica voto existente do usuário em um comentário
@@ -322,87 +339,97 @@ class AnimeChat {
 
   // Interface de edição de comentários
   toggleEditMode(commentId) {
-    const commentDiv = document.querySelector(`[data-comment-id="${commentId}"]`);
-    const commentText = commentDiv.querySelector('.comment-text');
-    const commentRating = commentDiv.querySelector('.comment-rating');
-    const editForm = commentDiv.querySelector('.edit-form');
+    const $commentDiv = $(`[data-comment-id="${commentId}"]`);
+    const $commentText = $commentDiv.find('.comment-text');
+    const $commentRating = $commentDiv.find('.comment-rating');
+    const $editForm = $commentDiv.find('.edit-form');
 
-    if (editForm) {
-      commentText.style.display = 'block';
-      commentRating.style.display = 'block';
-      editForm.remove();
+    if ($editForm.length) {
+      $commentText.show();
+      $commentRating.show();
+      $editForm.remove();
     } else {
-      const currentText = commentText.textContent;
-      const currentRating = parseFloat(commentDiv.getAttribute('data-rating')) * 10;
+      const currentText = $commentText.text();
+      const currentRating = parseFloat($commentDiv.attr('data-rating')) * 10;
 
-      commentText.style.display = 'none';
-      commentRating.style.display = 'none';
+      $commentText.hide();
+      $commentRating.hide();
 
-      const form = document.createElement('form');
-      form.className = 'edit-form mt-2';
-      form.innerHTML = `
-        <div class="rating-container mb-4">
-          <p class="mb-2 font-semibold">
-            Sua avaliação: 
-            <span class="rating-number-input">
-              <input type="number" 
-                     id="edit-rating-display"
-                     class="text-purple-600 ml-2 w-16 text-center" 
+      const $form = $('<form>', {
+        class: 'edit-form mt-2',
+        html: `
+          <div class="rating-container mb-4">
+            <p class="mb-2 font-semibold">
+              Sua avaliação: 
+              <span class="rating-number-input">
+                <input type="number" 
+                       id="edit-rating-display"
+                       class="text-purple-600 ml-2 w-16 text-center" 
+                       min="0" 
+                       max="10" 
+                       step="0.1" 
+                       value="${(currentRating / 10).toFixed(1)}">
+              </span>
+            </p>
+            <div class="rating-slider-container">
+              <input type="range" 
+                     id="edit-rating-slider" 
                      min="0" 
-                     max="10" 
-                     step="0.1" 
-                     value="${(currentRating / 10).toFixed(1)}">
-            </span>
-          </p>
-          <div class="rating-slider-container">
-            <input type="range" 
-                   id="edit-rating-slider" 
-                   min="0" 
-                   max="100" 
-                   value="${currentRating}"
-                   class="rating-slider"
-                   step="1">
-            <div class="rating-emoji-container">
-              <span id="edit-rating-emoji" class="rating-emoji">😊</span>
+                     max="100" 
+                     value="${currentRating}"
+                     class="rating-slider"
+                     step="1">
+              <div class="rating-emoji-container">
+                <span id="edit-rating-emoji" class="rating-emoji">😊</span>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="relative">
-          <textarea 
-            class="w-full p-2 border rounded resize-none dark:bg-gray-800"
-            maxlength="${AnimeChat.MAX_COMMENT_LENGTH}"
-            oninput="animeChat.updateCharCount(this, 'edit-comment-count-${commentId}')"
-          >${currentText}</textarea>
-          <small id="edit-comment-count-${commentId}" class="text-right block mt-1">0/${AnimeChat.MAX_COMMENT_LENGTH}</small>
-        </div>
-        <div class="flex gap-2 mt-2">
-          <button type="submit" class="btn-action btn-primary order-1 sm:order-2 w-full py-2 text-sm">
-            <span class="flex items-center justify-center gap-2">
-              <i class="fi fi-br-checkbox"></i>
-              Salvar
-            </span>
-          </button>
-          <button type="button" onclick="animeChat.toggleEditMode('${commentId}')" class="btn-action btn-cancel order-2 sm:order-1 w-full py-2 text-sm">
-            <span class="flex items-center justify-center gap-2">
-              <i class="fi fi-br-circle-xmark"></i>
-              Cancelar
-            </span>
-          </button>
-        </div>
-      `;
-
-      commentText.insertAdjacentElement('afterend', form);
-
-      // Inicializa o slider e input de avaliação na edição
-      const editSlider = form.querySelector('#edit-rating-slider');
-      const editInput = form.querySelector('#edit-rating-display');
-
-      editSlider.addEventListener('input', function () {
-        animeChat.updateEditRatingDisplay(this.value);
+          <div class="relative">
+            <textarea 
+              class="w-full p-2 border rounded resize-none dark:bg-gray-800"
+              maxlength="${AnimeChat.MAX_COMMENT_LENGTH}"
+            >${currentText}</textarea>
+            <small id="edit-comment-count-${commentId}" class="text-right block mt-1">0/${AnimeChat.MAX_COMMENT_LENGTH}</small>
+          </div>
+          <div class="flex gap-2 mt-2">
+            <button type="submit" class="btn-action btn-primary order-1 sm:order-2 w-full py-2 text-sm">
+              <span class="flex items-center justify-center gap-2">
+                <i class="fi fi-br-checkbox"></i>
+                Salvar
+              </span>
+            </button>
+            <button type="button" class="btn-cancel-edit btn-action btn-cancel order-2 sm:order-1 w-full py-2 text-sm">
+              <span class="flex items-center justify-center gap-2">
+                <i class="fi fi-br-circle-xmark"></i>
+                Cancelar
+              </span>
+            </button>
+          </div>
+        `
       });
 
-      editInput.addEventListener('input', function () {
-        let value = parseFloat(this.value);
+      $commentText.after($form);
+
+      // Inicializa o contador de caracteres
+      const $textarea = $form.find('textarea');
+      const $counter = $form.find(`#edit-comment-count-${commentId}`);
+      $counter.text(`${$textarea.val().length}/${AnimeChat.MAX_COMMENT_LENGTH}`);
+
+      // Adicionar evento ao textarea para contar caracteres
+      $textarea.on('input', () => {
+        $counter.text(`${$textarea.val().length}/${AnimeChat.MAX_COMMENT_LENGTH}`);
+      });
+
+      // Inicializa o slider e input de avaliação na edição
+      const $editSlider = $form.find('#edit-rating-slider');
+      const $editInput = $form.find('#edit-rating-display');
+
+      $editSlider.on('input', (e) => {
+        this.updateEditRatingDisplay($(e.target).val());
+      });
+
+      $editInput.on('input', (e) => {
+        let value = parseFloat($(e.target).val());
 
         // Valida o valor
         if (isNaN(value)) value = 0;
@@ -410,46 +437,47 @@ class AnimeChat {
         if (value > 10) value = 10;
 
         // Multiplica por 10 para a escala do slider
-        animeChat.updateEditRatingDisplay(value * 10, false);
+        this.updateEditRatingDisplay(value * 10, false);
       });
 
       // Formata o valor quando o input perde o foco
-      editInput.addEventListener('blur', function () {
-        let value = parseFloat(this.value || 0);
-        this.value = (Math.round(value * 10) / 10).toFixed(1);
+      $editInput.on('blur', (e) => {
+        let value = parseFloat($(e.target).val() || 0);
+        $(e.target).val((Math.round(value * 10) / 10).toFixed(1));
       });
 
-      animeChat.updateEditRatingDisplay(currentRating);
+      this.updateEditRatingDisplay(currentRating);
 
-      // Atualiza contador inicial
-      const textarea = form.querySelector('textarea');
-      const counter = form.querySelector(`#edit-comment-count-${commentId}`);
-      counter.textContent = `${textarea.value.length}/${AnimeChat.MAX_COMMENT_LENGTH}`;
+      // Evento de cancelamento
+      $form.find('.btn-cancel-edit').on('click', () => {
+        this.toggleEditMode(commentId);
+      });
 
-      form.addEventListener('submit', async (e) => {
+      // Evento de submissão do formulário
+      $form.on('submit', async (e) => {
         e.preventDefault();
-        const newText = form.querySelector('textarea').value.trim();
-        const newRating = parseFloat(form.querySelector('#edit-rating-slider').value) / 10;
+        const newText = $form.find('textarea').val().trim();
+        const newRating = parseFloat($form.find('#edit-rating-slider').val()) / 10;
 
         if (newText) {
           const animeTitle = new URLSearchParams(window.location.search).get('anime');
           
           // Adiciona estado de carregamento ao botão
-          const submitButton = e.target.querySelector('button[type="submit"]');
-          const originalText = submitButton.textContent;
-          submitButton.disabled = true;
-          submitButton.innerHTML = '<span class="animate-spin mr-2">⏳</span> Salvando...';
+          const $submitButton = $(e.target).find('button[type="submit"]');
+          const originalText = $submitButton.html();
+          $submitButton.prop('disabled', true);
+          $submitButton.html('<span class="animate-spin mr-2">⏳</span> Salvando...');
           
           try {
-            const result = await animeChat.editComment(decodeURIComponent(animeTitle), commentId, newText, newRating);
-            if (result) animeChat.updateCommentsList(decodeURIComponent(animeTitle));
+            const result = await this.editComment(decodeURIComponent(animeTitle), commentId, newText, newRating);
+            if (result) this.updateCommentsList(decodeURIComponent(animeTitle));
           } catch (error) {
             console.error('Erro ao editar comentário:', error);
             alert('Ocorreu um erro ao editar seu comentário. Por favor, tente novamente.');
           } finally {
             // Restaura o botão original (mesmo que não seja mais visível)
-            submitButton.disabled = false;
-            submitButton.textContent = originalText;
+            $submitButton.prop('disabled', false);
+            $submitButton.html(originalText);
           }
         }
       });
@@ -458,25 +486,25 @@ class AnimeChat {
 
   // Atualiza interface visual da avaliação durante edição
   updateEditRatingDisplay(value, updateInput = true) {
-    const emoji = document.getElementById('edit-rating-emoji');
-    const display = document.getElementById('edit-rating-display');
-    const slider = document.getElementById('edit-rating-slider');
+    const $emoji = $('#edit-rating-emoji');
+    const $display = $('#edit-rating-display');
+    const $slider = $('#edit-rating-slider');
     const rating = value / 10;
 
     // Adiciona classe de animação
-    emoji.classList.remove('animate');
-    void emoji.offsetWidth;
-    emoji.classList.add('animate');
+    $emoji.removeClass('animate');
+    void $emoji[0].offsetWidth;
+    $emoji.addClass('animate');
 
     // Define o emoji baseado no valor usando a propriedade estática
-    emoji.textContent = AnimeChat.EMOJI_RANGES.find(range => value <= range.max).emoji;
+    $emoji.text(AnimeChat.EMOJI_RANGES.find(range => value <= range.max).emoji);
 
     // Atualiza os valores
-    if (updateInput && display) display.value = rating.toFixed(1);
-    if (!updateInput && slider) slider.value = Math.round(value);
+    if (updateInput && $display.length) $display.val(rating.toFixed(1));
+    if (!updateInput && $slider.length) $slider.val(Math.round(value));
   }
 
-  // Renderiza comentário individual com controles de moderação (atualizado)
+  // Renderiza comentário individual com controles de moderação
   renderComment(comment, animeTitle) {
     const currentUser = JSON.parse(localStorage.getItem('userSession'))?.username;
     const isCommentOwner = currentUser === comment.username;
@@ -510,7 +538,6 @@ class AnimeChat {
                     class="btn-action btn-delete"
                     onclick="if(confirm('Deseja realmente excluir este comentário?')) { 
                       animeChat.deleteComment('${animeTitle}', '${comment.id}'); 
-                      animeChat.updateCommentsList('${animeTitle}');
                     }"
                     title="${isAdmin && !isCommentOwner ? 'Excluir como administrador' : 'Excluir comentário'}"
                   >
@@ -555,59 +582,57 @@ class AnimeChat {
 
   // Atualiza lista completa de comentários
   async updateCommentsList(animeTitle) {
-    const commentsList = document.getElementById('comments-list');
     const comments = await this.loadComments(animeTitle);
+    const $commentsList = $('#comments-list');
 
     if (!comments || comments.length === 0) {
-      commentsList.innerHTML = `
+      $commentsList.html(`
         <p class="text-center">Nenhum comentário ainda. Seja o primeiro a comentar!</p>
-      `;
+      `);
       return;
     }
 
-    commentsList.innerHTML = comments.map(comment => this.renderComment(comment, animeTitle)).join('');
+    $commentsList.html(comments.map(comment => this.renderComment(comment, animeTitle)).join(''));
   }
 
   // Gerenciamento de exibição de avaliações
   updateRatingDisplay(value) {
-    const display = document.getElementById('rating-display');
-    if (display) display.textContent = parseFloat(value).toFixed(1);
+    $('#rating-display').text(parseFloat(value).toFixed(1));
   }
 
   // Atualiza emoji da avaliação baseado no valor do slider
   updateRatingEmoji(value, updateInput = true) {
-    const emoji = document.getElementById('rating-emoji');
-    const display = document.getElementById('rating-display');
-    const slider = document.getElementById('rating-slider');
+    const $emoji = $('#rating-emoji');
+    const $display = $('#rating-display');
+    const $slider = $('#rating-slider');
     const rating = parseFloat(value) / 10;
 
     // Adiciona classe de animação
-    emoji.classList.remove('animate');
-    void emoji.offsetWidth;
-    emoji.classList.add('animate');
+    $emoji.removeClass('animate');
+    void $emoji[0].offsetWidth;
+    $emoji.addClass('animate');
 
     // Define o emoji baseado no valor usando a propriedade estática
-    emoji.textContent = AnimeChat.EMOJI_RANGES.find(range => value <= range.max).emoji;
+    $emoji.text(AnimeChat.EMOJI_RANGES.find(range => value <= range.max).emoji);
 
     // Atualiza os valores com precisão de uma casa decimal
-    if (updateInput && display) display.value = rating.toFixed(1);
-    if (!updateInput && slider) slider.value = Math.round(value);
+    if (updateInput && $display.length) $display.val(rating.toFixed(1));
+    if (!updateInput && $slider.length) $slider.val(Math.round(value));
   }
 
   // Atualiza contador de caracteres
   updateCharCount(textarea, counterId) {
-    const counter = document.getElementById(counterId);
-    if (counter) counter.textContent = `${textarea.value.length}/${AnimeChat.MAX_COMMENT_LENGTH}`;
+    $(`#${counterId}`).text(`${$(textarea).val().length}/${AnimeChat.MAX_COMMENT_LENGTH}`);
   }
 
   // Atualiza as estatísticas do anime em tempo real
   updateAnimeStats(animeTitle) {
     // Seleciona os elementos de estatísticas
-    const scoreElement = document.querySelector('.stat-item:nth-child(1) .stat-value');
-    const favoritesElement = document.querySelector('.stat-item:nth-child(2) .stat-value');
-    const commentsElement = document.querySelector('.stat-item:nth-child(3) .stat-value');
+    const $scoreElement = $('.stat-item:nth-child(1) .stat-value');
+    const $favoritesElement = $('.stat-item:nth-child(2) .stat-value');
+    const $commentsElement = $('.stat-item:nth-child(3) .stat-value');
     
-    if (!scoreElement || !favoritesElement || !commentsElement) return;
+    if (!$scoreElement.length || !$favoritesElement.length || !$commentsElement.length) return;
 
     // Obtém os dados atualizados
     const animes = JSON.parse(localStorage.getItem('animeData')) || [];
@@ -616,9 +641,9 @@ class AnimeChat {
     const favoritesCount = countAnimeFavorites(animeTitle);
     
     // Atualiza os valores na interface
-    if (anime) scoreElement.textContent = Number(anime.score).toFixed(1);
-    favoritesElement.textContent = favoritesCount;
-    commentsElement.textContent = comments.length;
+    if (anime) $scoreElement.text(Number(anime.score).toFixed(1));
+    $favoritesElement.text(favoritesCount);
+    $commentsElement.text(comments.length);
   }
 }
 
