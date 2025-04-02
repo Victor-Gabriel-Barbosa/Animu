@@ -9,6 +9,14 @@ class AnimeLoader {
       featured: 'featuredAnimes',
       seasonal: 'seasonalAnimes',
     };
+    // Adiciona cache para reduzir requisições repetidas
+    this.cache = {
+      commentCounts: {},
+      favoritedAnimes: {},
+      animeIds: {}
+    };
+    // Flag para verificar se estamos em dispositivo móvel
+    this.isMobile = window.innerWidth < 768;
   }
 
   // Método estático para inicializar o AnimeLoader
@@ -74,8 +82,9 @@ class AnimeLoader {
       // Utiliza o AnimeManager para obter animes ordenados por pontuação
       const animes = await this.animeManager.getAnimes('score');
       
-      // Limita aos 16 melhores animes
-      const featuredAnimes = animes.slice(0, 16);
+      // Limita o número de animes em dispositivos móveis para melhorar a performance
+      const limit = this.isMobile ? 8 : 16;
+      const featuredAnimes = animes.slice(0, limit);
       
       // Armazena temporariamente para uso na página
       localStorage.setItem(this.localStorageKeys.featured, JSON.stringify(featuredAnimes));
@@ -104,14 +113,15 @@ class AnimeLoader {
       // Obtém todos os animes e depois filtra localmente pela temporada
       const allAnimes = await this.animeManager.getAnimes();
       
-      // Filtra animes da temporada atual
+      // Limita o número de animes em dispositivos móveis
+      const limit = this.isMobile ? 6 : 12;
       const seasonalAnimes = allAnimes.filter(anime => {
         return anime.season?.period?.toLowerCase() === currentSeason.season.toLowerCase() &&
           parseInt(anime.season?.year) === currentSeason.year;
       })
-      // Ordena por pontuação e limita aos 12 primeiros
+      // Ordena por pontuação e limita com base no dispositivo
       .sort((a, b) => (parseFloat(b.score) || 0) - (parseFloat(a.score) || 0))
-      .slice(0, 12);
+      .slice(0, limit);
       
       console.log(`Animes da temporada carregados: ${seasonalAnimes.length}`);
       
@@ -139,6 +149,36 @@ class AnimeLoader {
         return cachedData;
       } else this.loadRecentAnimes(); // Se não houver cache, tenta carregar animes recentes como alternativa
       return [];
+    }
+  }
+
+  /**
+   * Otimização: Pré-carrega dados de favoritos e comentários em batch
+   * em vez de fazer uma requisição por anime
+   */
+  async preloadAnimeMetadata(animes, userId) {
+    if (!animes || animes.length === 0) return;
+    
+    try {
+      // 1. Busca todos os IDs de animes de uma vez
+      const animeTitles = animes.map(anime => anime.primaryTitle);
+      
+      // 2. Busca favoritos do usuário em uma única requisição
+      if (userId) {
+        const favoriteStatus = await this.userManager.getAnimeFavoriteStatus(userId, animeTitles);
+        favoriteStatus.forEach(status => {
+          this.cache.favoritedAnimes[status.animeTitle] = status.isFavorited;
+        });
+      }
+      
+      // 3. Busca contagens de comentários em batch
+      const commentCounts = await this.animeManager.getCommentCountBatch(animeTitles);
+      Object.keys(commentCounts).forEach(title => {
+        this.cache.commentCounts[title] = commentCounts[title];
+      });
+      
+    } catch (error) {
+      console.error("Erro ao pré-carregar metadados:", error);
     }
   }
 
@@ -182,99 +222,108 @@ class AnimeLoader {
       return;
     }
 
-    // Para cada anime, verifica se está na lista de favoritos e obtém contagem de comentários
+    // Pré-carrega metadados para todos os animes de uma vez
     if (currentUser) {
-      for (let anime of featuredAnimes) {
-        anime.isFavorited = await this.isAnimeFavorited(anime.primaryTitle);
-        // Obtém a contagem de comentários do Firestore
-        anime.commentCount = await this.animeManager.getCommentCount(anime.primaryTitle);
-      }
+      await this.preloadAnimeMetadata(featuredAnimes, currentUser.userId);
     } else {
-      // Se não estiver logado, só pega a contagem de comentários
-      for (let anime of featuredAnimes) anime.commentCount = await this.animeManager.getCommentCount(anime.primaryTitle);
+      await this.preloadAnimeMetadata(featuredAnimes);
     }
 
-    swiperWrapper.innerHTML = featuredAnimes.map(anime => `
-      <div class="swiper-slide">
-        <a href="animes.html?anime=${encodeURIComponent(anime.primaryTitle)}" class="anime-card">
-          <div class="image-wrapper">
-            <img 
-              src="${anime.coverImage}" 
-              alt="${anime.primaryTitle}" 
-              class="anime-image"
-              onerror="this.src='https://ui-avatars.com/api/?name=Anime&background=8B5CF6&color=fff'">
-            
-            <div class="quick-info">
-              <span class="info-pill">⭐ ${Number(anime.score).toFixed(1)}</span>
-              <span class="info-pill">
-                <svg class="meta-icon" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59 8-8 8zm-1-4h2v2h-2v-2zm0-2h2V7h-2v7z"/>
-                </svg>
-                ${anime.episodes > 0 ? anime.episodes : '?'}
-              </span>
+    // Cria o HTML em uma única operação
+    const html = [];
+    for (const anime of featuredAnimes) {
+      // Usa dados do cache em vez de fazer consultas individuais
+      anime.isFavorited = this.cache.favoritedAnimes[anime.primaryTitle] || false;
+      anime.commentCount = this.cache.commentCounts[anime.primaryTitle] || 0;
+      
+      html.push(`
+        <div class="swiper-slide">
+          <a href="animes.html?anime=${encodeURIComponent(anime.primaryTitle)}" class="anime-card">
+            <div class="image-wrapper">
+              <img 
+                src="${anime.coverImage}" 
+                alt="${anime.primaryTitle}" 
+                class="anime-image"
+                loading="lazy"
+                onerror="this.src='https://ui-avatars.com/api/?name=Anime&background=8B5CF6&color=fff'">
+              
+              <div class="quick-info">
+                <span class="info-pill">⭐ ${Number(anime.score).toFixed(1)}</span>
+                <span class="info-pill">
+                  <svg class="meta-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59 8-8 8zm-1-4h2v2h-2v-2zm0-2h2V7h-2v7z"/>
+                  </svg>
+                  ${anime.episodes > 0 ? anime.episodes : '?'}
+                </span>
+              </div>
+
+              ${!this.isMobile ? `
+              <div class="anime-overlay">
+                <div class="overlay-content">
+                  <div class="anime-genres">
+                    ${anime.genres.slice(0, 3).map(genre =>
+                      `<span class="genre-tag">${genre}</span>`
+                    ).join('')}
+                  </div>
+                  <p class="text-sm mt-2 line-clamp-3">${anime.synopsis || 'Sinopse não disponível.'}</p>
+                </div>
+              </div>
+              ` : ''}
             </div>
 
-            <div class="anime-overlay">
-              <div class="overlay-content">
-                <div class="anime-genres">
-                  ${anime.genres.slice(0, 3).map(genre =>
-                    `<span class="genre-tag">${genre}</span>`
-                  ).join('')}
-                </div>
-                <p class="text-sm mt-2 line-clamp-3">${anime.synopsis || 'Sinopse não disponível.'}</p>
+            <div class="anime-info">
+              <h3 class="anime-title line-clamp-2">${anime.primaryTitle}</h3>
+              <div class="anime-meta">
+                <span class="meta-item">
+                  <svg class="meta-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18z"/>
+                  </svg>
+                  ${anime.commentCount || 0}
+                </span>
+                <button 
+                  class="meta-item favorite-count ${anime.isFavorited ? 'is-favorited' : ''}"
+                  data-anime-title="${anime.primaryTitle}"
+                  data-anime-id="${anime.id || ''}"
+                  ${!currentUser ? 'title="Faça login para favoritar"' : ''}
+                >
+                  <svg class="meta-icon heart-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                  </svg>
+                  <span class="favorite-number">${anime.favoriteCount || 0}</span>
+                </button>
               </div>
             </div>
-          </div>
+          </a>
+        </div>
+      `);
+    }
 
-          <div class="anime-info">
-            <h3 class="anime-title line-clamp-2">${anime.primaryTitle}</h3>
-            <div class="anime-meta">
-              <span class="meta-item">
-                <svg class="meta-icon" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18z"/>
-                </svg>
-                ${anime.commentCount || 0}
-              </span>
-              <button 
-                class="meta-item favorite-count ${anime.isFavorited ? 'is-favorited' : ''}"
-                data-anime-title="${anime.primaryTitle}"
-                data-anime-id="${anime.id || ''}"
-                ${!currentUser ? 'title="Faça login para favoritar"' : ''}
-              >
-                <svg class="meta-icon heart-icon" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                </svg>
-                <span class="favorite-number">${anime.favoriteCount || 0}</span>
-              </button>
-            </div>
-          </div>
-        </a>
-      </div>
-    `).join('');
+    // Atualiza o DOM de uma só vez
+    swiperWrapper.innerHTML = html.join('');
 
     // Adiciona eventos de clique para os botões de favoritar
     this.attachFavoriteButtonEvents(swiperWrapper);
 
-    // Inicializa o Swiper
-    new Swiper('.featured-swiper', {
-      slidesPerView: 2,
-      spaceBetween: 20,
-      loop: true,
-      autoplay: {
-        delay: 3000,
-        disableOnInteraction: false,
-        pauseOnMouseEnter: true
-      },
+    // Configurações otimizadas do Swiper
+    const swiperConfig = {
+      slidesPerView: 1,
+      spaceBetween: 10,
+      loop: this.isMobile ? false : true, // Desabilita loop em dispositivos móveis para economizar recursos
+      observer: true,
+      observeParents: true,
+      watchOverflow: true,
+      updateOnWindowResize: true,
+      grabCursor: true,
       pagination: {
         el: '.featured-pagination',
         clickable: true,
         dynamicBullets: true,
       },
-      navigation: {
-        nextEl: '.featured-swiper .swiper-button-next',
-        prevEl: '.featured-swiper .swiper-button-prev',
-      },
       breakpoints: {
+        480: {
+          slidesPerView: 2,
+          spaceBetween: 15
+        },
         640: {
           slidesPerView: 3,
           spaceBetween: 20
@@ -288,7 +337,31 @@ class AnimeLoader {
           spaceBetween: 20
         }
       }
-    });
+    };
+
+    // Adiciona autoplay apenas em dispositivos não móveis para melhorar performance
+    if (!this.isMobile) {
+      swiperConfig.autoplay = {
+        delay: 3000,
+        disableOnInteraction: false,
+        pauseOnMouseEnter: true
+      };
+    }
+
+    // Adiciona navegação apenas em dispositivos não móveis
+    if (!this.isMobile) {
+      swiperConfig.navigation = {
+        nextEl: '.featured-swiper .swiper-button-next',
+        prevEl: '.featured-swiper .swiper-button-prev',
+      };
+    } else {
+      // Esconde os botões de navegação em dispositivos móveis
+      const navButtons = document.querySelectorAll('.featured-swiper .swiper-button-next, .featured-swiper .swiper-button-prev');
+      navButtons.forEach(button => button.style.display = 'none');
+    }
+
+    // Inicializa o Swiper com configurações otimizadas
+    new Swiper('.featured-swiper', swiperConfig);
   }
 
   /**
@@ -306,88 +379,95 @@ class AnimeLoader {
       return;
     }
 
-    // Para cada anime, verifica se está na lista de favoritos e obtém contagem de comentários
+    // Pré-carrega metadados para todos os animes de uma vez
     if (currentUser) {
-      for (let anime of seasonalAnimes) {
-        anime.isFavorited = await this.isAnimeFavorited(anime.primaryTitle);
-        // Obtém a contagem de comentários do Firestore
-        anime.commentCount = await this.animeManager.getCommentCount(anime.primaryTitle);
-      }
+      await this.preloadAnimeMetadata(seasonalAnimes, currentUser.userId);
     } else {
-      // Se não estiver logado, só pega a contagem de comentários
-      for (let anime of seasonalAnimes) anime.commentCount = await this.animeManager.getCommentCount(anime.primaryTitle);
+      await this.preloadAnimeMetadata(seasonalAnimes);
     }
 
-    swiperWrapper.innerHTML = seasonalAnimes.map(anime => `
-      <div class="swiper-slide">
-        <a href="animes.html?anime=${encodeURIComponent(anime.primaryTitle)}" class="anime-card">
-          <div class="image-wrapper">
-            <img 
-              src="${anime.coverImage}" 
-              alt="${anime.primaryTitle}" 
-              class="anime-image"
-              onerror="this.src='https://ui-avatars.com/api/?name=Anime&background=8B5CF6&color=fff'">
-            
-            <div class="quick-info">
-              <span class="info-pill">⭐ ${Number(anime.score).toFixed(1)}</span>
-              <span class="info-pill">
-                <svg class="meta-icon" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59 8-8 8zm-1-4h2v2h-2v-2zm0-2h2V7h-2v7z"/>
-                </svg>
-                ${anime.episodes > 0 ? anime.episodes : '?'}
-              </span>
+    // Cria o HTML em uma única operação
+    const html = [];
+    for (const anime of seasonalAnimes) {
+      // Usa dados do cache em vez de fazer consultas individuais
+      anime.isFavorited = this.cache.favoritedAnimes[anime.primaryTitle] || false;
+      anime.commentCount = this.cache.commentCounts[anime.primaryTitle] || 0;
+      
+      html.push(`
+        <div class="swiper-slide">
+          <a href="animes.html?anime=${encodeURIComponent(anime.primaryTitle)}" class="anime-card">
+            <div class="image-wrapper">
+              <img 
+                src="${anime.coverImage}" 
+                alt="${anime.primaryTitle}" 
+                class="anime-image"
+                loading="lazy"
+                onerror="this.src='https://ui-avatars.com/api/?name=Anime&background=8B5CF6&color=fff'">
+              
+              <div class="quick-info">
+                <span class="info-pill">⭐ ${Number(anime.score).toFixed(1)}</span>
+                <span class="info-pill">
+                  <svg class="meta-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59 8-8 8zm-1-4h2v2h-2v-2zm0-2h2V7h-2v7z"/>
+                  </svg>
+                  ${anime.episodes > 0 ? anime.episodes : '?'}
+                </span>
+              </div>
             </div>
-          </div>
 
-          <div class="anime-info">
-            <h3 class="anime-title line-clamp-2">${anime.primaryTitle}</h3>
-            <div class="anime-meta">
-              <span class="meta-item">
-                <svg class="meta-icon" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18z"/>
-                </svg>
-                ${anime.commentCount || 0}
-              </span>
-              <button 
-                class="meta-item favorite-count ${anime.isFavorited ? 'is-favorited' : ''}"
-                data-anime-title="${anime.primaryTitle}"
-                data-anime-id="${anime.id || ''}"
-                ${!currentUser ? 'title="Faça login para favoritar"' : ''}
-              >
-                <svg class="meta-icon heart-icon" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                </svg>
-                <span class="favorite-number">${anime.favoriteCount || 0}</span>
-              </button>
+            <div class="anime-info">
+              <h3 class="anime-title line-clamp-2">${anime.primaryTitle}</h3>
+              <div class="anime-meta">
+                <span class="meta-item">
+                  <svg class="meta-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18z"/>
+                  </svg>
+                  ${anime.commentCount || 0}
+                </span>
+                <button 
+                  class="meta-item favorite-count ${anime.isFavorited ? 'is-favorited' : ''}"
+                  data-anime-title="${anime.primaryTitle}"
+                  data-anime-id="${anime.id || ''}"
+                  ${!currentUser ? 'title="Faça login para favoritar"' : ''}
+                >
+                  <svg class="meta-icon heart-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                  </svg>
+                  <span class="favorite-number">${anime.favoriteCount || 0}</span>
+                </button>
+              </div>
             </div>
-          </div>
-        </a>
-      </div>
-    `).join('');
+          </a>
+        </div>
+      `);
+    }
+
+    // Atualiza o DOM de uma só vez
+    swiperWrapper.innerHTML = html.join('');
 
     // Adiciona eventos de clique para os botões de favoritar
     this.attachFavoriteButtonEvents(swiperWrapper);
 
-    // Inicializa o Swiper
-    new Swiper('.seasonal-swiper', {
-      slidesPerView: 2,
-      spaceBetween: 20,
-      loop: true,
-      autoplay: {
-        delay: 3000,
-        disableOnInteraction: false,
-        pauseOnMouseEnter: true
-      },
+    // Configurações otimizadas do Swiper
+    const swiperConfig = {
+      slidesPerView: 1,
+      spaceBetween: 10,
+      loop: this.isMobile ? false : true, // Desabilita loop em dispositivos móveis
+      observer: true,
+      observeParents: true,
+      watchOverflow: true,
+      updateOnWindowResize: true,
+      grabCursor: true,
       pagination: {
         el: '.seasonal-pagination',
         clickable: true,
         dynamicBullets: true,
       },
-      navigation: {
-        nextEl: '.seasonal-swiper .swiper-button-next',
-        prevEl: '.seasonal-swiper .swiper-button-prev',
-      },
       breakpoints: {
+        480: {
+          slidesPerView: 2,
+          spaceBetween: 15
+        },
         640: {
           slidesPerView: 3,
           spaceBetween: 20
@@ -401,7 +481,31 @@ class AnimeLoader {
           spaceBetween: 20
         }
       }
-    });
+    };
+
+    // Adiciona autoplay apenas em dispositivos não móveis
+    if (!this.isMobile) {
+      swiperConfig.autoplay = {
+        delay: 3000,
+        disableOnInteraction: false,
+        pauseOnMouseEnter: true
+      };
+    }
+
+    // Adiciona navegação apenas em dispositivos não móveis
+    if (!this.isMobile) {
+      swiperConfig.navigation = {
+        nextEl: '.seasonal-swiper .swiper-button-next',
+        prevEl: '.seasonal-swiper .swiper-button-prev',
+      };
+    } else {
+      // Esconde os botões de navegação em dispositivos móveis
+      const navButtons = document.querySelectorAll('.seasonal-swiper .swiper-button-next, .seasonal-swiper .swiper-button-prev');
+      navButtons.forEach(button => button.style.display = 'none');
+    }
+
+    // Inicializa o Swiper com configurações otimizadas
+    new Swiper('.seasonal-swiper', swiperConfig);
   }
 
   // Inicializa a atualização do link da temporada atual
@@ -680,12 +784,19 @@ class AnimeLoader {
       // Atualiza o link da temporada atual
       this.updateCurrentSeasonLink();
       
-      // Carrega os dados de animes
-      await Promise.all([
-        this.loadFeaturedAnimes(),
-        this.loadSeasonalAnimes(),
-        this.loadLatestReviews()
-      ]);
+      // Carrega os dados em sequência para evitar sobrecarga em dispositivos móveis
+      if (this.isMobile) {
+        await this.loadFeaturedAnimes();
+        await this.loadSeasonalAnimes();
+        await this.loadLatestReviews();
+      } else {
+        // Em desktops, carrega em paralelo
+        await Promise.all([
+          this.loadFeaturedAnimes(),
+          this.loadSeasonalAnimes(),
+          this.loadLatestReviews()
+        ]);
+      }
       
       console.log("Dados de animes inicializados com sucesso");
       return true;
@@ -990,9 +1101,14 @@ async function loadRecentNews() {
 
 // Inicializa o AnimeLoader automaticamente quando o DOM estiver carregado
 document.addEventListener('DOMContentLoaded', () => {
-  // Inicializa o AnimeLoader se estiver na página principal
-  window.animeLoader = AnimeLoader.init();
+  // Atrasa a inicialização para melhorar o tempo de carregamento inicial
+  setTimeout(() => {
+    // Inicializa o AnimeLoader se estiver na página principal
+    window.animeLoader = AnimeLoader.init();
 
-  // Inicializa dados da página
-  initPageData();
+    // Inicializa dados da página de forma assíncrona
+    requestAnimationFrame(() => {
+      initPageData();
+    });
+  }, 100);
 });
