@@ -96,30 +96,40 @@
     <section class="parallax-section">
       <div class="container mx-auto px-4 max-w-10xl">
         <div class="parallax-content mx-auto px-5">
-          <h2 class="section-title text-2xl md:text-3xl lg:text-4xl my-4 md:my-6">Animes em Destaque</h2>
-
-          <div class="swiper-container featured-swiper">
-            <div class="swiper-wrapper">
-              <!-- Carrossel preenchido via JS -->
-            </div>
-            <div class="swiper-button-next"></div>
-            <div class="swiper-button-prev"></div>
-            <div class="swiper-pagination featured-pagination"></div>
+          <!-- Tabs para alternar entre os carrosséis -->
+          <div class="carousel-tabs flex justify-center gap-4 mb-6">
+            <button class="carousel-tab active" data-target="featured">
+              <span class="tab-text">Animes em Destaque</span>
+              <div class="tab-indicator"></div>
+            </button>
+            <button class="carousel-tab" data-target="seasonal">
+              <span class="tab-text">Animes da Temporada</span>
+              <div class="tab-indicator"></div>
+            </button>
           </div>
-        </div>
-      </div>
-      
-      <div class="container mx-auto px-4 max-w-10xl mt-6">
-        <div class="parallax-content mx-auto px-5">
-          <h2 class="section-title text-2xl md:text-3xl lg:text-4xl my-4 md:my-6">Animes da Temporada</h2>
 
-          <div class="swiper-container seasonal-swiper">
-            <div class="swiper-wrapper">
-              <!-- Carrossel preenchido via JS -->
+          <!-- Carrossel de Animes em Destaque (inicialmente visível) -->
+          <div id="featured-carousel" class="carousel-content active">
+            <div class="swiper-container featured-swiper">
+              <div class="swiper-wrapper">
+                <!-- Carrossel preenchido via JS -->
+              </div>
+              <div class="swiper-button-next"></div>
+              <div class="swiper-button-prev"></div>
+              <div class="swiper-pagination featured-pagination"></div>
             </div>
-            <div class="swiper-button-next"></div>
-            <div class="swiper-button-prev"></div>
-            <div class="swiper-pagination seasonal-pagination"></div>
+          </div>
+
+          <!-- Carrossel de Animes da Temporada (inicialmente oculto) -->
+          <div id="seasonal-carousel" class="carousel-content hidden">
+            <div class="swiper-container seasonal-swiper">
+              <div class="swiper-wrapper">
+                <!-- Carrossel preenchido via JS -->
+              </div>
+              <div class="swiper-button-next"></div>
+              <div class="swiper-button-prev"></div>
+              <div class="swiper-pagination seasonal-pagination"></div>
+            </div>
           </div>
         </div>
       </div>

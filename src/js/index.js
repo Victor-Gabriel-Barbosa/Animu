@@ -250,8 +250,8 @@ class AnimeLoader {
     // Adiciona eventos de clique para os botões de favoritar
     this.attachFavoriteButtonEvents(swiperWrapper);
 
-    // Inicializa o Swiper
-    new Swiper('.featured-swiper', {
+    // Inicializa o Swiper e salva a referência
+    window.featuredSwiper = new Swiper('.featured-swiper', {
       slidesPerView: 2,
       spaceBetween: 20,
       loop: true,
@@ -363,8 +363,8 @@ class AnimeLoader {
     // Adiciona eventos de clique para os botões de favoritar
     this.attachFavoriteButtonEvents(swiperWrapper);
 
-    // Inicializa o Swiper
-    new Swiper('.seasonal-swiper', {
+    // Inicializa o Swiper e salva a referência
+    window.seasonalSwiper = new Swiper('.seasonal-swiper', {
       slidesPerView: 2,
       spaceBetween: 20,
       loop: true,
@@ -990,4 +990,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Inicializa dados da página
   initPageData();
+  
+  // Inicializa a alternância entre os carrosséis
+  initCarouselTabs();
 });
+
+// Função para controlar a alternância entre os carrosséis
+function initCarouselTabs() {
+  const tabs = document.querySelectorAll('.carousel-tab');
+  const contents = document.querySelectorAll('.carousel-content');
+  
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.dataset.target;
+      
+      // Desativa todas as tabs e contents
+      tabs.forEach(t => t.classList.remove('active'));
+      contents.forEach(c => c.classList.remove('active'));
+      
+      // Ativa a tab clicada e o content correspondente
+      tab.classList.add('active');
+      document.getElementById(`${target}-carousel`).classList.add('active');
+      
+      // Reinicia o Swiper para garantir que funcione corretamente após a exibição
+      if (target === 'featured' && window.featuredSwiper) {
+        window.featuredSwiper.update();
+      } else if (target === 'seasonal' && window.seasonalSwiper) {
+        window.seasonalSwiper.update();
+      }
+    });
+  });
+}
