@@ -653,7 +653,7 @@
   font-weight: 600;
   transition: all 0.3s ease;
   background: transparent;
-  color: var(--text-color);
+  color: white;
   border: none;
   cursor: pointer;
   font-size: 1.25rem;
