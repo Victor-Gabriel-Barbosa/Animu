@@ -65,10 +65,7 @@ class AnimeLoader {
     }
   }
 
-  /**
-   * Carrega animes em destaque
-   * Ordenados por pontuação
-   */
+  // Carrega animes em destaque (Ordenados por pontuação)
   async loadFeaturedAnimes() {
     try {
       // Utiliza o AnimeManager para obter animes ordenados por pontuação
@@ -142,9 +139,7 @@ class AnimeLoader {
     }
   }
 
-  /**
-   * Carrega animes recentes (caso não existam animes da temporada)
-   */
+  // Carrega animes recentes (caso não existam animes da temporada)
   async loadRecentAnimes() {
     try {
       // Usa o AnimeManager para obter animes ordenados por data de criação
