@@ -425,12 +425,10 @@ i {
 
 .btn-cancel:hover {
   opacity: 0.95;
-  transform: translateY(-2px);
   box-shadow: 0 6px 12px rgba(204, 0, 0, 0.3);
 }
 
 .btn-cancel:active {
-  transform: translateY(1px);
   box-shadow: 0 2px 4px rgba(204, 0, 0, 0.2);
 }
 
@@ -554,12 +552,10 @@ input, button, textarea, select {
   
   &:hover {
     opacity: 0.95;
-    transform: translateY(-2px);
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
   }
   
   &:active {
-    transform: translateY(1px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
   
@@ -590,7 +586,6 @@ input, button, textarea, select {
   
   &:hover {
     background: var(--card-shadow);
-    transform: translateY(-2px);
   }
 }
 

@@ -1,5 +1,4 @@
-.btn-add,
-.admin-form #submit-btn {
+.btn-add, .admin-form #submit-btn {
   background: var(--primary-gradient);
   color: white;
   border: none;
@@ -472,8 +471,7 @@
   gap: 0.5rem;
 }
 
-.btn-edit,
-.btn-delete {
+.btn-edit, .btn-delete {
   padding: 0.5rem;
   border: none;
   border-radius: 4px;
@@ -509,12 +507,12 @@
   height: 100%;
   background: rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: flex-start; /* Mudado de center para flex-start */
+  align-items: flex-start; 
   justify-content: center;
   z-index: 1000;
   padding: 2rem;
-  overflow-y: auto; /* Permite scroll no modal */
-  pointer-events: auto; /* Garante que cliques funcionem */
+  overflow-y: auto; 
+  pointer-events: auto; 
 }
 
 .modal > * {
@@ -777,32 +775,6 @@
   transform: scale(1.01);
 }
 
-.btn {
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.5rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
-}
-
-.btn-primary {
-  background: var(--primary-color);
-  color: white;
-}
-
-.btn-primary:hover {
-  filter: brightness(1.1);
-  transform: translateY(-1px);
-}
-
-.btn-secondary {
-  background: var(--card-shadow);
-  color: var(--text-color);
-}
-
-.btn-secondary:hover {
-  background: var(--card-shadow-light);
-}
-
 .modal-content {
   padding: 2rem;
   border-radius: 1rem;
@@ -821,11 +793,6 @@
 
   .form-group {
     margin-bottom: 1rem;
-  }
-
-  .btn {
-    width: 100%;
-    margin-bottom: 0.5rem;
   }
 
   .modal-footer {
