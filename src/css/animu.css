@@ -71,7 +71,7 @@ body.has-navbar.menu-open {
 }
 
 body.has-navbar:not(.menu-open) {
-  padding-left: 60px; 
+  padding-left: 65px; 
   transition: padding-left 0.3s ease;
 }
 
@@ -493,27 +493,6 @@ i {
 .back-to-top:hover i {
   transform: translateY(-4px);
   transition: transform 0.2s ease;
-}
-
-/* Ajustes responsivos para o botão */
-@media (max-width: 768px) {
-  .back-to-top {
-    bottom: 16px;
-    width: 42px;
-    height: 42px;
-  }
-
-  .back-to-top .f1 {
-    font-size: 24px;
-  }
-}
-
-@media (max-width: 480px) {
-  .back-to-top {
-    bottom: 12px;
-    width: 40px;
-    height: 40px;
-  }
 }
 
 /* 4.2. Formulários */

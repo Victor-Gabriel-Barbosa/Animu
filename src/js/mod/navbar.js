@@ -153,11 +153,11 @@ class Navbar {
             <i class="fi fi-sr-user"></i>
           </button>
           <div id="auth-dropdown" class="user-dropdown hidden">
-            <a href="./signin.html" class="dropdown-item">
+            <a href="./signin.html" class="dropdown-item text-green-600">
               <i class="fi fi-sr-address-card"></i>
               <span>Entrar</span>
             </a>
-            <a href="./signup.html" class="dropdown-item">
+            <a href="./signup.html" class="dropdown-item text-blue-600">
               <i class="fi fi-sr-user-add"></i>
               <span>Criar Conta</span>
             </a>
