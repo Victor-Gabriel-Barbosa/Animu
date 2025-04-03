@@ -75,14 +75,31 @@ class CategoryAdmin {
               <label class="block text-sm font-medium mb-1">
                 Tipo de Categoria
               </label>
-              <div class="flex gap-4">
-                <label class="inline-flex items-center">
-                  <input type="radio" name="category-type" value="main" checked>
-                  <span class="ml-2">Principal</span>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
+                <label class="category-type-option cursor-pointer">
+                  <input type="radio" name="category-type" value="main" class="sr-only" checked>
+                  <div class="flex items-center gap-2 sm:gap-3 border border-gray-300 dark:border-gray-600 rounded-lg p-2 sm:p-3 transition-all hover:border-purple-500 option-content">
+                    <div class="p-1.5 sm:p-2 rounded-md bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400">
+                      <i class="fi fi-rs-rocket-lunch text-lg sm:text-xl"></i>
+                    </div>
+                    <div class="flex-1">
+                      <span class="text-sm sm:text-base font-medium">Principal</span>
+                      <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 sm:mt-1">Categoria de primeiro nível</p>
+                    </div>
+                  </div>
                 </label>
-                <label class="inline-flex items-center">
-                  <input type="radio" name="category-type" value="sub">
-                  <span class="ml-2">Subcategoria</span>
+                
+                <label class="category-type-option cursor-pointer">
+                  <input type="radio" name="category-type" value="sub" class="sr-only">
+                  <div class="flex items-center gap-2 sm:gap-3 border border-gray-300 dark:border-gray-600 rounded-lg p-2 sm:p-3 transition-all hover:border-purple-500 option-content">
+                    <div class="p-1.5 sm:p-2 rounded-md bg-purple-100 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400">
+                      <i class="fi fi-rr-list-timeline text-lg sm:text-xl"></i>
+                    </div>
+                    <div class="flex-1">
+                      <span class="text-sm sm:text-base font-medium">Subcategoria</span>
+                      <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 sm:mt-1">Categoria subordinada</p>
+                    </div>
+                  </div>
                 </label>
               </div>
             </div>

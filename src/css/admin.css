@@ -1388,3 +1388,18 @@ input[id$="-hex"].error {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* Estilos para o seletor de tipo de categoria */
+.category-type-option input:checked + .option-content {
+  border-color: var(--primary-color);
+  background-color: var(--primary-color-alpha);
+  box-shadow: 0 0 0 1px var(--primary-color);
+}
+
+.category-type-option .option-content {
+  transition: all 0.2s ease;
+}
+
+.category-type-option:hover .option-content {
+  border-color: var(--primary-color);
+}
