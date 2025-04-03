@@ -10,7 +10,7 @@ const firebaseConfig = {
 
 // Verifica se o Firebase já foi inicializado para evitar inicialização múltipla
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-else firebase.app(); // Use o app já inicializado
+else firebase.app(); // Usa o app já inicializado
 
 // Exporta referências de serviços para uso em outros arquivos
 const auth = firebase.auth();

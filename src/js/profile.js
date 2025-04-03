@@ -363,11 +363,10 @@ function loadFavoriteAnimes(user) {
     return `
       <a href="animes.html?anime=${encodeURIComponent(anime.primaryTitle)}" 
        class="flex items-center gap-4 p-4 rounded-lg 
-              hover:bg-purple-50 dark:hover:bg-purple-800/30
-              hover:shadow-lg dark:hover:shadow-purple-900/30
+              hover:bg-purple-800/30
+              hover:shadow-purple-900/30
               hover:scale-102 transform
-              group
-              transition-all duration-200 ease-in-out">
+              group transition-all duration-200 ease-in-out">
         <img src="${anime.coverImage}" alt="${anime.primaryTitle}" 
              class="w-16 h-16 object-cover rounded-lg 
              hover:shadow-md transition-shadow duration-200">
@@ -381,13 +380,10 @@ function loadFavoriteAnimes(user) {
           </div>
         </div>
         <button onclick="shareAnime(event, '${anime.primaryTitle}', '${anime.coverImage}')"
-                class="opacity-0 group-hover:opacity-100 p-2 text-purple-600 hover:text-white 
-                       hover:bg-purple-600 rounded-full transition-all duration-200"
+                class="p-2 w-10 h-10 flex items-center justify-center text-purple-600 hover:text-white 
+                      hover:bg-purple-600 rounded-full transition-all duration-200"
                 title="Compartilhar com amigos">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
-          </svg>
+          <i class="fi fi-rr-share"></i>
         </button>
       </a>
     `;
@@ -441,20 +437,16 @@ async function shareAnime(event, animeTitle, coverImage) {
           </div>
           <div class="flex justify-end gap-3">
             <button onclick="closeShareModal()" 
-                    class="btn btn-cancel order-2 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
+                    class="btn-action btn-cancel order-2 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
               <span class="flex items-center justify-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <i class="fi fi-br-circle-xmark"></i>
                 Cancelar
               </span>
             </button>
             <button onclick="confirmShare('${animeTitle}', '${coverImage}')" 
-                    class="btn btn-primary order-1 md:order-3 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
+                    class="btn-action btn-primary order-1 md:order-3 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
               <span class="flex items-center justify-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
+                <i class="fi fi-br-checkbox"></i>
                 Compartilhar
               </span>
             </button>

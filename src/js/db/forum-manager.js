@@ -125,7 +125,7 @@ class ForumManager {
         const topics = JSON.parse(localStorage.getItem('forum_topics') || '[]');
         
         // Cria um novo ID único
-        const topicId = Date.now().toString() + Math.random().toString(36).substr(2, 5);
+        const topicId = Date.now().toString() + Math.random().toString(36).substring(2, 7);
         
         // Prepara o objeto do tópico
         const newTopic = {
