@@ -202,7 +202,7 @@ nav .ml-10 a.active {
   position: fixed;
   top: 56px;
   left: 0;
-  width: 225px; 
+  width: 200px; 
   height: calc(100vh - 56px);
   background: var(--background);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -621,7 +621,7 @@ body.has-navbar {
 }
 
 body.has-navbar.menu-open:not(.nav-hidden) {
-  padding-left: 225px;
+  padding-left: 200px;
 }
 
 body.has-navbar.nav-hidden {
@@ -783,7 +783,7 @@ body.has-navbar.nav-hidden main {
 /* Tablets grandes e desktops pequenos */
 @media (min-width: 769px) and (max-width: 1024px) {
   body.has-navbar.menu-open {
-    padding-left: 225px;
+    padding-left: 200px;
   }
 }
 
@@ -811,7 +811,7 @@ body.has-navbar.nav-hidden main {
 /* Desktops grandes */
 @media (min-width: 1025px) {
   body.has-navbar.menu-open {
-    padding-left: 225px;
+    padding-left: 200px;
   }
 }
 

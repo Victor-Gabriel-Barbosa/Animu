@@ -99,14 +99,14 @@ function renderTopics() {
 
   // Adiciona filtros de categoria com melhor scroll horizontal em dispositivos móveis
   const categoryFilters = `
-    <div class="category-filters mb-6 flex gap-2 overflow-x-auto pb-2 px-1 -mx-1 snap-x snap-mandatory scrollbar-hide">
-      <button class="category-filter px-4 py-2 rounded-full border transition-colors hover:bg-purple-700 whitespace-nowrap flex-shrink-0 snap-start"
+    <div class="category-filters mb-4 md:mb-6 flex gap-1.5 sm:gap-2 md:gap-3 overflow-x-auto pb-2 px-1 -mx-1 snap-x snap-mandatory scrollbar-hide">
+      <button class="category-filter text-xs sm:text-sm md:text-base px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border transition-colors hover:bg-purple-700 whitespace-nowrap flex-shrink-0 snap-start"
               data-category="all"
               onclick="filterTopicsByCategory()">
         🔍 Todas
       </button>
       ${FORUM_CONFIG.categories.map(cat => `
-        <button class="category-filter px-4 py-2 rounded-full border transition-colors hover:bg-purple-700 whitespace-nowrap flex-shrink-0 snap-start"
+        <button class="category-filter text-xs sm:text-sm md:text-base px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border transition-colors hover:bg-purple-700 whitespace-nowrap flex-shrink-0 snap-start"
                 data-category="${cat.id}"
                 onclick="filterTopicsByCategory('${cat.id}')">
           ${cat.icon} ${cat.name}
@@ -121,26 +121,26 @@ function renderTopics() {
   // Verifica se não há tópicos e exibe mensagem apropriada
   if (forumTopics.length === 0) {
     const message = activeCategory === 'all' 
-      ? `<div class="text-center py-12">
-          <div class="text-6xl mb-4">🔍</div>
-          <h3 class="text-xl font-medium mb-2">Nenhuma discussão encontrada</h3>
-          <p class="text-gray-600">Seja o primeiro a iniciar uma discussão no fórum!</p>
+      ? `<div class="text-center py-8 md:py-12">
+          <div class="text-4xl sm:text-5xl md:text-6xl mb-3 md:mb-4">🔍</div>
+          <h3 class="text-lg sm:text-xl md:text-2xl font-medium mb-2">Nenhuma discussão encontrada</h3>
+          <p class="text-sm sm:text-base text-gray-600">Seja o primeiro a iniciar uma discussão no fórum!</p>
           <button onclick="document.getElementById('new-topic-btn').click()" 
-                  class="mt-4 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                  class="mt-3 md:mt-4 px-4 py-2 sm:px-6 sm:py-2 text-sm sm:text-base bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
             Criar discussão
           </button>
         </div>`
-      : `<div class="text-center py-12">
-          <div class="text-6xl mb-4">${FORUM_CONFIG.categories.find(c => c.id === activeCategory)?.icon || '🔍'}</div>
-          <h3 class="text-xl font-medium mb-2">Nenhuma discussão na categoria "${FORUM_CONFIG.categories.find(c => c.id === activeCategory)?.name || 'selecionada'}"</h3>
-          <p class="text-gray-600">Seja o primeiro a iniciar uma discussão nesta categoria!</p>
-          <div class="mt-4 flex justify-center gap-4">
+      : `<div class="text-center py-8 md:py-12">
+          <div class="text-4xl sm:text-5xl md:text-6xl mb-3 md:mb-4">${FORUM_CONFIG.categories.find(c => c.id === activeCategory)?.icon || '🔍'}</div>
+          <h3 class="text-lg sm:text-xl md:text-2xl font-medium mb-2">Nenhuma discussão na categoria "${FORUM_CONFIG.categories.find(c => c.id === activeCategory)?.name || 'selecionada'}"</h3>
+          <p class="text-sm sm:text-base text-gray-600">Seja o primeiro a iniciar uma discussão nesta categoria!</p>
+          <div class="mt-3 md:mt-4 flex flex-col sm:flex-row justify-center gap-2 sm:gap-4">
             <button onclick="filterTopicsByCategory('all')" 
-                    class="px-4 py-2 border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-600 hover:text-white transition-colors">
+                    class="px-4 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm md:text-base border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-600 hover:text-white transition-colors mb-2 sm:mb-0">
               Ver todas as categorias
             </button>
             <button onclick="document.getElementById('new-topic-btn').click()" 
-                    class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                    class="px-4 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm md:text-base bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
               Criar discussão
             </button>
           </div>
@@ -204,57 +204,57 @@ function renderTopics() {
 // Renderiza a lista de tópicos do fórum
 function renderReplies(replies, topicId, userId) {
   return replies.map(reply => `
-    <div class="mb-3 overflow-hidden" id="reply-${reply.id}">
-      <div class="flex items-start gap-3">
-        <img class="h-8 w-8 rounded-full object-cover"
+    <div class="mb-2 sm:mb-3 overflow-hidden" id="reply-${reply.id}">
+      <div class="flex items-start gap-2 sm:gap-3">
+        <img class="h-6 w-6 sm:h-8 sm:w-8 rounded-full object-cover"
              src="${AnimuUtils.getAuthorAvatar(reply.author)}"
              alt="${reply.author}">
         <div class="flex-1">
-          <div class="flex justify-between items-start">
-            <p class="text-sm">
+          <div class="flex justify-between items-start flex-wrap sm:flex-nowrap">
+            <p class="text-xs sm:text-sm mb-1 sm:mb-0">
               <span class="font-semibold">${reply.author}</span>
-              em ${AnimuUtils.formatDate(reply.date)}
-              ${reply.editedAt ? `<span class="text-xs">(editado)</span>` : ''}
+              <span class="text-gray-600">em ${AnimuUtils.formatDate(reply.date)}</span>
+              ${reply.editedAt ? `<span class="text-xs opacity-75">(editado)</span>` : ''}
             </p>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-1 sm:gap-2 mt-0.5 sm:mt-0">
               ${(AnimuUtils.isAuthor(reply.author) || AnimuUtils.isUserAdmin()) ? `
                 <button onclick="editReply('${topicId}', '${reply.id}')" 
-                        class="btn-action text-blue-600 hover:text-blue-800">
-                  <i class="fi fi-bs-edit"></i>
+                        class="btn-action text-blue-600 hover:text-blue-800 p-0.5 sm:p-1 touch-manipulation">
+                  <i class="fi fi-bs-edit text-xs sm:text-sm"></i>
                 </button>
                 <button onclick="deleteReply('${topicId}', '${reply.id}')" 
-                        class="btn-action text-red-600 hover:text-red-800">
-                  <i class="fi fi-bs-trash"></i>
+                        class="btn-action text-red-600 hover:text-red-800 p-0.5 sm:p-1 touch-manipulation">
+                  <i class="fi fi-bs-trash text-xs sm:text-sm"></i>
                 </button>
               ` : ''}
               <button onclick="likeReply('${topicId}', '${reply.id}')" 
-                      class="btn-action text-sm gap-1 p-1 ${reply.likedBy && reply.likedBy.includes(userId) ? 'text-purple-600' : 'text-gray-400'} transition-colors">
-                <i class="fi fi-ss-heart"></i>
-                ${reply.likes || 0}
+                      class="btn-action text-xs sm:text-sm gap-0.5 sm:gap-1 p-1 ${reply.likedBy && reply.likedBy.includes(userId) ? 'text-purple-600' : 'text-gray-400'} transition-colors touch-manipulation">
+                <i class="fi fi-ss-heart text-xs sm:text-sm"></i>
+                <span class="text-xs">${reply.likes || 0}</span>
               </button>
             </div>
           </div>
-          <div class="reply-content overflow-hidden mt-1">
-            <p class="break-words">${reply.content}</p>
+          <div class="reply-content overflow-hidden">
+            <p class="break-words text-xs sm:text-sm">${reply.content}</p>
           </div>
-          <div class="reply-edit-form hidden mt-4">
-            <form onsubmit="saveReplyEdit(event, '${topicId}', '${reply.id}')" class="space-y-3">
+          <div class="reply-edit-form hidden mt-2 sm:mt-3">
+            <form onsubmit="saveReplyEdit(event, '${topicId}', '${reply.id}')" class="space-y-2">
               <div>
-                <textarea class="w-full p-2 border rounded-lg" 
+                <textarea class="w-full p-1.5 sm:p-2 border rounded-lg text-xs sm:text-sm" 
                           maxlength="${FORUM_CONFIG.maxReplyLength}"
                           oninput="updateCharCount(this, 'reply-edit-count-${reply.id}')">${reply.content}</textarea>
-                <small id="reply-edit-count-${reply.id}" class="text-right block mt-1">0/${FORUM_CONFIG.maxReplyLength}</small>
+                <small id="reply-edit-count-${reply.id}" class="text-right block mt-0.5 text-xs">0/${FORUM_CONFIG.maxReplyLength}</small>
               </div>
-              <div class="flex flex-col sm:flex-row justify-end gap-2">
+              <div class="flex flex-col sm:flex-row justify-end gap-1 sm:gap-2">
                 <button type="button" onclick="cancelReplyEdit('${reply.id}')" 
-                        class="btn-action btn-cancel order-2 sm:order-1 w-full py-2 text-sm">
-                  <span class="flex items-center justify-center gap-2">
+                        class="btn-action btn-cancel order-2 sm:order-1 w-full py-1.5 text-xs">
+                  <span class="flex items-center justify-center gap-1 sm:gap-2">
                     <i class="fi fi-br-circle-xmark"></i>
                     Cancelar
                   </span>
                 </button>
-                <button type="submit" class="btn-action btn-primary order-1 sm:order-2 w-full py-2 text-sm">
-                  <span class="flex items-center justify-center gap-2">
+                <button type="submit" class="btn-action btn-primary order-1 sm:order-2 w-full py-1.5 text-xs">
+                  <span class="flex items-center justify-center gap-1 sm:gap-2">
                     <i class="fi fi-br-checkbox"></i>
                     Salvar
                   </span>
@@ -282,21 +282,21 @@ function renderTopicCard(topic, userId) {
   const category = FORUM_CONFIG.categories.find(c => c.id === topic.category) || { icon: '💬', name: 'Geral' };
 
   return `
-    <div class="card p-4 sm:p-6 mb-4 transform transition-all overflow-hidden rounded-lg shadow-sm hover:shadow-md" 
+    <div class="card p-3 sm:p-4 md:p-6 mb-3 sm:mb-4 transform transition-all overflow-hidden rounded-lg shadow-sm hover:shadow-md" 
          id="topic-${topic.id}">
       <div class="topic-content overflow-hidden" onclick="incrementTopicViews('${topic.id}')">
-        <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 md:gap-4">
           <!-- Avatar com tamanho adaptável -->
-          <img class="h-10 w-10 sm:h-12 sm:w-12 rounded-full object-cover flex-shrink-0"
+          <img class="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-full object-cover flex-shrink-0"
                src="${AnimuUtils.getAuthorAvatar(topic.author)}"
                alt="${topic.author}">
           <div class="flex-1 min-w-0">
             <div class="flex flex-col gap-1 sm:gap-2">
               <div class="flex items-center gap-2">
-                <span class="text-lg flex-shrink-0">${category.icon}</span>
-                <h3 class="text-xl font-bold truncate">${topic.title}</h3>
+                <span class="text-base sm:text-lg md:text-xl flex-shrink-0">${category.icon}</span>
+                <h3 class="text-lg sm:text-xl md:text-2xl font-bold truncate">${topic.title}</h3>
               </div>
-              <p class="text-sm">
+              <p class="text-xs sm:text-sm text-gray-600">
                 Por <span class="font-semibold">${topic.author}</span> 
                 em ${AnimuUtils.formatDate(topic.date)}
                 ${topic.editedAt ? `<span class="text-xs">(editado)</span>` : ''}
@@ -304,59 +304,59 @@ function renderTopicCard(topic, userId) {
             </div>
           </div>
           <!-- Botões de ação otimizados para mobile -->
-          <div class="flex items-center justify-end gap-2 flex-shrink-0 mt-2 sm:mt-0">
+          <div class="flex items-center justify-end gap-1 sm:gap-2 flex-shrink-0 mt-1 sm:mt-0">
             ${(AnimuUtils.isAuthor(topic.author) || AnimuUtils.isUserAdmin()) ? `
               <button onclick="editTopic('${topic.id}'); event.stopPropagation();" 
-                      class="btn-action text-blue-600 hover:text-blue-800 p-1">
-                <i class="fi fi-bs-edit"></i>
+                      class="btn-action text-blue-600 hover:text-blue-800 p-1 touch-manipulation">
+                <i class="fi fi-bs-edit text-sm sm:text-base"></i>
               </button>
               <button onclick="deleteTopic('${topic.id}'); event.stopPropagation();" 
-                      class="btn-action text-red-600 hover:text-red-800 p-1">
-                <i class="fi fi-bs-trash"></i>
+                      class="btn-action text-red-600 hover:text-red-800 p-1 touch-manipulation">
+                <i class="fi fi-bs-trash text-sm sm:text-base"></i>
               </button>
             ` : ''}
             <button onclick="likeTopic('${topic.id}'); event.stopPropagation();" 
-                    class="btn-action flex items-center gap-1 p-1 rounded-full ${topic.likedBy && topic.likedBy.includes(userId) ? 'text-purple-600' : 'text-gray-400'} transition-colors">
-              <i class="fi fi-ss-social-network"></i>
-              ${topic.likes}
+                    class="btn-action flex items-center gap-1 p-1.5 rounded-full ${topic.likedBy && topic.likedBy.includes(userId) ? 'text-purple-600' : 'text-gray-400'} transition-colors touch-manipulation">
+              <i class="fi fi-ss-social-network text-sm sm:text-base"></i>
+              <span class="text-xs sm:text-sm">${topic.likes}</span>
             </button>
           </div>
         </div>
-        <p class="mt-3 mb-4 break-words topic-content">
+        <p class="mt-2 sm:mt-3 mb-3 sm:mb-4 break-words topic-content text-sm sm:text-base line-clamp-3 sm:line-clamp-4">
           ${topic.content}
         </p>
       </div>
 
       <!-- Formulário de edição do tópico com melhoria de responsividade -->
       <div class="topic-edit-form hidden">
-        <form onsubmit="saveTopicEdit(event, '${topic.id}')" class="space-y-4">
+        <form onsubmit="saveTopicEdit(event, '${topic.id}')" class="space-y-3 sm:space-y-4">
           <div>
             <input type="text" value="${topic.title}" 
-                   class="w-full p-2 border rounded-lg text-xl font-bold mb-2"
+                   class="w-full p-2 border rounded-lg text-base sm:text-lg md:text-xl font-bold mb-1 sm:mb-2"
                    maxlength="${FORUM_CONFIG.maxTitleLength}"
                    oninput="updateCharCount(this, 'edit-title-count-${topic.id}')">
-            <small id="edit-title-count-${topic.id}" class="text-right block mt-1">
+            <small id="edit-title-count-${topic.id}" class="text-right block mt-0.5 sm:mt-1 text-xs">
               ${topic.title.length}/${FORUM_CONFIG.maxTitleLength}
             </small>
           </div>
           <div>
             <!-- Substituindo textarea por div para o editor Quill -->
-            <div id="edit-content-${topic.id}" class="w-full p-2 border rounded-lg min-h-[150px]"></div>
-            <small id="edit-content-count-${topic.id}" class="text-right block mt-1">
+            <div id="edit-content-${topic.id}" class="w-full p-2 border rounded-lg min-h-[120px] sm:min-h-[150px] text-sm sm:text-base"></div>
+            <small id="edit-content-count-${topic.id}" class="text-right block mt-0.5 sm:mt-1 text-xs">
               ${topic.content.length <= FORUM_CONFIG.maxContentLength ? topic.content.length : FORUM_CONFIG.maxContentLength}/${FORUM_CONFIG.maxContentLength}
             </small>
           </div>
           <div class="flex flex-col sm:flex-row justify-end gap-2">
             <button type="button" onclick="cancelTopicEdit('${topic.id}')" 
-                    class="btn-action btn-cancel order-2 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
-              <span class="flex items-center justify-center gap-2">
+                    class="btn-action btn-cancel order-2 sm:order-1 flex-1 w-full py-2 text-xs sm:text-sm">
+              <span class="flex items-center justify-center gap-1 sm:gap-2">
                 <i class="fi fi-br-circle-xmark"></i>
                 Cancelar
               </span>
             </button>
             <button type="submit" 
-                    class="btn-action btn-primary order-1 md:order-3 flex-1 w-full py-3 md:py-2 text-sm md:text-base">
-              <span class="flex items-center justify-center gap-2">
+                    class="btn-action btn-primary order-1 sm:order-2 flex-1 w-full py-2 text-xs sm:text-sm">
+              <span class="flex items-center justify-center gap-1 sm:gap-2">
                 <i class="fi fi-br-checkbox"></i>
                 Salvar
               </span>
@@ -366,48 +366,48 @@ function renderTopicCard(topic, userId) {
       </div>
       
       <!-- Seção de respostas com melhor espaçamento para mobile -->
-      <div class="ml-3 sm:ml-6 border-l-2 border-purple-600 pl-2 sm:pl-4 mt-4">
+      <div class="ml-2 sm:ml-4 md:ml-6 border-l-2 border-purple-600 pl-2 sm:pl-3 md:pl-4 mt-3 sm:mt-4">
         ${renderReplies(topic.replies, topic.id, userId)}
       </div>
       
       <!-- Formulário de resposta responsivo -->
       ${AnimuUtils.isUserLoggedIn() ? `
-        <div class="mt-4">
+        <div class="mt-3 sm:mt-4">
           <form onsubmit="addReply(event, '${topic.id}')" class="space-y-2">
             <div class="flex-1">
               <input type="text" 
                      placeholder="Adicione uma resposta..." 
                      maxlength="${FORUM_CONFIG.maxReplyLength}"
                      oninput="updateCharCount(this, 'reply-count-${topic.id}')"
-                     class="w-full p-2 border rounded-lg">
-              <small id="reply-count-${topic.id}" class="text-right block mt-1">0/${FORUM_CONFIG.maxReplyLength}</small>
+                     class="w-full p-1.5 sm:p-2 border rounded-lg text-sm">
+              <small id="reply-count-${topic.id}" class="text-right block mt-0.5 sm:mt-1 text-xs">0/${FORUM_CONFIG.maxReplyLength}</small>
             </div>
             <div class="flex justify-end">
-              <button type="submit" class="btn px-4 py-2">
+              <button type="submit" class="btn px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm touch-manipulation">
                 Responder
               </button>
             </div>
           </form>
         </div>
       ` : `
-        <div class="mt-4 text-center py-2">
-          <a href="signin.html" class="text-purple-600 hover:text-purple-700 font-medium">
+        <div class="mt-3 sm:mt-4 text-center py-2">
+          <a href="signin.html" class="text-purple-600 hover:text-purple-700 font-medium text-sm sm:text-base">
             Faça login para participar da discussão
           </a>
         </div>
       `}
       
       <!-- Estatísticas do tópico com melhor layout mobile -->
-      <div class="flex flex-wrap gap-2 mt-4 text-sm text-gray-600">
+      <div class="flex flex-wrap gap-1.5 sm:gap-2 mt-3 sm:mt-4 text-xs sm:text-sm text-gray-600">
         <span class="badge views-count">${topic.views || 0} 👀</span>
         <span class="badge">${topic.replies.length} 💬</span>
         <span class="badge">${topic.likes} 👍</span>
       </div>
 
       <!-- Sistema de tags com layout flexível -->
-      <div class="flex flex-wrap gap-2 mt-2">
+      <div class="flex flex-wrap gap-1.5 sm:gap-2 mt-2">
         ${(topic.tags || []).map(tag => `
-          <span class="tag text-xs sm:text-sm">
+          <span class="tag text-xs py-0.5 px-1.5 sm:py-1 sm:px-2">
             #${tag}
           </span>
         `).join('')}
@@ -1034,6 +1034,15 @@ async function filterTopicsByCategory(categoryId = 'all') {
   // Salva a categoria ativa no localStorage para persistência
   localStorage.setItem('activeCategoryFilter', categoryId);
   
+  // Mostra um indicador de carregamento enquanto os dados são buscados
+  if (forumTopicsContainer) {
+    forumTopicsContainer.innerHTML = `
+      <div class="flex justify-center items-center py-12">
+        <div class="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-t-2 border-b-2 border-purple-600"></div>
+      </div>
+    `;
+  }
+  
   // Carrega tópicos com ou sem filtro de categoria
   await loadForumData(categoryId === 'all' ? null : categoryId);
   renderTopics();
@@ -1110,6 +1119,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // Variável global para o editor Quill
+
 let quillEditor;
 
 // Função de inicialização do editor Quill
