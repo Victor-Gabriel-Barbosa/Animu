@@ -922,16 +922,15 @@ textarea:disabled {
   transition: opacity 0.3s ease;
 }
 
-.drop-zone-prompt svg {
-  width: 64px;
-  height: 64px;
+.drop-zone-prompt i {
+  font-size: 64px;
   color: var(--primary-color);
   margin-bottom: 1rem;
   opacity: 0.8;
   transition: transform 0.3s ease;
 }
 
-.drop-zone:hover .drop-zone-prompt svg {
+.drop-zone:hover .drop-zone-prompt i {
   transform: scale(1.1);
   opacity: 1;
 }

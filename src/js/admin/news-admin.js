@@ -342,7 +342,13 @@ document.addEventListener('DOMContentLoaded', function () {
       // Busca notícia pelo ID usando o NewsManager
       const newsData = await newsManager.getNewsById(id);
       
-      if (newsData) openModal(newsData);
+      if (newsData) {
+        openModal(newsData);
+        // Ensure remove button is shown when editing a news item with image
+        if (newsData.image) {
+          removeImageBtn.classList.remove('hidden');
+        }
+      }
       else alert('Notícia não encontrada');
     } catch (error) {
       console.error('Erro ao recuperar notícia para edição:', error);
@@ -412,6 +418,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (imageInput) {
       imageInput.value = '';
       imagePreview.classList.add('hidden');
+      removeImageBtn.classList.add('hidden'); // Esconde o botão novamente
       imageDropZone.querySelector('.upload-area').classList.remove('hidden');
       
       if (typeof updateFormProgress === 'function') updateFormProgress();
@@ -431,6 +438,8 @@ document.addEventListener('DOMContentLoaded', function () {
       document.getElementById('image').value = imageData;
       previewImage.src = imageData;
       imagePreview.classList.remove('hidden');
+      // Mostra o botão de remover e remove classe hidden
+      removeImageBtn.classList.remove('hidden');
       imageDropZone.querySelector('.upload-area').classList.add('hidden');
       
       if (typeof updateFormProgress === 'function') updateFormProgress();
