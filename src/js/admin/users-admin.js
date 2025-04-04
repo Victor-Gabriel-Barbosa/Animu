@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // Atualiza estatísticas do painel administrativo
   async function updateStats() {
     try {
+      AnimuUtils.toggleLoading(true);
       const users = await userManager.loadUsers();
       const admins = users.filter(user => user.isAdmin);
       
@@ -24,8 +25,7 @@ document.addEventListener('DOMContentLoaded', function () {
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
       
       const newUsers = users.filter(user => {
-        const userDate = user.createdAt?.toDate ? 
-          user.createdAt.toDate() : new Date(user.createdAt);
+        const userDate = user.createdAt?.toDate ? user.createdAt.toDate() : new Date(user.createdAt);
         return userDate > sevenDaysAgo;
       });
 
@@ -35,6 +35,8 @@ document.addEventListener('DOMContentLoaded', function () {
       novosUsuarios.textContent = newUsers.length;
     } catch (e) {
       console.error('Erro ao atualizar estatísticas:', e);
+    } finally {
+      AnimuUtils.toggleLoading(false);
     }
   }
 
@@ -84,6 +86,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // Aplica filtros e popula tabela com usuários correspondentes
   async function updateTable(filterValue = '', userType = 'all') {
     try {
+      AnimuUtils.toggleLoading(true);
       const users = await userManager.loadUsers();
       tableBody.innerHTML = '';
 
@@ -102,12 +105,15 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     } catch (e) {
       console.error('Erro ao atualizar tabela:', e);
+    } finally {
+      AnimuUtils.toggleLoading(false);
     }
   }
 
   // Alterna privilégios de administrador para um usuário
   window.toggleAdminStatus = async function (userId) {
     try {
+      AnimuUtils.toggleLoading(true);
       // Busca usuário atual
       const user = await userManager.getUserById(userId);
       if (!user) {
@@ -129,6 +135,8 @@ document.addEventListener('DOMContentLoaded', function () {
     } catch (e) {
       console.error('Erro ao alterar status de admin:', e);
       alert('Erro ao alterar status. Tente novamente.');
+    } finally {
+      AnimuUtils.toggleLoading(false);
     }
   };
 
@@ -137,6 +145,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!confirm('Tem certeza que deseja excluir este usuário?')) return;
     
     try {
+      AnimuUtils.toggleLoading(true);
       // Busca referência à coleção de usuários para excluir (não existe método de exclusão no UserManager)
       await db.collection('users').doc(userId).delete();
       
@@ -147,6 +156,8 @@ document.addEventListener('DOMContentLoaded', function () {
     } catch (e) {
       console.error('Erro ao excluir usuário:', e);
       alert('Erro ao excluir usuário. Tente novamente.');
+    } finally {
+      AnimuUtils.toggleLoading(false);
     }
   };
 

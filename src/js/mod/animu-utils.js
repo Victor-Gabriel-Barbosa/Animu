@@ -138,6 +138,11 @@ class AnimuUtils {
     // Retorna o avatar padrão ou o avatar em cache enquanto a busca acontece
     return this.avatarCache[username];
   }
+
+  static toggleLoading(show = true) {
+    if (show) document.body.classList.add('loading');
+    else document.body.classList.remove('loading');
+  }
 }
 
 // Exporta a classe AnimuUtils para uso global como 'Utils'

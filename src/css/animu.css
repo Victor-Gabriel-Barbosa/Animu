@@ -265,8 +265,6 @@ tbody tr:nth-child(5) { animation-delay: 0.5s; }
   position: relative;
   overflow: hidden;
   padding: 4rem 0;
-  border-top: 2px solid var(--primary-color);
-  border-bottom: 2px solid var(--primary-color);
 }
 
 .parallax-section::before {
@@ -832,7 +830,6 @@ body.dark-mode {
 /* Estilos para o Swiper */
 .swiper-container {
   width: 100%;
-  padding: 2rem 0;
   position: relative;
   overflow: hidden;
 }
@@ -845,12 +842,7 @@ body.dark-mode {
 
 .swiper-button-next,
 .swiper-button-prev {
-  color: var(--primary-color);
-  background-color: var(--background);
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  backdrop-filter: blur(4px);
+  color: white;
   transition: all 0.3s ease;
   opacity: 0; /* Botões iniciam invisíveis */
 }
@@ -863,14 +855,15 @@ body.dark-mode {
 
 .swiper-button-next:hover,
 .swiper-button-prev:hover {
-  background: var(--primary-gradient);
-  color: white;
+  color: var(--primary-color);
+  transform: scale(1.2);
+  transition: all 0.3s ease;
 }
 
 .swiper-button-next::after,
 .swiper-button-prev::after {
-  font-size: 22px;
-  font-weight: bold;
+  font-size: 32px;
+  font-weight: bolder;
 }
 
 /* Estilo para a paginação do Swiper */

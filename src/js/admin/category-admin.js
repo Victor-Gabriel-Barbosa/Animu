@@ -38,6 +38,12 @@ class CategoryAdmin {
     });
   }
 
+  // Método para mostrar/esconder o indicador de carregamento
+  toggleLoading(show = true) {
+    if (show) document.body.classList.add('loading');
+    else document.body.classList.remove('loading');
+  }
+
   generateForm() {
     return `
       <!-- Guia rápido -->
@@ -449,6 +455,9 @@ class CategoryAdmin {
   async handleFormSubmit(e) {
     e.preventDefault();
     this.isFormSaving = true; // Define a flag antes de salvar
+    
+    // Ativa o indicador de carregamento
+    AnimuUtils.toggleLoading(true);
 
     // Captura todos os valores necessários antes de qualquer operação
     const form = e.target;
@@ -468,6 +477,7 @@ class CategoryAdmin {
     // Validação dos dados obrigatórios
     if (!categoryData.name || !categoryData.icon || !categoryData.description) {
       this.isFormSaving = false;
+      AnimuUtils.toggleLoading(false);
       alert('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
@@ -487,6 +497,9 @@ class CategoryAdmin {
     } catch (error) {
       alert(error.message);
       this.isFormSaving = false; // Reseta a flag em caso de erro
+    } finally {
+      // Desativa o indicador de carregamento
+      AnimuUtils.toggleLoading(false);
     }
   }
 
@@ -673,6 +686,9 @@ class CategoryAdmin {
     if (!confirm('Tem certeza que deseja excluir esta categoria?')) return;
 
     try {
+      // Ativa o indicador de carregamento
+      AnimuUtils.toggleLoading(true);
+      
       // Utiliza o CategoryManager para excluir categoria
       const result = await this.categoryFirestore.deleteCategory(categoryId);
       
@@ -685,8 +701,11 @@ class CategoryAdmin {
       }
     } catch (error) {
       alert('Erro ao excluir categoria: ' + error.message);
+    } finally {
+      // Desativa o indicador de carregamento
+      AnimuUtils.toggleLoading(false);
+      this.updateStatistics(); // Adiciona chamada após deletar
     }
-    this.updateStatistics(); // Adiciona chamada após deletar
   }
 
   // Limpa o formulário
@@ -848,6 +867,9 @@ class CategoryAdmin {
   // Carrega categorias do Firebase
   async loadCategoriesFromFirebase() {
     try {
+      // Ativa o indicador de carregamento
+      AnimuUtils.toggleLoading(true);
+      
       console.log('Tentando carregar categorias do Firebase...');
       
       // Utiliza o CategoryManager para carregar categorias
@@ -872,12 +894,18 @@ class CategoryAdmin {
     } catch (error) {
       console.error('Erro ao carregar categorias do Firebase:', error);
       this.loadCategories(); // Em caso de erro, carrega do localStorage
+    } finally {
+      // Desativa o indicador de carregamento
+      AnimuUtils.toggleLoading(false);
     }
   }
 
   // Salva categorias no Firebase
   async saveCategoriesOnFirebase() {
     try {
+      // Ativa o indicador de carregamento
+      AnimuUtils.toggleLoading(true);
+      
       console.log('Tentando salvar categorias no Firebase...');
       const categories = this.getCategories();
       
@@ -903,6 +931,9 @@ class CategoryAdmin {
     } catch (error) {
       console.error('Erro ao salvar categorias no Firebase:', error);
       alert(`Erro ao salvar no Firebase: ${error.message}. Verifique o console para mais detalhes.`);
+    } finally {
+      // Desativa o indicador de carregamento
+      AnimuUtils.toggleLoading(false);
     }
   }
 }

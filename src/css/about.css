@@ -94,7 +94,6 @@ section.visible {
 }
 
 .resource-list li:hover {
-  background: var(--card-shadow);
   box-shadow: 0 10px 30px var(--primary-color);
 }
 
@@ -206,7 +205,6 @@ section.visible {
 .contact-link:hover {
   background: var(--primary-gradient);
   color: white;
-  transform: translateX(10px);
 }
 
 .contact-link:nth-child(1) {

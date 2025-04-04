@@ -45,14 +45,14 @@ document.addEventListener('DOMContentLoaded', () => {
 // Carrega lista de animes do Firebase usando o AnimeManager
 async function loadAnimesList() {
   try {
-    document.body.classList.add('loading');
+    AnimuUtils.toggleLoading(true);
     const animes = await animeManager.getAnimes('primaryTitle');
     renderAnimesList(animes);
-    document.body.classList.remove('loading');
+    AnimuUtils.toggleLoading(false);
   } catch (error) {
     console.error('Erro ao carregar animes:', error);
     alert('Erro ao carregar a lista de animes. Verifique sua conexão com a internet.');
-    document.body.classList.remove('loading');
+    AnimuUtils.toggleLoading(false);
     
     // Tenta carregar do cache como fallback
     const localAnimes = animeManager.getAnimesFromCache();
@@ -355,7 +355,7 @@ async function editAnime(animeId) {
   try {
     console.log('Iniciando edição do anime com ID:', animeId);
     // Exibe indicador de carregamento
-    document.body.classList.add('loading');
+    AnimuUtils.toggleLoading(true);
     
     // Utiliza o AnimeManager para buscar o anime
     const anime = await animeManager.getAnimeById(animeId);
@@ -415,10 +415,10 @@ async function editAnime(animeId) {
         initialFormState = getFormState();
         
         // Remove o indicador de carregamento
-        document.body.classList.remove('loading');
+        AnimuUtils.toggleLoading(false);
       } catch (innerError) {
         console.error('Erro ao preencher formulário:', innerError);
-        document.body.classList.remove('loading');
+        AnimuUtils.toggleLoading(false);
         alert(`Erro ao preencher formulário: ${innerError.message}`);
       }
     }, 100);
@@ -426,7 +426,7 @@ async function editAnime(animeId) {
   } catch (error) {
     console.error('Erro ao editar anime:', error);
     alert(`Erro ao carregar dados do anime para edição: ${error.message}`);
-    document.body.classList.remove('loading');
+    AnimuUtils.toggleLoading(false);
   }
 }
 
@@ -540,19 +540,19 @@ async function deleteAnime(animeId) {
   if (confirm('Tem certeza que deseja excluir este anime? Todos os comentários associados também serão excluídos.')) {
     try {
       // Adiciona indicador de carregamento
-      document.body.classList.add('loading');
+      AnimuUtils.toggleLoading(true);
       
       // Usa o AnimeManager para excluir o anime
       await animeManager.deleteAnime(animeId);
       
       // Atualiza a interface
       await loadAnimesList();
-      document.body.classList.remove('loading');
+      AnimuUtils.toggleLoading(false);
       alert('Anime excluído com sucesso!');
     } catch (error) {
       console.error('Erro ao excluir anime:', error);
       alert('Erro ao excluir o anime. Por favor, tente novamente.');
-      document.body.classList.remove('loading');
+      AnimuUtils.toggleLoading(false);
     }
   }
 }
@@ -560,13 +560,13 @@ async function deleteAnime(animeId) {
 // Exporta dados dos animes do Firestore
 async function exportAnimes() {
   try {
-    document.body.classList.add('loading');
+    AnimuUtils.toggleLoading(true);
     await animeManager.exportAnimes();
-    document.body.classList.remove('loading');
+    AnimuUtils.toggleLoading(false);
   } catch (error) {
     console.error('Erro ao exportar animes:', error);
     alert('Erro ao exportar dados. Verifique sua conexão com a internet.');
-    document.body.classList.remove('loading');
+    AnimuUtils.toggleLoading(false);
   }
 }
 
@@ -577,7 +577,7 @@ async function importAnimes(event) {
   
   if (confirm('Esta operação substituirá todos os animes existentes. Deseja continuar?')) {
     try {
-      document.body.classList.add('loading');
+      AnimuUtils.toggleLoading(true);
       
       const reader = new FileReader();
       reader.onload = async function(e) {
@@ -589,13 +589,13 @@ async function importAnimes(event) {
           
           // Atualiza a lista
           await loadAnimesList();
-          document.body.classList.remove('loading');
+          AnimuUtils.toggleLoading(false);
           alert('Dados importados com sucesso!');
           
         } catch (error) {
           console.error('Erro ao processar arquivo:', error);
           alert('Erro ao importar dados. Verifique se o arquivo está no formato correto.');
-          document.body.classList.remove('loading');
+          AnimuUtils.toggleLoading(false);
         }
       };
       
@@ -604,7 +604,7 @@ async function importAnimes(event) {
     } catch (error) {
       console.error('Erro na importação:', error);
       alert('Erro ao ler o arquivo. Tente novamente.');
-      document.body.classList.remove('loading');
+      AnimuUtils.toggleLoading(false);
     }
   }
   

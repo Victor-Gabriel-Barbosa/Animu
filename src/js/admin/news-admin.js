@@ -121,6 +121,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // Carrega notícias usando o NewsManager e gera tabela com opções de gerenciamento
   async function loadNews() {
     try {
+      AnimuUtils.toggleLoading(true);
       const newsListElement = document.querySelector('.admin-news-list');
       newsListElement.innerHTML = `
         <div class="text-center py-8">
@@ -206,6 +207,8 @@ document.addEventListener('DOMContentLoaded', function () {
           <p>Erro ao carregar notícias. Por favor, tente novamente.</p>
         </div>
       `;
+    } finally {
+      AnimuUtils.toggleLoading(false);
     }
   }
   
@@ -297,6 +300,9 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     try {
+      // Ativa o indicador de carregamento
+      AnimuUtils.toggleLoading(true);
+      
       // Mostra loader ou feedback visual
       document.getElementById('save-btn').disabled = true;
       document.getElementById('save-btn').innerHTML = 'Salvando...';
@@ -325,12 +331,14 @@ document.addEventListener('DOMContentLoaded', function () {
     } finally {
       document.getElementById('save-btn').disabled = false;
       document.getElementById('save-btn').innerHTML = 'Salvar Notícia';
+      AnimuUtils.toggleLoading(false);
     }
   }
 
   // Abre modal com dados de uma notícia para edição
   async function editNews(id) {
     try {
+      AnimuUtils.toggleLoading(true);
       // Busca notícia pelo ID usando o NewsManager
       const newsData = await newsManager.getNewsById(id);
       
@@ -339,6 +347,8 @@ document.addEventListener('DOMContentLoaded', function () {
     } catch (error) {
       console.error('Erro ao recuperar notícia para edição:', error);
       alert('Erro ao carregar os dados da notícia');
+    } finally {
+      AnimuUtils.toggleLoading(false);
     }
   }
 
@@ -346,6 +356,7 @@ document.addEventListener('DOMContentLoaded', function () {
   async function deleteNews(id) {
     if (confirm('Tem certeza que deseja excluir esta notícia?')) {
       try {
+        AnimuUtils.toggleLoading(true);
         // Exclui notícia usando o NewsManager
         await newsManager.deleteNews(id);
         console.log('Notícia excluída com sucesso!');
@@ -353,6 +364,8 @@ document.addEventListener('DOMContentLoaded', function () {
       } catch (error) {
         console.error('Erro ao excluir notícia:', error);
         alert('Erro ao excluir notícia. Por favor, tente novamente.');
+      } finally {
+        AnimuUtils.toggleLoading(false);
       }
     }
   }
