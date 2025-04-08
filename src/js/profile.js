@@ -5,7 +5,7 @@ const categoryManager = new CategoryManager();
 // Inicializa o gerenciador de chats para operações de chat
 const chatManager = new ProfileChatManager();
 
-document.addEventListener('DOMContentLoaded', async function () {
+$(document).ready(async function () {
   // Obtém ID do usuário da URL se existir
   const urlParams = new URLSearchParams(window.location.search);
   const profileId = urlParams.get('id');
@@ -73,21 +73,21 @@ document.addEventListener('DOMContentLoaded', async function () {
  * @param {boolean} isOwnProfile - Se é o próprio perfil
  */
 function adjustInterfaceForVisitedProfile(profileUser, isOwnProfile) {
-  const editButton = document.getElementById('edit-profile');
-  const logoutButton = document.getElementById('logout-button');
-  const changeAvatarButton = document.querySelector('#change-avatar');
-  const addFriendBtn = document.getElementById('add-friend-btn');
+  const $editButton = $('#edit-profile');
+  const $logoutButton = $('#logout-button');
+  const $changeAvatarButton = $('#change-avatar');
+  const $addFriendBtn = $('#add-friend-btn');
 
   if (!isOwnProfile) {
     // Oculta botões de edição e logout
-    editButton.style.display = 'none';
-    logoutButton.style.display = 'none';
-    changeAvatarButton.style.display = 'none';
-    addFriendBtn.style.display = 'none';
+    $editButton.hide();
+    $logoutButton.hide();
+    $changeAvatarButton.hide();
+    $addFriendBtn.hide();
 
     // Adiciona botão de chat se não for o próprio perfil
-    const buttonContainer = document.querySelector('.flex.gap-3.mt-4');
-    buttonContainer.innerHTML = `
+    const $buttonContainer = $('.flex.gap-3.mt-4');
+    $buttonContainer.html(`
       <button onclick="openChat('${profileUser.id}')"
               class="flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg 
                      hover:bg-purple-700 transition-all hover:scale-105">
@@ -105,27 +105,27 @@ function adjustInterfaceForVisitedProfile(profileUser, isOwnProfile) {
         </svg>
         Voltar
       </button>
-    `;
+    `);
   }
 }
 
 // Exibe informações básicas do perfil do usuário
 function initializeProfile(user) {
   // Atualiza informações básicas
-  document.getElementById('profile-username').textContent = user.username;
-  document.getElementById('profile-email').textContent = user.email;
-  document.getElementById('display-name').textContent = user.displayName || user.username;
+  $('#profile-username').text(user.username);
+  $('#profile-email').text(user.email);
+  $('#display-name').text(user.displayName || user.username);
   
   // Usa o formatador de data do UserManager para exibir a data de criação da conta
   const formattedDate = AnimuUtils.formatDate(user.createdAt);
-  document.getElementById('profile-joined').textContent = `Membro desde: ${formattedDate}`;
+  $('#profile-joined').text(`Membro desde: ${formattedDate}`);
 
   // Usa o avatar da sessão do usuário
-  if (user.avatar) document.getElementById('profile-avatar').src = user.avatar;
+  if (user.avatar) $('#profile-avatar').attr('src', user.avatar);
 
   // Atualiza gêneros favoritos
-  const favoriteGenres = document.getElementById('favorite-genres');
-  favoriteGenres.innerHTML = user.favoriteGenres?.map(genre => `<span class="genre">${genre}</span>`).join('') || 'Nenhum gênero favorito';
+  const $favoriteGenres = $('#favorite-genres');
+  $favoriteGenres.html(user.favoriteGenres?.map(genre => `<span class="genre">${genre}</span>`).join('') || 'Nenhum gênero favorito');
 }
 
 // Calcula e exibe métricas de engajamento do usuário
@@ -168,8 +168,8 @@ function loadStatistics(user) {
  * @param {number} finalValue - Valor final a ser exibido
  */
 function animateCounter(elementId, finalValue) {
-  const element = document.getElementById(elementId);
-  if (!element) return;
+  const $element = $(`#${elementId}`);
+  if (!$element.length) return;
   
   const duration = 1000; // duração da animação em ms
   const stepTime = 20; // tempo entre cada etapa da animação
@@ -181,8 +181,8 @@ function animateCounter(elementId, finalValue) {
     currentValue += increment;
     if (currentValue >= finalValue) {
       clearInterval(counterAnimation);
-      element.textContent = finalValue;
-    } else element.textContent = Math.floor(currentValue);
+      $element.text(finalValue);
+    } else $element.text(Math.floor(currentValue));
   }, stepTime);
 }
 
@@ -192,44 +192,37 @@ function animateCounter(elementId, finalValue) {
  * @param {number} value - Valor da estatística
  */
 function applyTrendIndicator(elementId, value) {
-  const element = document.getElementById(elementId);
-  if (!element) return;
+  const $element = $(`#${elementId}`);
+  if (!$element.length) return;
   
   // Adiciona classes com base nos valores
-  if (value > 50) element.classList.add('high-value');
-  else if (value > 20) element.classList.add('medium-value');
-  else element.classList.add('low-value');
+  if (value > 50) $element.addClass('high-value');
+  else if (value > 20) $element.addClass('medium-value');
+  else $element.addClass('low-value');
   
   // Adiciona indicador de tendência apenas em telas maiores
   if (value > 30 && window.innerWidth > 480) {
-    const trendIndicator = document.createElement('span');
-    trendIndicator.className = 'trend-up ml-1 text-xs';
-    trendIndicator.innerHTML = '↑';
-    element.appendChild(trendIndicator);
+    const trendIndicator = $('<span>').addClass('trend-up ml-1 text-xs').html('↑');
+    $element.append(trendIndicator);
   }
 }
 
 // Ajusta o layout das estatísticas baseado no tamanho da tela
 function adjustStatisticsLayout() {
-  const statsContainer = document.querySelector('.stats-container');
-  if (!statsContainer) return;
+  const $statsContainer = $('.stats-container');
+  if (!$statsContainer.length) return;
 
   // Em telas pequenas, remove a classe grid e adiciona flexbox vertical
-  if (window.innerWidth <= 480) {
-    statsContainer.classList.remove('grid');
-    statsContainer.classList.add('flex', 'flex-col');
-  } else {
-    statsContainer.classList.add('grid');
-    statsContainer.classList.remove('flex', 'flex-col');
-  }
+  if (window.innerWidth <= 480) $statsContainer.removeClass('grid').addClass('flex flex-col');
+  else $statsContainer.addClass('grid').removeClass('flex flex-col');
 }
 
 // Verifica se o elemento está visível na tela para iniciar animações
 function checkIfElementsInView() {
-  const statsContainer = document.querySelector('.stats-container');
-  if (!statsContainer) return;
+  const $statsContainer = $('.stats-container');
+  if (!$statsContainer.length) return;
   
-  const rect = statsContainer.getBoundingClientRect();
+  const rect = $statsContainer[0].getBoundingClientRect();
   const isInView = (
     rect.top >= 0 &&
     rect.left >= 0 &&
@@ -237,42 +230,38 @@ function checkIfElementsInView() {
     rect.right <= (window.innerWidth || document.documentElement.clientWidth)
   );
   
-  if (isInView) statsContainer.classList.add('animate-in');
+  if (isInView) $statsContainer.addClass('animate-in');
 }
 
 // Adiciona o verificador de visibilidade ao evento de rolagem
-document.addEventListener('DOMContentLoaded', function() {
+$(document).ready(function() {
   // Adiciona evento de rolagem para verificar visibilidade dos elementos
-  window.addEventListener('scroll', checkIfElementsInView);
+  $(window).on('scroll', checkIfElementsInView);
   // Verifica imediatamente após o carregamento
   checkIfElementsInView();
   // Verifica o layout imediatamente após o carregamento
   adjustStatisticsLayout();
   
   // Recalcula quando a janela for redimensionada
-  window.addEventListener('resize', function() {
+  $(window).on('resize', function() {
     adjustStatisticsLayout();
     
     // Remove e reaplica indicadores de tendência quando a tela mudar de tamanho
     const statsElements = ['stats-animes', 'stats-reviews', 'stats-likes', 'stats-favorites'];
     statsElements.forEach(id => {
-      const element = document.getElementById(id);
-      if (element) {
+      const $element = $(`#${id}`);
+      if ($element.length) {
         // Guarda o valor atual
-        const value = parseInt(element.textContent.replace(/[^\d]/g, ''), 10);
+        const value = parseInt($element.text().replace(/[^\d]/g, ''), 10);
         
         // Remove possíveis spans de indicador
-        const trendIndicator = element.querySelector('.trend-up');
-        if (trendIndicator) {
-          trendIndicator.remove();
-        }
+        const trendIndicator = $element.find('.trend-up');
+        if (trendIndicator.length) trendIndicator.remove();
         
         // Reaplica o indicador adequado para o tamanho atual
         if (value > 30 && window.innerWidth > 480) {
-          const newIndicator = document.createElement('span');
-          newIndicator.className = 'trend-up ml-1 text-xs';
-          newIndicator.innerHTML = '↑';
-          element.appendChild(newIndicator);
+          const newIndicator = $('<span>').addClass('trend-up ml-1 text-xs').html('↑');
+          $element.append(newIndicator);
         }
       }
     });
@@ -332,14 +321,14 @@ function loadAchievements(user) {
     }
   ];
 
-  const achievementsContainer = document.getElementById('achievements');
-  achievementsContainer.innerHTML = achievements.map(achievement => `
+  const $achievementsContainer = $('#achievements');
+  $achievementsContainer.html(achievements.map(achievement => `
     <div class="achievement p-3 rounded-lg ${achievement.unlocked ? 'bg-purple-100 dark:bg-purple-900' : 'bg-gray-100 dark:bg-gray-700 opacity-50'}">
       <div class="text-2xl mb-2">${achievement.icon}</div>
       <h3 class="font-semibold">${achievement.title}</h3>
       <p class="text-sm text-gray-600 dark:text-gray-400">${achievement.description}</p>
     </div>
-  `).join('');
+  `).join(''));
 }
 
 /**
@@ -349,14 +338,14 @@ function loadAchievements(user) {
 function loadFavoriteAnimes(user) {
   const animes = JSON.parse(localStorage.getItem('animeData')) || [];
   const favoriteAnimes = user.favoriteAnimes || [];
-  const container = document.getElementById('favorite-animes');
+  const $container = $('#favorite-animes');
 
   if (favoriteAnimes.length === 0) {
-    container.innerHTML = '<p class="text-center text-gray-500">Nenhum anime favorito ainda</p>';
+    $container.html('<p class="text-center text-gray-500">Nenhum anime favorito ainda</p>');
     return;
   }
 
-  container.innerHTML = favoriteAnimes.map(animeTitle => {
+  $container.html(favoriteAnimes.map(animeTitle => {
     const anime = animes.find(a => a.primaryTitle === animeTitle);
     if (!anime) return '';
 
@@ -387,7 +376,7 @@ function loadFavoriteAnimes(user) {
         </button>
       </a>
     `;
-  }).join('');
+  }).join(''));
 }
 
 async function shareAnime(event, animeTitle, coverImage) {
@@ -455,7 +444,7 @@ async function shareAnime(event, animeTitle, coverImage) {
       </div>
     `;
 
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    $('body').append(modalHtml);
   } catch (error) {
     console.error("Erro ao compartilhar anime:", error);
     alert("Ocorreu um erro ao compartilhar o anime. Tente novamente mais tarde.");
@@ -464,8 +453,7 @@ async function shareAnime(event, animeTitle, coverImage) {
 
 // Remove o modal de compartilhamento da página
 function closeShareModal() {
-  const modal = document.getElementById('share-modal');
-  if (modal) modal.remove();
+  $('#share-modal').remove();
 }
 
 /**
@@ -475,7 +463,7 @@ function closeShareModal() {
  */
 async function confirmShare(animeTitle, coverImage) {
   try {
-    const selectedFriends = Array.from(document.querySelectorAll('#share-modal input[type="checkbox"]:checked')).map(cb => cb.value);
+    const selectedFriends = $('#share-modal input[type="checkbox"]:checked').map((_, cb) => cb.value).get();
 
     if (selectedFriends.length === 0) {
       alert('Selecione pelo menos um amigo para compartilhar!');
@@ -498,10 +486,8 @@ async function confirmShare(animeTitle, coverImage) {
     closeShareModal();
 
     // Mostra notificação de sucesso
-    const notification = document.createElement('div');
-    notification.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
-    notification.textContent = `Anime compartilhado com ${selectedFriends.length} amigo(s)!`;
-    document.body.appendChild(notification);
+    const notification = $('<div>').addClass('fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50').text(`Anime compartilhado com ${selectedFriends.length} amigo(s)!`);
+    $('body').append(notification);
     setTimeout(() => notification.remove(), 3000);
   } catch (error) {
     console.error("Erro ao confirmar compartilhamento:", error);
@@ -522,11 +508,9 @@ async function changeAvatar(avatar, userId) {
     
     if (result.success) {
       // Atualiza a imagem na interface
-      document.getElementById('profile-avatar').src = avatar;
+      $('#profile-avatar').attr('src', avatar);
       console.log("Avatar atualizado com sucesso!");
-    } else {
-      console.error("Erro ao atualizar avatar:", result.error);
-    }
+    } else console.error("Erro ao atualizar avatar:", result.error);
   } catch (error) {
     console.error("Erro ao atualizar avatar:", error);
   }
@@ -549,8 +533,8 @@ async function setupGenreSelection() {
       genres = localCategories.map(category => category.name);
     }
 
-    const genreContainer = document.getElementById('edit-genres');
-    genreContainer.innerHTML = genres.map(genre => `
+    const $genreContainer = $('#edit-genres');
+    $genreContainer.html(genres.map(genre => `
       <label class="inline-flex items-center p-2.5 border border-gray-200 dark:border-gray-600 
                   rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/30 cursor-pointer
                   transition-colors duration-200">
@@ -561,11 +545,10 @@ async function setupGenreSelection() {
                       bg-white dark:bg-gray-700">
         <span class="ml-2 text-sm">${genre}</span>
       </label>
-    `).join('');
+    `).join(''));
   } catch (error) {
     console.error('Erro ao carregar categorias para seleção de gêneros:', error);
-    const genreContainer = document.getElementById('edit-genres');
-    genreContainer.innerHTML = '<p class="text-red-500">Erro ao carregar categorias</p>';
+    $('#edit-genres').html('<p class="text-red-500">Erro ao carregar categorias</p>');
   }
 }
 
@@ -576,88 +559,78 @@ async function setupGenreSelection() {
 function setupEventListeners(user, isOwnProfile) {
   if (isOwnProfile) {
     // Referências dos elementos UI
-    const editButton = document.getElementById('edit-profile');
-    const editModal = document.getElementById('edit-modal');
-    const editForm = document.getElementById('edit-profile-form');
-    const cancelButton = document.getElementById('cancel-edit');
-    const closeButton = document.getElementById('close-modal');
+    const $editButton = $('#edit-profile');
+    const $editModal = $('#edit-modal');
+    const $editForm = $('#edit-profile-form');
+    const $cancelButton = $('#cancel-edit');
+    const $closeButton = $('#close-modal');
 
     // Botão de editar perfil
-    editButton.addEventListener('click', async () => {
-      editModal.classList.remove('hidden');
-      editModal.classList.add('flex');
+    $editButton.on('click', async () => {
+      $editModal.removeClass('hidden').addClass('flex');
 
       // Preenche o formulário com dados atuais
-      document.getElementById('edit-display-name').value = user.displayName || user.username;
-      document.getElementById('edit-email').value = user.email;
+      $('#edit-display-name').val(user.displayName || user.username);
+      $('#edit-email').val(user.email);
 
       // Configura e marca os gêneros favoritos
       await setupGenreSelection();
-      const checkboxes = document.querySelectorAll('input[name="genres"]');
-      checkboxes.forEach(checkbox => { 
-        checkbox.checked = user.favoriteGenres?.includes(checkbox.value) || false; 
+      $('input[name="genres"]').each(function() { 
+        $(this).prop('checked', user.favoriteGenres?.includes($(this).val()) || false); 
       });
     });
 
     // Botão de cancelar edição
-    cancelButton.addEventListener('click', () => {
-      editModal.classList.remove('flex');
-      editModal.classList.add('hidden');
+    $cancelButton.on('click', () => {
+      $editModal.removeClass('flex').addClass('hidden');
     });
 
     // Botão de fechar modal (X)
-    closeButton.addEventListener('click', () => {
-      editModal.classList.remove('flex');
-      editModal.classList.add('hidden');
+    $closeButton.on('click', () => {
+      $editModal.removeClass('flex').addClass('hidden');
     });
 
     // Fecha o modal ao clicar fora
-    editModal.addEventListener('click', (e) => {
-      if (e.target === editModal) {
-        editModal.classList.remove('flex');
-        editModal.classList.add('hidden');
-      }
+    $editModal.on('click', (e) => {
+      if (e.target === $editModal[0]) $editModal.removeClass('flex').addClass('hidden');
     });
 
     // Fecha o modal com tecla ESC
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !editModal.classList.contains('hidden')) {
-        editModal.classList.remove('flex');
-        editModal.classList.add('hidden');
-      }
+    $(document).on('keydown', (e) => {
+      if (e.key === 'Escape' && !$editModal.hasClass('hidden')) $editModal.removeClass('flex').addClass('hidden');
     });
 
     // Adiciona manipulação de upload de avatar no modal
-    const avatarUploadBtn = document.getElementById('avatar-upload-btn');
-    const avatarInput = document.getElementById('edit-avatar');
-    const previewAvatar = document.getElementById('preview-avatar');
+    const $avatarUploadBtn = $('#avatar-upload-btn');
+    const $avatarInput = $('#edit-avatar');
+    const $previewAvatar = $('#preview-avatar');
 
     // Inicializar preview com avatar atual
-    previewAvatar.src = user.avatar || "https://ui-avatars.com/api/?name=" + encodeURIComponent(user.username);
+    $previewAvatar.attr('src', user.avatar || "https://ui-avatars.com/api/?name=" + encodeURIComponent(user.username));
 
-    avatarUploadBtn.addEventListener('click', () => { 
-      avatarInput.click(); 
+    $avatarUploadBtn.on('click', () => { 
+      $avatarInput.click(); 
     });
 
-    avatarInput.addEventListener('change', (e) => {
+    $avatarInput.on('change', (e) => {
       const file = e.target.files[0];
       if (file) {
         const reader = new FileReader();
         reader.onload = (event) => { 
-          previewAvatar.src = event.target.result; 
+          $previewAvatar.attr('src', event.target.result); 
         };
         reader.readAsDataURL(file);
       }
     });
 
     // Formulário de edição
-    editForm.addEventListener('submit', async (e) => {
+    $editForm.on('submit', async (e) => {
       e.preventDefault();
 
-      const displayName = document.getElementById('edit-display-name').value;
-      const email = document.getElementById('edit-email').value;
-      const selectedGenres = Array.from(document.querySelectorAll('input[name="genres"]:checked')).map(checkbox => checkbox.value);
-      const newAvatar = previewAvatar.src;
+      const displayName = $('#edit-display-name').val();
+      const email = $('#edit-email').val();
+      const selectedGenres = $('input[name="genres"]:checked').map((_, checkbox) => checkbox.value).get();
+      const newAvatar = $previewAvatar.attr('src');
 
       try {
         // Atualiza os dados do usuário
@@ -681,13 +654,14 @@ function setupEventListeners(user, isOwnProfile) {
     });
 
     // Botão de mudar avatar
-    const changeAvatarButton = document.getElementById('change-avatar');
-    changeAvatarButton.addEventListener('click', () => {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = 'image/*';
+    const $changeAvatarButton = $('#change-avatar');
+    $changeAvatarButton.on('click', () => {
+      const input = $('<input>').attr({
+        type: 'file',
+        accept: 'image/*'
+      });
 
-      input.onchange = (e) => {
+      input.on('change', (e) => {
         const file = e.target.files[0];
         if (file) {
           const reader = new FileReader();
@@ -697,14 +671,14 @@ function setupEventListeners(user, isOwnProfile) {
           };
           reader.readAsDataURL(file);
         }
-      };
+      });
 
       input.click();
     });
 
     // Adiciona handler para o botão de logout
-    const logoutButton = document.getElementById('logout-button');
-    logoutButton?.addEventListener('click', () => {
+    const $logoutButton = $('#logout-button');
+    $logoutButton?.on('click', () => {
       localStorage.removeItem('userSession');
       window.location.href = './signin.html';
     });
@@ -722,8 +696,8 @@ async function initializeFriendSystem(currentUser) {
     setupFriendSearchListener();
 
     // Adiciona o evento de click ao botão existente no HTML
-    const addFriendBtn = document.getElementById('add-friend-btn');
-    if (addFriendBtn) addFriendBtn.addEventListener('click', showAddFriendModal);
+    const $addFriendBtn = $('#add-friend-btn');
+    if ($addFriendBtn.length) $addFriendBtn.on('click', showAddFriendModal);
   } catch (error) {
     console.error("Erro ao inicializar sistema de amizades:", error);
   }
@@ -731,7 +705,7 @@ async function initializeFriendSystem(currentUser) {
 
 // Carrega e exibe a lista de amigos do usuário na interface
 async function loadFriends(user) {
-  const friendsList = document.getElementById('friends-list');
+  const $friendsList = $('#friends-list');
   const friends = user.friends || [];
   
   try {
@@ -739,7 +713,7 @@ async function loadFriends(user) {
     const users = await userManager.loadUsers();
 
     if (friends.length === 0) {
-      friendsList.innerHTML = `
+      $friendsList.html(`
         <div class="text-center py-8">
           <svg class="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
@@ -751,11 +725,11 @@ async function loadFriends(user) {
             Começar a adicionar amigos
           </button>
         </div>
-      `;
+      `);
       return;
     }
 
-    friendsList.innerHTML = friends.map(friendId => {
+    $friendsList.html(friends.map(friendId => {
       const friend = users.find(u => u.id === friendId);
       if (!friend) return '';
 
@@ -798,16 +772,16 @@ async function loadFriends(user) {
           </div>
         </div>
       `;
-    }).join('');
+    }).join(''));
   } catch (error) {
     console.error("Erro ao carregar amigos:", error);
-    friendsList.innerHTML = '<p class="text-center text-red-500">Erro ao carregar lista de amigos</p>';
+    $friendsList.html('<p class="text-center text-red-500">Erro ao carregar lista de amigos</p>');
   }
 }
 
 // Carrega e exibe solicitações de amizade pendentes para um usuário
 async function loadFriendRequests(user) {
-  const requestsContainer = document.getElementById('friend-requests');
+  const $requestsContainer = $('#friend-requests');
   const requests = user.friendRequests || [];
   
   try {
@@ -815,13 +789,13 @@ async function loadFriendRequests(user) {
     const users = await userManager.loadUsers();
 
     if (requests.length === 0) {
-      requestsContainer.style.display = 'none';
+      $requestsContainer.hide();
       return;
     }
 
-    requestsContainer.style.display = 'block';
-    const requestsList = requestsContainer.querySelector('div');
-    requestsList.innerHTML = requests.map(requestId => {
+    $requestsContainer.show();
+    const $requestsList = $requestsContainer.find('div');
+    $requestsList.html(requests.map(requestId => {
       const requester = users.find(u => u.id === requestId);
       if (!requester) return '';
 
@@ -858,7 +832,7 @@ async function loadFriendRequests(user) {
           </div>
         </div>
       `;
-    }).join('');
+    }).join(''));
   } catch (error) {
     console.error("Erro ao carregar solicitações de amizade:", error);
   }
@@ -866,24 +840,23 @@ async function loadFriendRequests(user) {
 
 // Exibe o modal para adicionar amigos, limpando os campos de busca
 function showAddFriendModal() {
-  const modal = document.getElementById('add-friend-modal');
-  modal.classList.remove('hidden');
-  modal.classList.add('flex');
-  document.getElementById('friend-search').value = '';
-  document.getElementById('friend-search-results').innerHTML = '';
+  const $modal = $('#add-friend-modal');
+  $modal.removeClass('hidden').addClass('flex');
+  $('#friend-search').val('');
+  $('#friend-search-results').html('');
 }
 
 // Configura o sistema de busca de amigos com feedback em tempo real
 function setupFriendSearchListener() {
-  const searchInput = document.getElementById('friend-search');
-  const resultsContainer = document.getElementById('friend-search-results');
-  const closeModal = document.getElementById('close-friend-modal');
-  const modal = document.getElementById('add-friend-modal');
+  const $searchInput = $('#friend-search');
+  const $resultsContainer = $('#friend-search-results');
+  const $closeModal = $('#close-friend-modal');
+  const $modal = $('#add-friend-modal');
 
-  searchInput.addEventListener('input', debounce(async (e) => {
+  $searchInput.on('input', debounce(async (e) => {
     const query = e.target.value.toLowerCase();
     if (!query) {
-      resultsContainer.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-8">Comece digitando para encontrar amigos...</div>';
+      $resultsContainer.html('<div class="text-center text-gray-500 dark:text-gray-400 py-8">Comece digitando para encontrar amigos...</div>');
       return;
     }
 
@@ -899,7 +872,7 @@ function setupFriendSearchListener() {
       );
 
       // Verifica se o usuário já é amigo ou se já existe uma solicitação pendente
-      resultsContainer.innerHTML = filteredUsers.length ?
+      $resultsContainer.html(filteredUsers.length ?
         filteredUsers.map(user => {
           const targetUser = users.find(u => u.id === user.id);
           const isAlreadyFriend = targetUser.friends?.includes(currentUser.userId);
@@ -924,17 +897,15 @@ function setupFriendSearchListener() {
             }
             </div>
           `;
-        }).join('') :
-        '<div class="text-center text-gray-500 dark:text-gray-400 py-8">Nenhum usuário encontrado</div>';
+        }).join('') : '<div class="text-center text-gray-500 dark:text-gray-400 py-8">Nenhum usuário encontrado</div>');
     } catch (error) {
       console.error("Erro na busca de amigos:", error);
-      resultsContainer.innerHTML = '<div class="text-center text-red-500 py-8">Erro ao buscar usuários</div>';
+      $resultsContainer.html('<div class="text-center text-red-500 py-8">Erro ao buscar usuários</div>');
     }
   }, 300));
 
-  closeModal.addEventListener('click', () => {
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
+  $closeModal.on('click', () => {
+    $modal.addClass('hidden').removeClass('flex');
   });
 }
 
@@ -958,11 +929,8 @@ async function sendFriendRequest(event, targetUserId) {
 
     // Nova verificação: se o usuário atual tem uma solicitação pendente do usuário alvo
     if (currentUserData.friendRequests?.includes(targetUserId)) {
-      const button = event.target;
-      button.disabled = true;
-      button.textContent = 'Solicitação pendente recebida';
-      button.classList.remove('bg-purple-500', 'hover:bg-purple-600');
-      button.classList.add('bg-gray-400');
+      const $button = $(event.target);
+      $button.prop('disabled', true).text('Solicitação pendente recebida').removeClass('bg-purple-500 hover:bg-purple-600').addClass('bg-gray-400');
       return;
     }
 
@@ -976,17 +944,12 @@ async function sendFriendRequest(event, targetUserId) {
     await userManager.saveUser(targetUser);
 
     // Atualiza a interface
-    const button = event.target;
-    button.disabled = true;
-    button.textContent = 'Solicitação enviada';
-    button.classList.remove('bg-purple-500', 'hover:bg-purple-600');
-    button.classList.add('bg-gray-400');
+    const $button = $(event.target);
+    $button.prop('disabled', true).text('Solicitação enviada').removeClass('bg-purple-500 hover:bg-purple-600').addClass('bg-gray-400');
 
     // Mostra uma notificação
-    const notification = document.createElement('div');
-    notification.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg';
-    notification.textContent = 'Solicitação de amizade enviada!';
-    document.body.appendChild(notification);
+    const notification = $('<div>').addClass('fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg').text('Solicitação de amizade enviada!');
+    $('body').append(notification);
 
     // Remove a notificação após 3 segundos
     setTimeout(() => { 
@@ -1124,17 +1087,13 @@ async function openChat(friendId) {
     }
     
     // Verifica se já existe uma janela de chat aberta
-    const existingChat = document.querySelector(`#chat-${friendId}`);
-    if (existingChat) {
-      existingChat.querySelector('input').focus();
+    const existingChat = $(`#chat-${friendId}`);
+    if (existingChat.length) {
+      existingChat.find('input').focus();
       return;
     }
     
-    const chatWindow = document.createElement('div');
-    chatWindow.id = `chat-${friendId}`;
-    chatWindow.className = 'w-80 rounded-lg shadow-lg overflow-hidden chat-window';
-    chatWindow.style.background = 'var(--background)';
-    chatWindow.innerHTML = `
+    const chatWindow = $(document.createElement('div')).attr('id', `chat-${friendId}`).addClass('w-80 rounded-lg shadow-lg overflow-hidden chat-window').css('background', 'var(--background)').html(`
       <div class="flex items-center justify-between p-3 bg-purple-500 text-white">
         <div class="flex items-center gap-2">
           <img src="${friend.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(friend.username)}`}" 
@@ -1169,9 +1128,9 @@ async function openChat(friendId) {
           </form>
         </div>
       </div>
-    `;
+    `);
 
-    document.getElementById('chat-windows').appendChild(chatWindow);
+    $('#chat-windows').append(chatWindow);
     loadChatMessages(sessionData.userId, friendId);
   } catch (error) {
     console.error("Erro ao abrir chat:", error);
@@ -1183,17 +1142,17 @@ async function openChat(friendId) {
  * @param {string} friendId - ID do amigo no chat
  */
 function maximizeChat(friendId) {
-  const chatWindow = document.getElementById(`chat-${friendId}`);
-  if (!chatWindow) return;
+  const $chatWindow = $(`#chat-${friendId}`);
+  if (!$chatWindow.length) return;
   
   // Adiciona classe para estilo de tela cheia
-  chatWindow.classList.add('chat-maximized');
+  $chatWindow.addClass('chat-maximized');
   // Remove classe de minimizado caso exista
-  chatWindow.classList.remove('chat-minimized', 'chat-normal');
+  $chatWindow.removeClass('chat-minimized chat-normal');
   
   // Atualiza os botões para mostrar opção de restaurar e minimizar
-  const headerButtons = chatWindow.querySelector('.flex.items-center.gap-1');
-  headerButtons.innerHTML = `
+  const $headerButtons = $chatWindow.find('.flex.items-center.gap-1');
+  $headerButtons.html(`
     <button onclick="minimizeChat('${friendId}')" class="text-white hover:text-gray-200 transition-colors p-1" title="Minimizar">
       <i class="fi fi-rr-window-minimize"></i>
     </button>
@@ -1203,11 +1162,11 @@ function maximizeChat(friendId) {
     <button onclick="closeChat('${friendId}')" class="text-white hover:text-gray-200 transition-colors p-1" title="Fechar">
       <i class="fi fi-rr-x"></i>
     </button>
-  `;
+  `);
   
   // Ajusta a rolagem das mensagens
-  const messagesContainer = document.getElementById(`chat-messages-${friendId}`);
-  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  const $messagesContainer = $(`#chat-messages-${friendId}`);
+  $messagesContainer.scrollTop($messagesContainer[0].scrollHeight);
 }
 
 /**
@@ -1215,23 +1174,23 @@ function maximizeChat(friendId) {
  * @param {string} friendId - ID do amigo no chat
  */
 function minimizeChat(friendId) {
-  const chatWindow = document.getElementById(`chat-${friendId}`);
-  if (!chatWindow) return;
+  const $chatWindow = $(`#chat-${friendId}`);
+  if (!$chatWindow.length) return;
   
   // Se já está minimizado, restaura para normal
-  if (chatWindow.classList.contains('chat-minimized')) {
+  if ($chatWindow.hasClass('chat-minimized')) {
     restoreChat(friendId);
     return;
   }
   
   // Adiciona classe para estilo minimizado
-  chatWindow.classList.add('chat-minimized');
+  $chatWindow.addClass('chat-minimized');
   // Remove outras classes de estado
-  chatWindow.classList.remove('chat-maximized', 'chat-normal');
+  $chatWindow.removeClass('chat-maximized chat-normal');
   
   // Atualiza os botões para mostrar opção de restaurar e maximizar
-  const headerButtons = chatWindow.querySelector('.flex.items-center.gap-1');
-  headerButtons.innerHTML = `
+  const $headerButtons = $chatWindow.find('.flex.items-center.gap-1');
+  $headerButtons.html(`
     <button onclick="restoreChat('${friendId}')" class="text-white hover:text-gray-200 transition-colors p-1" title="Restaurar">
       <i class="fi fi-rr-angle-down"></i>
     </button>
@@ -1241,7 +1200,7 @@ function minimizeChat(friendId) {
     <button onclick="closeChat('${friendId}')" class="text-white hover:text-gray-200 transition-colors p-1" title="Fechar">
       <i class="fi fi-rr-x"></i>
     </button>
-  `;
+  `);
 }
 
 /**
@@ -1249,17 +1208,17 @@ function minimizeChat(friendId) {
  * @param {string} friendId - ID do amigo no chat
  */
 function restoreChat(friendId) {
-  const chatWindow = document.getElementById(`chat-${friendId}`);
-  if (!chatWindow) return;
+  const $chatWindow = $(`#chat-${friendId}`);
+  if (!$chatWindow.length) return;
   
   // Adiciona classe para estilo normal
-  chatWindow.classList.add('chat-normal');
+  $chatWindow.addClass('chat-normal');
   // Remove outras classes de estado
-  chatWindow.classList.remove('chat-maximized', 'chat-minimized');
+  $chatWindow.removeClass('chat-maximized chat-minimized');
   
   // Atualiza os botões para mostrar opções padrão
-  const headerButtons = chatWindow.querySelector('.flex.items-center.gap-1');
-  headerButtons.innerHTML = `
+  const $headerButtons = $chatWindow.find('.flex.items-center.gap-1');
+  $headerButtons.html(`
     <button onclick="minimizeChat('${friendId}')" class="text-white hover:text-gray-200 transition-colors p-1" title="Minimizar">
       <i class="fi fi-rr-window-minimize"></i>
     </button>
@@ -1269,11 +1228,11 @@ function restoreChat(friendId) {
     <button onclick="closeChat('${friendId}')" class="text-white hover:text-gray-200 transition-colors p-1" title="Fechar">
       <i class="fi fi-rr-x"></i>
     </button>
-  `;
+  `);
   
   // Ajusta a rolagem das mensagens
-  const messagesContainer = document.getElementById(`chat-messages-${friendId}`);
-  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  const $messagesContainer = $(`#chat-messages-${friendId}`);
+  $messagesContainer.scrollTop($messagesContainer[0].scrollHeight);
 }
 
 /**
@@ -1284,7 +1243,7 @@ function restoreChat(friendId) {
 async function loadChatMessages(senderId, receiverId) {
   try {
     const messages = await chatManager.getMessages(senderId, receiverId); // Agora retorna Promise
-    const container = document.getElementById(`chat-messages-${receiverId}`);
+    const $container = $(`#chat-messages-${receiverId}`);
     
     // Usa userManager para obter usuários
     const users = await userManager.loadUsers();
@@ -1293,7 +1252,7 @@ async function loadChatMessages(senderId, receiverId) {
     const sender = users.find(u => u.id === senderId);
     const receiver = users.find(u => u.id === receiverId);
 
-    container.innerHTML = messages.map(msg => {
+    $container.html(messages.map(msg => {
       const isMine = msg.senderId === senderId;
       const user = isMine ? sender : receiver;
       const messageClasses = isMine ? 'ml-auto' : 'mr-auto';
@@ -1356,16 +1315,14 @@ async function loadChatMessages(senderId, receiverId) {
           ` : ''}
         </div>
       `;
-    }).join('');
+    }).join(''));
 
-    container.scrollTop = container.scrollHeight;
+    $container.scrollTop($container[0].scrollHeight);
     
     // Configura listener em tempo real
     chatManager.listenToMessages(senderId, receiverId, updatedMessages => {
-      if (updatedMessages.length > messages.length) {
-        // Atualiza apenas se houver novas mensagens
-        loadChatMessages(senderId, receiverId);
-      }
+      // Atualiza apenas se houver novas mensagens
+      if (updatedMessages.length > messages.length) loadChatMessages(senderId, receiverId);
     });
   } catch (error) {
     console.error("Erro ao carregar mensagens:", error);
@@ -1380,8 +1337,8 @@ async function loadChatMessages(senderId, receiverId) {
  */
 async function sendMessage(event, senderId, receiverId) {
   event.preventDefault();
-  const input = event.target.querySelector('input');
-  const message = input.value.trim();
+  const $input = $(event.target).find('input');
+  const message = $input.val().trim();
 
   if (!message) return;
 
@@ -1390,13 +1347,12 @@ async function sendMessage(event, senderId, receiverId) {
   // A função loadChatMessages será chamada pelo listener em tempo real
   // mas chamamos explicitamente para garantir atualização imediata
   await loadChatMessages(senderId, receiverId);
-  input.value = '';
+  $input.val('');
 }
 
 // Remove a janela de chat com um amigo específico
 function closeChat(friendId) {
-  const chatWindow = document.getElementById(`chat-${friendId}`);
-  if (chatWindow) chatWindow.remove();
+  $(`#chat-${friendId}`).remove();
 }
 
 // Gera linha do tempo com atividades recentes do usuário
@@ -1458,8 +1414,8 @@ function loadActivityTimeline(user) {
   // Ordena atividades por data
   activities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-  const container = document.getElementById('activity-timeline');
-  container.innerHTML = activities.map(activity => `
+  const $container = $('#activity-timeline');
+  $container.html(activities.map(activity => `
     <div class="activity-item border-l-2 border-purple-500 pl-4 pb-4">
       <div class="text-sm text-white">
         ${new Date(activity.timestamp).toLocaleDateString('pt-BR')}
@@ -1468,7 +1424,7 @@ function loadActivityTimeline(user) {
         ${getActivityContent(activity)}
       </div>
     </div>
-  `).join('');
+  `).join(''));
 }
 
 /**

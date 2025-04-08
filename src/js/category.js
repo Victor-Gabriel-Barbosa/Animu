@@ -1,13 +1,13 @@
 // Classe para gerenciamento das categorias
 class CategoryDisplay { 
   constructor() {
-    this.mainContainer = document.getElementById('main-categories');
-    this.subContainer = document.getElementById('subcategories');
+    this.mainContainer = $('#main-categories');
+    this.subContainer = $('#subcategories');
     this.categoryManager = new CategoryManager(); 
     this.initialize();
     
     // Recarrega categorias quando houver atualizações
-    window.addEventListener('categoriesUpdated', () => this.renderCategories());
+    $(window).on('categoriesUpdated', () => this.renderCategories());
   }
 
   async initialize() {
@@ -100,28 +100,28 @@ class CategoryDisplay {
     const categories = this.getCategories();
     
     // Renderiza categorias principais
-    if (this.mainContainer && categories.length > 0) {
-      this.mainContainer.innerHTML = categories
+    if (this.mainContainer.length > 0 && categories.length > 0) {
+      this.mainContainer.html(categories
         .filter(cat => !cat.isSubcategory)
         .map(category => this.createCategoryCard(category))
-        .join('');
+        .join(''));
     }
 
     // Renderiza subcategorias
-    if (this.subContainer && categories.length > 0) {
-      this.subContainer.innerHTML = categories
+    if (this.subContainer.length > 0 && categories.length > 0) {
+      this.subContainer.html(categories
         .filter(cat => cat.isSubcategory)
         .map(category => this.createSubcategoryTag(category))
-        .join('');
+        .join(''));
     }
 
     // Exibe mensagem quando não há categorias
     if (categories.length === 0) {
-      this.mainContainer.innerHTML = `
+      this.mainContainer.html(`
         <div class="col-span-full text-center py-8">
           <p class="text-xl text-gray-500">Nenhuma categoria encontrada.</p>
         </div>
-      `;
+      `);
     }
   }
 
@@ -165,13 +165,13 @@ class CategoryDisplay {
   }
 
   setupEventListeners() {
-    // Gerencia cliques em categorias e subcategorias usando delegação de eventos
-    document.addEventListener('click', (e) => {
-      const categoryCard = e.target.closest('.category-card');
-      const subcategoryTag = e.target.closest('.subcategory-tag');
-
-      if (categoryCard) this.filterByCategory(categoryCard.dataset.category);
-      else if (subcategoryTag) this.filterByCategory(subcategoryTag.dataset.subcategory);
+    // Gerencia cliques em categorias e subcategorias
+    $(document).on('click', '.category-card', (e) => {
+      this.filterByCategory($(e.currentTarget).data('category'));
+    });
+    
+    $(document).on('click', '.subcategory-tag', (e) => {
+      this.filterByCategory($(e.currentTarget).data('subcategory'));
     });
   }
 
@@ -182,6 +182,6 @@ class CategoryDisplay {
 }
 
 // Inicializa o gerenciador de categorias
-document.addEventListener('DOMContentLoaded', () => { 
+$(document).ready(() => { 
   new CategoryDisplay(); 
 });

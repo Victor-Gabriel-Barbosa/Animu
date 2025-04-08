@@ -942,8 +942,8 @@ function renderIndexNews() {
 // Carrega notícias recentes do Firestore
 async function loadRecentNews() {
   try {
-    const newsGrid = document.querySelector('.news-grid');
-    if (!newsGrid) return;
+    const $newsGrid = $('.news-grid');
+    if (!$newsGrid.length) return;
     
     // Cria uma instância do AnimeManager se não existir
     const animeManager = new AnimeManager();
@@ -957,8 +957,8 @@ async function loadRecentNews() {
       return;
     }
     
-    // Renderiza as notícias
-    newsGrid.innerHTML = recentNews.map(news => `
+    // Renderiza as notícias usando jQuery
+    $newsGrid.html(recentNews.map(news => `
       <a href="news.html?id=${news.id}" class="news-card">
         <div class="news-image-container">
           <img src="${news.image}" alt="${news.title}" class="news-image">
@@ -975,7 +975,7 @@ async function loadRecentNews() {
           <p class="news-summary">${news.summary}</p>
         </div>
       </a>
-    `).join('');
+    `).join(''));
     
   } catch (error) {
     console.error("Erro ao carregar notícias recentes:", error);
@@ -984,7 +984,7 @@ async function loadRecentNews() {
 }
 
 // Inicializa o AnimeLoader automaticamente quando o DOM estiver carregado
-document.addEventListener('DOMContentLoaded', () => {
+$(document).ready(function() {
   // Inicializa o AnimeLoader se estiver na página principal
   window.animeLoader = AnimeLoader.init();
 
@@ -995,29 +995,27 @@ document.addEventListener('DOMContentLoaded', () => {
   initCarouselTabs();
 });
 
-// Função para controlar a alternância entre os carrosséis
+// Função para controlar a alternância entre os carrosséis usando jQuery
 function initCarouselTabs() {
-  const tabs = document.querySelectorAll('.carousel-tab');
-  const contents = document.querySelectorAll('.carousel-content');
+  const $tabs = $('.carousel-tab');
+  const $contents = $('.carousel-content');
   
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      const target = tab.dataset.target;
-      
-      // Desativa todas as tabs e contents
-      tabs.forEach(t => t.classList.remove('active'));
-      contents.forEach(c => c.classList.remove('active'));
-      
-      // Ativa a tab clicada e o content correspondente
-      tab.classList.add('active');
-      document.getElementById(`${target}-carousel`).classList.add('active');
-      
-      // Reinicia o Swiper para garantir que funcione corretamente após a exibição
-      if (target === 'featured' && window.featuredSwiper) {
-        window.featuredSwiper.update();
-      } else if (target === 'seasonal' && window.seasonalSwiper) {
-        window.seasonalSwiper.update();
-      }
-    });
+  $tabs.on('click', function() {
+    const target = $(this).data('target');
+    
+    // Desativa todas as tabs e contents
+    $tabs.removeClass('active');
+    $contents.removeClass('active');
+    
+    // Ativa a tab clicada e o content correspondente
+    $(this).addClass('active');
+    $(`#${target}-carousel`).addClass('active');
+    
+    // Reinicia o Swiper para garantir que funcione corretamente após a exibição
+    if (target === 'featured' && window.featuredSwiper) {
+      window.featuredSwiper.update();
+    } else if (target === 'seasonal' && window.seasonalSwiper) {
+      window.seasonalSwiper.update();
+    }
   });
 }

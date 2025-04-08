@@ -7,13 +7,6 @@ const forumManager = new ForumManager();
 // Instância do gerenciador de usuários para operações no Firestore
 const userManager = new UserManager();
 
-// Elementos do DOM
-const newTopicBtn = document.getElementById('new-topic-btn');
-const newTopicModal = document.getElementById('new-topic-modal');
-const newTopicForm = document.getElementById('new-topic-form');
-const cancelTopicBtn = document.getElementById('cancel-topic');
-const forumTopicsContainer = document.getElementById('forum-topics');
-
 // Variável global para as opções da toolbar do editor
 const toolbarOptions = [
   ['bold', 'italic', 'underline', 'strike'],
@@ -56,44 +49,49 @@ class ForumModerator {
 
 // Fecha o modal
 function closeModal() {
-  newTopicModal.classList.add('hidden');
-  newTopicForm.reset();
+  $('#new-topic-modal').addClass('hidden');
+  $('#new-topic-form')[0].reset();
   // Limpa o editor Quill se estiver disponível
   if (quillEditor) quillEditor.root.innerHTML = '';
 }
 
-// Event Listeners
-newTopicBtn?.addEventListener('click', () => {
-  if (!AnimuUtils.isUserLoggedIn()) {
-    alert('Você precisa estar logado para criar uma discussão!');
-    window.location.href = 'signin.html';
-    return;
-  }
-  newTopicModal.classList.remove('hidden');
-  populateCategories();
+// Event Listeners com jQuery
+$(document).ready(function() {
+  // Abre o modal quando o botão de novo tópico é clicado
+  $('#new-topic-btn').on('click', function() {
+    if (!AnimuUtils.isUserLoggedIn()) {
+      alert('Você precisa estar logado para criar uma discussão!');
+      window.location.href = 'signin.html';
+      return;
+    }
+    $('#new-topic-modal').removeClass('hidden');
+    populateCategories();
+  });
+
+  // Fecha o modal com o X
+  $('#close-modal-btn').on('click', closeModal);
+
+  // Fecha o modal com o botão Cancelar
+  $('#cancel-topic-btn').on('click', closeModal);
+
+  // Fecha o modal clicando fora dele
+  $('#new-topic-modal').on('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  // Previne que cliques dentro do modal o fechem
+  $('.new-topic-modal').on('click', function(e) {
+    e.stopPropagation();
+  });
+
+  // Submissão do formulário
+  $('#new-topic-form').on('submit', addTopic);
 });
-
-// Fecha o modal com o X
-document.getElementById('close-modal-btn')?.addEventListener('click', closeModal);
-
-// Fecha o modal com o botão Cancelar
-document.getElementById('cancel-topic-btn')?.addEventListener('click', closeModal);
-
-// Fecha o modal clicando fora dele
-newTopicModal?.addEventListener('click', (e) => {
-  if (e.target === newTopicModal) closeModal();
-});
-
-// Previne que cliques dentro do modal o fechem
-newTopicModal?.querySelector('.new-topic-modal')?.addEventListener('click', (e) => {
-  e.stopPropagation();
-});
-
-newTopicForm?.addEventListener('submit', addTopic);
 
 // Renderiza as discussões com melhorias de responsividade
 function renderTopics() {
-  if (!forumTopicsContainer) return;
+  const $forumTopicsContainer = $('#forum-topics');
+  if (!$forumTopicsContainer.length) return;
 
   const userId = AnimuUtils.isUserLoggedIn() ? JSON.parse(localStorage.getItem('userSession')).userId : null;
 
@@ -125,7 +123,7 @@ function renderTopics() {
           <div class="text-4xl sm:text-5xl md:text-6xl mb-3 md:mb-4">🔍</div>
           <h3 class="text-lg sm:text-xl md:text-2xl font-medium mb-2">Nenhuma discussão encontrada</h3>
           <p class="text-sm sm:text-base text-gray-600">Seja o primeiro a iniciar uma discussão no fórum!</p>
-          <button onclick="document.getElementById('new-topic-btn').click()" 
+          <button onclick="$('#new-topic-btn').click()" 
                   class="mt-3 md:mt-4 px-4 py-2 sm:px-6 sm:py-2 text-sm sm:text-base bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
             Criar discussão
           </button>
@@ -139,14 +137,14 @@ function renderTopics() {
                     class="px-4 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm md:text-base border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-600 hover:text-white transition-colors mb-2 sm:mb-0">
               Ver todas as categorias
             </button>
-            <button onclick="document.getElementById('new-topic-btn').click()" 
+            <button onclick="$('#new-topic-btn').click()" 
                     class="px-4 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm md:text-base bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
               Criar discussão
             </button>
           </div>
         </div>`;
     
-    forumTopicsContainer.innerHTML = categoryFilters + message;
+    $forumTopicsContainer.html(categoryFilters + message);
     highlightActiveCategory(activeCategory);
     return;
   }
@@ -162,7 +160,7 @@ function renderTopics() {
     const filteredCategory = FORUM_CONFIG.categories.find(c => c.id === activeCategory);
     const topics = topicsByCategory[activeCategory] || [];
     
-    forumTopicsContainer.innerHTML = categoryFilters + 
+    $forumTopicsContainer.html(categoryFilters + 
       `<div class="category-section mb-8">
         <h3 class="text-2xl font-bold mb-4 px-1">${filteredCategory.icon} ${filteredCategory.name}</h3>
         ${topics.length 
@@ -171,16 +169,16 @@ function renderTopics() {
               <div class="text-4xl mb-3">${filteredCategory.icon}</div>
               <p class="text-lg mb-2">Nenhuma discussão nesta categoria</p>
               <p class="text-gray-600 mb-4">Seja o primeiro a iniciar uma conversa sobre ${filteredCategory.name}!</p>
-              <button onclick="document.getElementById('new-topic-btn').click()" 
+              <button onclick="$('#new-topic-btn').click()" 
                       class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
                 Criar discussão
               </button>
             </div>`
         }
-      </div>`;
+      </div>`);
   } else {
     // Se não estiver filtrando, mostrar todas as categorias
-    forumTopicsContainer.innerHTML = categoryFilters + Object.entries(topicsByCategory)
+    $forumTopicsContainer.html(categoryFilters + Object.entries(topicsByCategory)
       .map(([catId, topics]) => {
         const category = FORUM_CONFIG.categories.find(c => c.id === catId);
         return `
@@ -194,7 +192,7 @@ function renderTopics() {
             }
           </div>
         `;
-      }).join('');
+      }).join(''));
   }
 
   // Destacar a categoria selecionada após renderizar
@@ -1013,19 +1011,18 @@ async function loadForumData(categoryId = null) {
 
 // Destaca a categoria ativa nos filtros
 function highlightActiveCategory(categoryId, shouldScroll = false) {
-  document.querySelectorAll('.category-filter').forEach(btn => {
-    btn.classList.remove('bg-purple-700', 'text-white');
-  });
+  $('.category-filter').removeClass('bg-purple-700 text-white');
 
-  const selector = categoryId === 'all' 
-    ? '[data-category="all"]' 
-    : `[data-category="${categoryId}"]`;
+  const $selectedButton = categoryId === 'all' 
+    ? $('[data-category="all"]') 
+    : $(`[data-category="${categoryId}"]`);
     
-  const selectedButton = document.querySelector(selector);
-  if (selectedButton) {
-    selectedButton.classList.add('bg-purple-700', 'text-white');
+  if ($selectedButton.length) {
+    $selectedButton.addClass('bg-purple-700 text-white');
     // Rolagem suave apenas se explicitamente solicitado
-    if (shouldScroll) selectedButton.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    if (shouldScroll) {
+      $selectedButton[0].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
   }
 }
 
@@ -1035,12 +1032,13 @@ async function filterTopicsByCategory(categoryId = 'all') {
   localStorage.setItem('activeCategoryFilter', categoryId);
   
   // Mostra um indicador de carregamento enquanto os dados são buscados
-  if (forumTopicsContainer) {
-    forumTopicsContainer.innerHTML = `
+  const $forumTopicsContainer = $('#forum-topics');
+  if ($forumTopicsContainer.length) {
+    $forumTopicsContainer.html(`
       <div class="flex justify-center items-center py-12">
         <div class="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-t-2 border-b-2 border-purple-600"></div>
       </div>
-    `;
+    `);
   }
   
   // Carrega tópicos com ou sem filtro de categoria
@@ -1073,10 +1071,7 @@ async function incrementTopicViews(topicId) {
         forumTopics[topicIndex].views = (forumTopics[topicIndex].views || 0) + 1;
         
         // Atualiza apenas o elemento de visualização no DOM
-        const viewCounter = document.querySelector(`#topic-${topicId} .badge:first-child`);
-        if (viewCounter) {
-          viewCounter.textContent = `${forumTopics[topicIndex].views} 👀`;
-        }
+        $(`#topic-${topicId} .badge:first-child`).text(`${forumTopics[topicIndex].views} 👀`);
       }
     }
   } catch (error) {
@@ -1086,17 +1081,41 @@ async function incrementTopicViews(topicId) {
 
 // Atualiza o contador de caracteres
 function updateCharCount(input, counterId) {
-  const counter = document.getElementById(counterId);
-  const max = input.getAttribute('maxlength');
-  counter.textContent = `${input.value.length}/${max}`;
+  const $counter = $(`#${counterId}`);
+  const max = $(input).attr('maxlength');
+  $counter.text(`${$(input).val().length}/${max}`);
+}
+
+// Inicializa o editor Quill para o formulário de nova discussão
+let quillEditor;
+
+// Função de inicialização do editor Quill
+function initQuillEditor() {
+  quillEditor = new Quill('#topic-content', {
+    theme: 'snow',
+    modules: {
+      toolbar: toolbarOptions
+    },
+    placeholder: 'Escreva sua discussão aqui...'
+  });
+
+  quillEditor.on('text-change', function() {
+    const text = quillEditor.getText().trim();
+    const $charCount = $('#content-char-count');
+    if ($charCount.length) {
+      $charCount.text(`${text.length}/${FORUM_CONFIG.maxContentLength}`);
+      if (text.length > FORUM_CONFIG.maxContentLength * 0.9) {
+        $charCount.addClass('text-red-500');
+      } else {
+        $charCount.removeClass('text-red-500');
+      }
+    }
+  });
 }
 
 // Carrega dados necessários e configura estado inicial do fórum
-document.addEventListener('DOMContentLoaded', async () => {
+$(document).ready(async function() {
   try {
-    // Carrega a lista de palavrões
-    await loadBadWords();
-    
     // Verifica se há um filtro ativo salvo
     const activeCategory = localStorage.getItem('activeCategoryFilter') || 'all';
     
@@ -1117,28 +1136,3 @@ document.addEventListener('DOMContentLoaded', async () => {
     alert('Houve um problema ao carregar o fórum. Por favor, atualize a página.');
   }
 });
-
-// Variável global para o editor Quill
-
-let quillEditor;
-
-// Função de inicialização do editor Quill
-function initQuillEditor() {
-  quillEditor = new Quill('#topic-content', {
-    theme: 'snow',
-    modules: {
-      toolbar: toolbarOptions
-    },
-    placeholder: 'Escreva sua discussão aqui...'
-  });
-
-  quillEditor.on('text-change', function() {
-    const text = quillEditor.getText().trim();
-    const charCount = document.getElementById('content-char-count');
-    if (charCount) {
-      charCount.textContent = `${text.length}/${FORUM_CONFIG.maxContentLength}`;
-      if (text.length > FORUM_CONFIG.maxContentLength * 0.9) charCount.classList.add('text-red-500');
-      else charCount.classList.remove('text-red-500');
-    }
-  });
-}
