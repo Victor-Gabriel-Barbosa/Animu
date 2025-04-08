@@ -196,9 +196,7 @@ class CategoryManager {
       }
       
       // Atualiza a categoria
-      const updatedCategories = localCategories.map(cat => 
-        cat.id === categoryData.id ? categoryData : cat
-      );
+      const updatedCategories = localCategories.map(cat => cat.id === categoryData.id ? categoryData : cat);
       
       // Salva localmente
       localStorage.setItem('animuCategories', JSON.stringify(updatedCategories));

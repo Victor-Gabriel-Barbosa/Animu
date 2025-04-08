@@ -188,7 +188,7 @@ class UserManager {
     }
   }
 
-  // Verifica se um anime está na lista de favoritos do usuário - OTIMIZADO
+  // Verifica se um anime está na lista de favoritos do usuário
   async isAnimeFavorited(userId, animeTitle) {
     try {
       // Primeiro verifica se existe em cache da sessão atual
@@ -226,9 +226,7 @@ class UserManager {
         // Verifica se o cache não expirou (15 minutos)
         const cacheTime = userCache[animeTitle].timestamp || 0;
         const now = Date.now();
-        if (now - cacheTime < 15 * 60 * 1000) {
-          return userCache[animeTitle].status;
-        }
+        if (now - cacheTime < 15 * 60 * 1000) return userCache[animeTitle].status;
       }
       return null; // Cache não encontrado ou expirado
     } catch (e) {

@@ -2,7 +2,7 @@
 function checkAdminAccess() {
   // Redireciona para página inicial se não for admin
   if (!AnimuUtils.isUserAdmin()) {
-    $.alert('Acesso negado. Esta página é restrita a administradores.');
+    alert('Acesso negado. Esta página é restrita a administradores.');
     window.location.href = 'index.html';
     return false;
   }

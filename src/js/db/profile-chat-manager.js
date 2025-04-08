@@ -222,10 +222,7 @@ class ProfileChatManager extends Chat {
         // Fallback para localStorage
         return this.messages[chatId] || [];
       }
-    } else {
-      // Usar apenas localStorage se Firestore não estiver disponível
-      return this.messages[chatId] || [];
-    }
+    } else return this.messages[chatId] || []; // Usa o localStorage se Firestore não estiver disponível
   }
   
   /**

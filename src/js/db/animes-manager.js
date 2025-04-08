@@ -14,23 +14,9 @@ class AnimeManager {
   // Verifica a inicialização do Firebase e conexão
   async initCheck() {
     try {
-      await this.checkFirebaseConnection();
+      await window.checkFirebaseConnection();
     } catch (error) {
       console.error('Erro na inicialização do AnimeManager:', error);
-    }
-  }
-
-  /**
-   * Verifica a conexão com o Firebase
-   * @returns {Promise<boolean>} - Status da conexão
-   */
-  async checkFirebaseConnection() {
-    try {
-      await this.db.collection(this.animeCollection).limit(1).get();
-      return true;
-    } catch (error) {
-      console.error('Erro de conexão com o Firebase:', error);
-      return false;
     }
   }
 
@@ -384,9 +370,7 @@ class AnimeManager {
       const comments = animeData.comments || [];
       
       // Ordena comentários por data (mais recentes primeiro)
-      const sortedComments = comments.sort((a, b) => 
-        new Date(b.timestamp) - new Date(a.timestamp)
-      );
+      const sortedComments = comments.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
       
       // Adiciona ID do documento a cada comentário (o ID é o índice no array)
       const commentsWithIds = sortedComments.map((comment, index) => ({
@@ -504,9 +488,7 @@ class AnimeManager {
       const animeTitle = animeData.primaryTitle;
       
       // Verifica se o comentário existe
-      if (!animeData.comments || index >= animeData.comments.length) {
-        throw new Error('Comentário não encontrado');
-      }
+      if (!animeData.comments || index >= animeData.comments.length) throw new Error('Comentário não encontrado');
       
       // Obtém o comentário existente
       const existingComment = animeData.comments[index];
@@ -583,9 +565,7 @@ class AnimeManager {
       const animeTitle = animeData.primaryTitle;
       
       // Verifica se o comentário existe
-      if (!animeData.comments || index >= animeData.comments.length) {
-        throw new Error('Comentário não encontrado');
-      }
+      if (!animeData.comments || index >= animeData.comments.length) throw new Error('Comentário não encontrado');
       
       // Remove o comentário do array
       const updatedComments = [...animeData.comments];
@@ -645,9 +625,7 @@ class AnimeManager {
         const animeTitle = animeData.primaryTitle;
         
         // Verifica se o comentário existe
-        if (!animeData.comments || index >= animeData.comments.length) {
-          throw new Error('Comentário não encontrado');
-        }
+        if (!animeData.comments || index >= animeData.comments.length) throw new Error('Comentário não encontrado');
         
         // Obtém o comentário
         const comment = animeData.comments[index];
@@ -665,11 +643,8 @@ class AnimeManager {
         const newDislikes = dislikes.filter(user => user !== username);
         
         // Adiciona o novo voto, se não for um toggle
-        if (voteType === 'like' && !hasVotedLike) {
-          newLikes.push(username);
-        } else if (voteType === 'dislike' && !hasVotedDislike) {
-          newDislikes.push(username);
-        }
+        if (voteType === 'like' && !hasVotedLike) newLikes.push(username);
+        else if (voteType === 'dislike' && !hasVotedDislike) newDislikes.push(username);
         
         // Atualiza o comentário
         const updatedComment = {
@@ -891,9 +866,7 @@ class AnimeManager {
               
               // Adiciona exemplo se ainda não tiver muitos
               if (!categoryExamples[normalizedGenre]) categoryExamples[normalizedGenre] = [];
-              if (categoryExamples[normalizedGenre].length < 3) {
-                categoryExamples[normalizedGenre].push(anime.primaryTitle);
-              }
+              if (categoryExamples[normalizedGenre].length < 3) categoryExamples[normalizedGenre].push(anime.primaryTitle);
             });
           }
         });
