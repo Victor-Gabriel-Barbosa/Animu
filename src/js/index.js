@@ -957,7 +957,7 @@ async function loadRecentNews() {
       return;
     }
     
-    // Renderiza as notícias usando jQuery
+    // Renderiza as notícias
     $newsGrid.html(recentNews.map(news => `
       <a href="news.html?id=${news.id}" class="news-card">
         <div class="news-image-container">
@@ -995,7 +995,7 @@ $(document).ready(function() {
   initCarouselTabs();
 });
 
-// Função para controlar a alternância entre os carrosséis usando jQuery
+// Função para controlar a alternância entre os carrosséis
 function initCarouselTabs() {
   const $tabs = $('.carousel-tab');
   const $contents = $('.carousel-content');
@@ -1012,10 +1012,7 @@ function initCarouselTabs() {
     $(`#${target}-carousel`).addClass('active');
     
     // Reinicia o Swiper para garantir que funcione corretamente após a exibição
-    if (target === 'featured' && window.featuredSwiper) {
-      window.featuredSwiper.update();
-    } else if (target === 'seasonal' && window.seasonalSwiper) {
-      window.seasonalSwiper.update();
-    }
+    if (target === 'featured' && window.featuredSwiper) window.featuredSwiper.update();
+    else if (target === 'seasonal' && window.seasonalSwiper) window.seasonalSwiper.update();
   });
 }

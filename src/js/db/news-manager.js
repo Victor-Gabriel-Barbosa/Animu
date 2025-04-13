@@ -87,9 +87,7 @@ class NewsManager {
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
       
-      if (this.useLocalStorage) {
-        return this.saveNewsToLocalStorage(dataToSave, id);
-      }
+      if (this.useLocalStorage) return this.saveNewsToLocalStorage(dataToSave, id);
       
       if (id) {
         // Atualiza notícia existente
