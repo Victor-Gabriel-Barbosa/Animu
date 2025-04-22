@@ -140,8 +140,10 @@ window.ThemeManager = {
     this.applyTheme(savedTheme);
     this.updateThemeIcon(savedTheme);
 
-    // Inicializa o dropdown se estiver em uma página de login/signup
-    if (window.location.pathname.includes('signin.html') || window.location.pathname.includes('signup.html')) this.initThemeDropdown();
+    // Inicializa o dropdown se estiver em uma página de login/signup/portfolio
+    if (window.location.pathname.includes('signin.html') || 
+        window.location.pathname.includes('signup.html') ||
+        window.location.pathname.includes('portfolio.php')) this.initThemeDropdown();
 
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
     prefersDark.addEventListener('change', () => {
