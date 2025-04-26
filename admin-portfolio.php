@@ -31,9 +31,7 @@ function uploadImage($file)
   $target_dir = "src/assets/images/developers/";
 
   // Cria o diretório se não existir
-  if (!file_exists($target_dir)) {
-    mkdir($target_dir, 0777, true);
-  }
+  if (!file_exists($target_dir)) mkdir($target_dir, 0777, true);
 
   $file_extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
   $new_filename = uniqid() . '.' . $file_extension;
@@ -104,15 +102,14 @@ if (isset($_POST['add_developer'])) {
   // Verifica se foi enviada uma foto
   if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
     $upload_result = uploadImage($_FILES['photo']);
-    if ($upload_result['success']) {
-      $developer_data['photo'] = $upload_result['file_path'];
-    } else {
+    if ($upload_result['success']) $developer_data['photo'] = $upload_result['file_path'];
+    else {
       $message = $upload_result['message'];
       $messageType = 'error';
     }
   }
 
-  // Validação básica
+  // Validação dos campos obrigatórios
   if (empty($developer_data['name']) || empty($developer_data['role']) || empty($developer_data['bio'])) {
     $message = 'Os campos Nome, Cargo e Biografia são obrigatórios!';
     $messageType = 'error';

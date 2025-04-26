@@ -7,6 +7,9 @@ const forumManager = new ForumManager();
 // Instância do gerenciador de usuários para operações no Firestore
 const userManager = new UserManager();
 
+// Variável global para o formulário de novo tópico
+let newTopicForm;
+
 // Variável global para as opções da toolbar do editor
 const toolbarOptions = [
   ['bold', 'italic', 'underline', 'strike'],
@@ -86,6 +89,9 @@ $(document).ready(function() {
 
   // Submissão do formulário
   $('#new-topic-form').on('submit', addTopic);
+
+  // Inicializa a variável global para o formulário de novo tópico
+  newTopicForm = document.getElementById('new-topic-form');
 });
 
 // Renderiza as discussões com melhorias de responsividade

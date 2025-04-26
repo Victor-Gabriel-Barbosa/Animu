@@ -3,7 +3,7 @@
 /**
  * Página de Portfolio dos Desenvolvedores do Animu
  * 
- * Esta página exibe informações sobre os desenvolvedores do site Animu,
+ * Exibe informações sobre os desenvolvedores do site Animu,
  * mostrando suas habilidades, projetos e informações de contato.
  */
 
@@ -25,27 +25,8 @@ if (isset($_GET['id'])) {
     exit;
   }
 }
-
-// Processa o envio do formulário de contato
-$message = '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['contact_submit'])) {
-  $name = filter_input(INPUT_POST, 'name', FILTER_SANITIZE_SPECIAL_CHARS);
-  $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
-  $subject = filter_input(INPUT_POST, 'subject', FILTER_SANITIZE_SPECIAL_CHARS);
-  $messageContent = filter_input(INPUT_POST, 'message', FILTER_SANITIZE_SPECIAL_CHARS);
-
-  // Valida os dados do formulário
-  if (empty($name) || empty($email) || empty($subject) || empty($messageContent)) {
-    $message = '<div class="alert alert-error">Por favor, preencha todos os campos.</div>';
-  } else if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    $message = '<div class="alert alert-error">Por favor, forneça um email válido.</div>';
-  } else {
-    // Aqui você pode implementar o envio do email
-    // Por enquanto, vamos apenas simular o envio bem-sucedido
-    $message = '<div class="alert alert-success">Mensagem enviada com sucesso! Entraremos em contato em breve.</div>';
-  }
-}
 ?>
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 
