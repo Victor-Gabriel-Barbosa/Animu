@@ -70,10 +70,6 @@ class Navbar {
           <i class="fi fi-sr-comment-info"></i>
           <span>Sobre</span>
         </a>
-        <a href="http://localhost/Animu/portfolio.php" class="nav-link" title="Ver portfólio do desenvolvedor">
-          <i class="fi fi-sr-id-badge"></i>
-          <span>Portfólio</span>
-        </a>
         <!-- Opções de Admin (inicialmente ocultas) -->
         <div id="admin-options" class="hidden">
           <a href="users-admin.html" class="nav-link admin-link" title="Gerenciar usuários do sistema">
@@ -91,10 +87,6 @@ class Navbar {
           <a href="news-admin.html" class="nav-link admin-link" title="Gerenciar notícias do site">
             <i class="fi fi-sr-books-medical"></i>
             <span>Gerenciar Notícias</span>
-          </a>
-          <a href="http://localhost/Animu/admin-portfolio.php" class="nav-link admin-link" title="Gerenciar portfólio do desenvolvedor">
-            <i class="fi fi-sr-display-code"></i>
-            <span>Gerenciar Portfólio</span>
           </a>
         </div>
       </div>
