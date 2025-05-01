@@ -77,6 +77,45 @@ class UserManager {
     }
   }
 
+  // Encontra usuário por email
+  async findUserByEmail(email) {
+    try {
+      const snapshot = await this.usersCollection.where('email', '==', email).get();
+      
+      if (!snapshot.empty) {
+        const userData = snapshot.docs[0].data();
+        return {
+          id: snapshot.docs[0].id,
+          ...userData
+        };
+      }
+      
+      return null;
+    } catch (error) {
+      console.error("Erro ao buscar usuário por email:", error);
+      throw error;
+    }
+  }
+
+  // Atualiza dados de um usuário
+  async updateUser(userId, userData) {
+    try {
+      // Registra a data da última atualização
+      const dataToUpdate = {
+        ...userData,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      
+      await this.usersCollection.doc(userId).update(dataToUpdate);
+      
+      // Retorna o usuário atualizado
+      return await this.getUserById(userId);
+    } catch (error) {
+      console.error("Erro ao atualizar usuário:", error);
+      throw error;
+    }
+  }
+
   // Obtém um usuário por ID
   async getUserById(userId) {
     try {

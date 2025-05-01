@@ -16,6 +16,12 @@ else firebase.app(); // Usa o app já inicializado
 const auth = firebase.auth();
 const db = firebase.firestore();
 
+// Configuração do provedor de autenticação do Google
+const googleProvider = new firebase.auth.GoogleAuthProvider();
+googleProvider.setCustomParameters({
+  prompt: 'select_account'
+});
+
 // Ativa a persistência para funcionar offline
 db.enablePersistence().catch((err) => {
   console.error("Erro ao ativar persistência:", err.code);

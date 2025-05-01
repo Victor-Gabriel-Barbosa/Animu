@@ -206,6 +206,79 @@ $(document).ready(async function () {
       }
     }
 
+    // Login com Google
+    async loginWithGoogle() {
+      try {
+        // Inicia o processo de autenticação com popup
+        const result = await auth.signInWithPopup(googleProvider);
+        const user = result.user;
+        
+        // Obtem os dados do usuário Google
+        const googleUser = {
+          email: user.email,
+          username: user.displayName || user.email.split('@')[0],
+          avatar: user.photoURL || this.generateAvatar(user.displayName || user.email.split('@')[0]),
+          googleId: user.uid
+        };
+        
+        // Verifica se o usuário já existe no sistema
+        const existingUser = await this.userManager.findUserByEmail(googleUser.email);
+        
+        let userData;
+        if (!existingUser) {
+          // Cria um novo usuário
+          const newUser = {
+            username: googleUser.username,
+            email: googleUser.email,
+            avatar: googleUser.avatar,
+            googleId: googleUser.googleId,
+            isAdmin: false,
+            favoriteAnimes: [],
+            watchedAnimes: [],
+            friends: [],
+            friendRequests: []
+          };
+          
+          // Salva no Firestore
+          userData = await this.userManager.saveUser(newUser);
+        } else {
+          // Atualiza o usuário existente com as informações do Google, caso necessário
+          if (!existingUser.googleId) {
+            await this.userManager.updateUser(existingUser.id, {
+              googleId: googleUser.googleId,
+              avatar: existingUser.avatar || googleUser.avatar
+            });
+          }
+          userData = existingUser;
+        }
+        
+        // Cria sessão de usuário
+        const sessionData = {
+          userId: userData.id,
+          username: userData.username,
+          isAdmin: userData.isAdmin,
+          avatar: userData.avatar,
+          loginTime: new Date().toISOString()
+        };
+        
+        localStorage.setItem('userSession', JSON.stringify(sessionData));
+        return true;
+      } catch (error) {
+        console.error('Erro na autenticação com o Google:', error);
+        let errorMessage = 'Erro ao conectar com o Google. Tente novamente.';
+        
+        // Mensagens específicas para erros comuns
+        if (error.code === 'auth/popup-closed-by-user') {
+          errorMessage = 'O login foi cancelado. A janela de autenticação foi fechada.';
+        } else if (error.code === 'auth/popup-blocked') {
+          errorMessage = 'O popup de login foi bloqueado pelo navegador. Permita popups para este site.';
+        }
+        
+        this.showError(errorMessage);
+        return false;
+      }
+    }
+
     // Atualizar painel de usuário
     updateUserPanel() {
       const sessionData = JSON.parse(localStorage.getItem('userSession'));
@@ -273,6 +346,12 @@ $(document).ready(async function () {
       // Remove sessão
       localStorage.removeItem('userSession');
       this.clearSavedCredentials();
+      
+      // Desloga do Firebase Auth
+      auth.signOut().catch(error => {
+        console.error('Erro ao fazer logout do Firebase:', error);
+      });
+      
       // Recarrega a janela
       window.location.reload();
     }
@@ -442,6 +521,23 @@ $(document).ready(async function () {
         authManager.showError(error.message);
       } finally {
         $submitButton.prop('disabled', false);
+      }
+    });
+
+    // Login com Google
+    $('#google-login-button').on('click', async function () {
+      try {
+        const success = await authManager.loginWithGoogle();
+        if (success) {
+          authManager.updateUserPanel();
+
+          // Redireciona para a página anterior ou index.html
+          const previousPage = sessionStorage.getItem('previousPage');
+          sessionStorage.removeItem('previousPage'); // Limpar depois de usar
+          window.location.href = previousPage || 'index.html';
+        }
+      } catch (error) {
+        authManager.showError(error.message);
       }
     });
   }
