@@ -350,12 +350,12 @@ function loadFavoriteAnimes(user) {
     if (!anime) return '';
 
     return `
-      <a href="animes.html?anime=${encodeURIComponent(anime.primaryTitle)}" 
+      <a href="animes.html?anime=${encodeURIComponent(anime.primaryTitle).replace(/%20/g, '-')}" 
        class="flex items-center gap-4 p-4 rounded-lg 
               hover:bg-purple-800/30
               hover:shadow-purple-900/30
               hover:scale-102 transform
-              group transition-all duration-200 ease-in-out">
+              transition-all duration-200 ease-in-out">
         <img src="${anime.coverImage}" alt="${anime.primaryTitle}" 
              class="w-16 h-16 object-cover rounded-lg 
              hover:shadow-md transition-shadow duration-200">

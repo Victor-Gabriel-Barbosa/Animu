@@ -6,7 +6,14 @@ const animeChat = new AnimeChat();
 // Extrai parâmetros da URL de forma segura
 function getUrlParameter(name) {
   const urlParams = new URLSearchParams(window.location.search);
-  return urlParams.get(name);
+  let value = urlParams.get(name);
+  
+  // Se for o parâmetro de anime, substitui os hifens por espaços
+  if (name === 'anime' && value) {
+    value = value.replace(/-/g, ' ');
+  }
+  
+  return value;
 }
 
 // Busca anime por título principal ou alternativos
@@ -359,7 +366,7 @@ async function renderAllAnimes() {
       <div class="anime-grid">
         ${filteredAnimes.map(anime => `
           <div class="anime-card">
-            <a href="animes.html?anime=${encodeURIComponent(anime.primaryTitle)}" class="anime-card-link">
+            <a href="animes.html?anime=${encodeURIComponent(anime.primaryTitle).replace(/%20/g, '-')}" class="anime-card-link">
               <div class="image-wrapper">
                 <img 
                   src="${anime.coverImage}" 
@@ -510,7 +517,7 @@ function renderSearchResults(query) {
       <div class="anime-grid">
         ${results.map(anime => `
           <div class="anime-card">
-            <a href="animes.html?anime=${encodeURIComponent(anime.primaryTitle)}" class="anime-card-link">
+            <a href="animes.html?anime=${encodeURIComponent(anime.primaryTitle).replace(/%20/g, '-')}" class="anime-card-link">
               <div class="image-wrapper">
                 <img 
                   src="${anime.coverImage}" 
@@ -522,7 +529,7 @@ function renderSearchResults(query) {
                   <span class="info-pill">⭐ ${Number(anime.score).toFixed(1)}</span>
                   <span class="info-pill">
                     <svg class="meta-icon" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59 8-8 8zm-1-4h2v2h-2v-2zm0-2h2V7h-2v7z"/>
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59-8-8-8zm-1-4h2v2h-2v-2zm0-2h2V7h-2v7z"/>
                     </svg>
                     ${anime.episodes > 0 ? anime.episodes : '?'} eps
                   </span>
@@ -922,7 +929,7 @@ async function renderRelatedAnimes(currentAnime) {
     // Renderiza os cards
     swiperWrapper.innerHTML = relatedAnimes.map(anime => `
       <div class="swiper-slide">
-        <a href="animes.html?anime=${encodeURIComponent(anime.primaryTitle)}" class="anime-card">
+        <a href="animes.html?anime=${encodeURIComponent(anime.primaryTitle).replace(/%20/g, '-')}" class="anime-card">
           <div class="image-wrapper">
             <img 
               src="${anime.coverImage}" 
@@ -1421,7 +1428,7 @@ function formatFilterDisplay(filters) {
         </svg>
         Filtros aplicados
       </div>
-      <button class="clear-filters-btn" onclick="clearSearchFilters()">
+      <button class="clear-filters-anime-btn" onclick="clearSearchFilters()">
         <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
           <path d="M5.83 5.146a.5.5 0 0 0 0 .708L7.975 8l-2.147 2.146a.5.5 0 0 0 .707.708l2.147-2.147 2.146 2.147a.5.5 0 0 0 .707-.708L9.39 8l2.146-2.146a.5.5 0 0 0-.707-.708L8.683 7.293 6.536 5.146a.5.5 0 0 0-.707 0z"/>
           <path d="M13.683 1a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-7.08a2 2 0 0 1-1.519-.698L.241 8.65a1 1 0 0 1 0-1.302L5.084 1.7A2 2 0 0 1 6.603 1h7.08zm-7.08 1a1 1 0 0 0-.76.35L1 8l4.844 5.65a1 1 0 0 0 .759.35h7.08a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1h-7.08z"/>

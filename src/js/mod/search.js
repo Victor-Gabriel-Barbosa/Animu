@@ -598,7 +598,7 @@ class AnimeSearchBar {
     }) : 'N/A';
 
     return `
-      <a href="animes.html?anime=${encodeURIComponent(anime.primaryTitle)}" 
+      <a href="animes.html?anime=${encodeURIComponent(anime.primaryTitle).replace(/%20/g, '-')}" 
          class="search-result-item">
         <img src="${anime.coverImage}" 
              alt="${anime.primaryTitle}" 

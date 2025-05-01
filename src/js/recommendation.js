@@ -455,7 +455,7 @@ async function renderRecommendations(recommendations, containerId) {
     const favoriteCount = favoritesMap.get(anime.primaryTitle) || 0;
 
     return `
-      <a href="animes.html?anime=${encodeURIComponent(anime.primaryTitle)}" class="anime-card">
+      <a href="animes.html?anime=${encodeURIComponent(anime.primaryTitle).replace(/%20/g, '-')}" class="anime-card">
         <div class="image-wrapper">
           <img 
             src="${anime.coverImage}" 
