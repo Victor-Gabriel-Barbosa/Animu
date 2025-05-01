@@ -114,7 +114,7 @@ class ProfileChatManager extends Chat {
   async sendMessage(senderId, receiverId, message) {
     const chatId = this.getChatId(senderId, receiverId);
     
-    // Criar objeto de mensagem
+    // Cria objeto de mensagem
     const newMessage = {
       senderId,
       message: message,
@@ -124,10 +124,13 @@ class ProfileChatManager extends Chat {
     if (this.isFirestoreAvailable) {
       try {
         // Tenta salvar no Firestore
-        await this.chatsCollection.doc(chatId).collection('messages').add({
+        const docRef = await this.chatsCollection.doc(chatId).collection('messages').add({
           ...newMessage,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
+        
+        // Atualiza o objeto com o ID do documento
+        newMessage.id = docRef.id;
         
         // Atualiza também o localStorage para acesso offline
         this.updateLocalStorage(chatId, newMessage);
@@ -141,7 +144,7 @@ class ProfileChatManager extends Chat {
         return this.saveToLocalStorage(chatId, newMessage);
       }
     } else {
-      // Usar apenas localStorage se Firestore não estiver disponível
+      // Usa apenas localStorage se Firestore não estiver disponível
       return this.saveToLocalStorage(chatId, newMessage);
     }
   }
@@ -153,6 +156,11 @@ class ProfileChatManager extends Chat {
    * @returns {object} A mensagem criada
    */
   saveToLocalStorage(chatId, message) {
+    // Gera um ID único para a mensagem
+    if (!message.id) {
+      message.id = 'local_' + new Date().getTime() + '_' + Math.random().toString(36).substring(2, 9);
+    }
+    
     // Cria array de mensagens para o chat se não existir
     if (!this.messages[chatId]) this.messages[chatId] = [];
     
@@ -202,7 +210,9 @@ class ProfileChatManager extends Chat {
               id: doc.id,
               senderId: data.senderId,
               message: data.message,
-              timestamp: data.timestamp || new Date(data.createdAt?.toDate()).toISOString()
+              timestamp: data.timestamp || new Date(data.createdAt?.toDate()).toISOString(),
+              edited: data.edited || false,
+              editedAt: data.editedAt ? new Date(data.editedAt.toDate()).toISOString() : null
             };
           });
           
@@ -323,7 +333,9 @@ class ProfileChatManager extends Chat {
             id: doc.id,
             senderId: data.senderId,
             message: data.message,
-            timestamp: data.timestamp || new Date(data.createdAt?.toDate()).toISOString()
+            timestamp: data.timestamp || new Date(data.createdAt?.toDate()).toISOString(),
+            edited: data.edited || false,
+            editedAt: data.editedAt ? new Date(data.editedAt.toDate()).toISOString() : null
           };
         });
         
@@ -339,6 +351,157 @@ class ProfileChatManager extends Chat {
       });
       
     return unsubscribe;
+  }
+
+  /**
+   * Edita uma mensagem existente
+   * @param {string} senderId - ID do remetente
+   * @param {string} receiverId - ID do destinatário
+   * @param {string} messageId - ID da mensagem
+   * @param {string} newContent - Novo texto da mensagem
+   * @returns {Promise<boolean>} true se a edição foi bem sucedida
+   */
+  async editMessage(senderId, receiverId, messageId, newContent) {
+    const chatId = this.getChatId(senderId, receiverId);
+    
+    if (this.isFirestoreAvailable) {
+      try {
+        // Verifica se o usuário é o autor da mensagem
+        const messageRef = this.chatsCollection.doc(chatId)
+          .collection('messages')
+          .doc(messageId);
+          
+        const messageDoc = await messageRef.get();
+        if (!messageDoc.exists) throw new Error('Mensagem não encontrada');
+        
+        const messageData = messageDoc.data();
+        if (messageData.senderId !== senderId) throw new Error('Apenas o remetente pode editar a mensagem');
+        
+        // Atualiza a mensagem no Firestore
+        await messageRef.update({
+          message: newContent,
+          edited: true,
+          editedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        // Atualiza no localStorage
+        if (this.messages[chatId]) {
+          const index = this.messages[chatId].findIndex(m => m.id === messageId);
+          if (index !== -1) {
+            this.messages[chatId][index].message = newContent;
+            this.messages[chatId][index].edited = true;
+            this.messages[chatId][index].editedAt = new Date().toISOString();
+            localStorage.setItem('animuChats', JSON.stringify(this.messages));
+          }
+        }
+        
+        return true;
+      } catch (error) {
+        console.error('Erro ao editar mensagem no Firestore:', error);
+        this.isFirestoreAvailable = false;
+        
+        // Fallback para localStorage
+        return this.editMessageInLocalStorage(chatId, messageId, senderId, newContent);
+      }
+    } else {
+      // Apenas localStorage
+      return this.editMessageInLocalStorage(chatId, messageId, senderId, newContent);
+    }
+  }
+  
+  /**
+   * Edita uma mensagem existente no localStorage
+   * @param {string} chatId - ID da conversa
+   * @param {string} messageId - ID da mensagem
+   * @param {string} senderId - ID do remetente
+   * @param {string} newContent - Novo texto da mensagem
+   * @returns {boolean} true se a edição foi bem sucedida
+   */
+  editMessageInLocalStorage(chatId, messageId, senderId, newContent) {
+    if (!this.messages[chatId]) return false;
+    
+    const index = this.messages[chatId].findIndex(m => m.id === messageId);
+    if (index === -1) return false;
+    
+    // Verifica se o usuário é o autor da mensagem
+    if (this.messages[chatId][index].senderId !== senderId) return false;
+    
+    // Atualiza a mensagem
+    this.messages[chatId][index].message = newContent;
+    this.messages[chatId][index].edited = true;
+    this.messages[chatId][index].editedAt = new Date().toISOString();
+    
+    // Salva no localStorage
+    localStorage.setItem('animuChats', JSON.stringify(this.messages));
+    return true;
+  }
+
+  /**
+   * Exclui uma mensagem existente
+   * @param {string} senderId - ID do remetente
+   * @param {string} receiverId - ID do destinatário
+   * @param {string} messageId - ID da mensagem
+   * @returns {Promise<boolean>} true se a exclusão foi bem sucedida
+   */
+  async deleteMessage(senderId, receiverId, messageId) {
+    const chatId = this.getChatId(senderId, receiverId);
+    
+    if (this.isFirestoreAvailable) {
+      try {
+        // Verifica se o usuário é o autor da mensagem
+        const messageRef = this.chatsCollection.doc(chatId)
+          .collection('messages')
+          .doc(messageId);
+          
+        const messageDoc = await messageRef.get();
+        if (!messageDoc.exists) throw new Error('Mensagem não encontrada');
+        
+        const messageData = messageDoc.data();
+        if (messageData.senderId !== senderId) throw new Error('Apenas o remetente pode excluir a mensagem');
+        
+        // Exclui a mensagem no Firestore
+        await messageRef.delete();
+        
+        // Exclui no localStorage
+        if (this.messages[chatId]) {
+          this.messages[chatId] = this.messages[chatId].filter(m => m.id !== messageId);
+          localStorage.setItem('animuChats', JSON.stringify(this.messages));
+        }
+        
+        return true;
+      } catch (error) {
+        console.error('Erro ao excluir mensagem no Firestore:', error);
+        this.isFirestoreAvailable = false;
+        
+        // Fallback para localStorage
+        return this.deleteMessageFromLocalStorage(chatId, messageId, senderId);
+      }
+    } else {
+      // Apenas localStorage
+      return this.deleteMessageFromLocalStorage(chatId, messageId, senderId);
+    }
+  }
+  
+  /**
+   * Exclui uma mensagem existente no localStorage
+   * @param {string} chatId - ID da conversa
+   * @param {string} messageId - ID da mensagem
+   * @param {string} senderId - ID do remetente
+   * @returns {boolean} true se a exclusão foi bem sucedida
+   */
+  deleteMessageFromLocalStorage(chatId, messageId, senderId) {
+    if (!this.messages[chatId]) return false;
+    
+    // Verifica se o usuário é o autor da mensagem
+    const message = this.messages[chatId].find(m => m.id === messageId);
+    if (!message || message.senderId !== senderId) return false;
+    
+    // Filtrar a mensagem a ser excluída
+    this.messages[chatId] = this.messages[chatId].filter(m => m.id !== messageId);
+    
+    // Salvar no localStorage
+    localStorage.setItem('animuChats', JSON.stringify(this.messages));
+    return true;
   }
 }
 

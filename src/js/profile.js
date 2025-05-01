@@ -736,7 +736,7 @@ async function loadFriends(user) {
       return `
         <div class="friend-card group">
           <div class="flex items-center gap-3">
-            <div class="relative">
+            <div class="relative shrink-0">
               <a href="profile.html?id=${friend.id}" class="block">
                 <img src="${friend.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(friend.username)}`}" 
                      alt="${friend.username}" 
@@ -745,18 +745,18 @@ async function loadFriends(user) {
               </a>
             </div>
             
-            <div class="flex-1 min-w-0">
+            <div class="flex-1 min-w-0 overflow-hidden">
               <a href="profile.html?id=${friend.id}" class="hover:text-purple-600 transition-colors">
                 <h4 class="font-medium truncate">
                   ${friend.displayName || friend.username}
                 </h4>
-                <p class="text-xs text-gray-500">
+                <p class="text-xs text-gray-500 truncate">
                   ${friend.online ? 'Online' : 'Offline'}
                 </p>
               </a>
             </div>
             
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 shrink-0">
               <button onclick="openChat('${friend.id}')" 
                       class="action-btn text-purple-600 hover:text-purple-700"
                       title="Iniciar chat">
@@ -1280,10 +1280,19 @@ async function loadChatMessages(senderId, receiverId) {
                     </a>
                   </div>
                 </div>
-                <div class="px-3 py-1 bg-black/20">
+                <div class="px-3 py-1 bg-black/20 flex justify-between items-center">
                   <span class="text-xs text-purple-100">
                     ${new Date(msg.timestamp).toLocaleTimeString()}
                   </span>
+                  ${isMine ? `
+                    <div class="flex gap-1">
+                      <button onclick="deleteMessage('${senderId}', '${receiverId}', '${msg.id}')" 
+                              class="text-xs text-purple-100 hover:text-white transition-colors" 
+                              title="Excluir mensagem">
+                        <i class="fi fi-rr-trash"></i>
+                      </button>
+                    </div>
+                  ` : ''}
                 </div>
               </div>
               ${isMine ? `<img src="${avatar}" alt="${user?.username}" class="w-6 h-6 rounded-full object-cover">` : ''}
@@ -1291,22 +1300,39 @@ async function loadChatMessages(senderId, receiverId) {
           `;
         }
       } catch (e) {
-        // Ignora erro, não é uma mensagem JSON
+        console.error("Erro ao analisar mensagem:", e);
       }
 
       // Mensagem normal de texto
       return `
-        <div class="flex ${isMine ? 'justify-end' : 'justify-start'} items-end gap-2">
+        <div class="flex ${isMine ? 'justify-end' : 'justify-start'} items-end gap-2" id="msg-${msg.id}">
           ${!isMine ? `
             <img src="${avatar}" 
                  alt="${user?.username || 'User'}" 
                  class="w-6 h-6 rounded-full object-cover">
           ` : ''}
-          <div class="max-w-[70%] ${messageClasses} bg-purple-500 text-white rounded-lg p-2 break-words">
-            <p class="text-sm">${msg.message}</p>
-            <span class="text-xs text-purple-100 block mt-1">
-              ${new Date(msg.timestamp).toLocaleTimeString()}
-            </span>
+          <div class="max-w-[70%] ${messageClasses} bg-purple-500 text-white rounded-lg p-2 break-words message-content">
+            <p class="text-sm message-text">${msg.message}</p>
+            <div class="flex justify-between items-center mt-1">
+              <span class="text-xs text-purple-100">
+                ${new Date(msg.timestamp).toLocaleTimeString()}
+                ${msg.edited ? '<span class="text-purple-200 text-xs ml-1">(editada)</span>' : ''}
+              </span>
+              ${isMine ? `
+                <div class="flex gap-2">
+                  <button onclick="editMessage('${senderId}', '${receiverId}', '${msg.id}')" 
+                          class="text-xs text-purple-100 hover:text-white transition-colors" 
+                          title="Editar mensagem">
+                    <i class="fi fi-rr-edit"></i>
+                  </button>
+                  <button onclick="deleteMessage('${senderId}', '${receiverId}', '${msg.id}')" 
+                          class="text-xs text-purple-100 hover:text-white transition-colors" 
+                          title="Excluir mensagem">
+                    <i class="fi fi-rr-trash"></i>
+                  </button>
+                </div>
+              ` : ''}
+            </div>
           </div>
           ${isMine ? `
             <img src="${avatar}" 
@@ -1344,8 +1370,6 @@ async function sendMessage(event, senderId, receiverId) {
 
   await chatManager.sendMessage(senderId, receiverId, message);
 
-  // A função loadChatMessages será chamada pelo listener em tempo real
-  // mas chamamos explicitamente para garantir atualização imediata
   await loadChatMessages(senderId, receiverId);
   $input.val('');
 }
@@ -1353,6 +1377,134 @@ async function sendMessage(event, senderId, receiverId) {
 // Remove a janela de chat com um amigo específico
 function closeChat(friendId) {
   $(`#chat-${friendId}`).remove();
+}
+
+/**
+ * Edita uma mensagem existente no chat
+ * @param {string} senderId - ID do usuário que enviou a mensagem
+ * @param {string} receiverId - ID do usuário que recebeu a mensagem
+ * @param {string} messageId - ID da mensagem a ser editada
+ */
+async function editMessage(senderId, receiverId, messageId) {
+  // Busca o elemento da mensagem no DOM
+  const $messageDiv = $(`#msg-${messageId}`);
+  if (!$messageDiv.length) return;
+  
+  const $messageContent = $messageDiv.find('.message-text');
+  const currentText = $messageContent.text();
+  
+  // Verifica se já está em modo de edição
+  if ($messageDiv.find('.edit-form').length) return;
+  
+  // Oculta o texto original e adiciona um formulário para edição
+  $messageContent.hide();
+  
+  // Cria o formulário de edição
+  const $editForm = $(`
+    <form class="edit-form mt-2 mb-2">
+      <textarea class="w-full p-2 border rounded resize-none text-black dark:text-white dark:bg-gray-800 text-sm"
+                maxlength="500">${currentText}</textarea>
+      <div class="flex justify-between mt-2">
+        <small class="text-purple-200 text-xs edit-char-count">0/500</small>
+        <div class="flex gap-2">
+          <button type="button" class="cancel-edit text-xs text-purple-200 hover:text-white transition-colors">
+            Cancelar
+          </button>
+          <button type="submit" class="text-xs text-purple-200 hover:text-white transition-colors">
+            Salvar
+          </button>
+        </div>
+      </div>
+    </form>
+  `);
+  
+  // Insere o formulário após o texto original
+  $messageContent.after($editForm);
+  
+  // Atualiza o contador de caracteres
+  const $textarea = $editForm.find('textarea');
+  const $charCount = $editForm.find('.edit-char-count');
+  $charCount.text(`${$textarea.val().length}/500`);
+  
+  // Adiciona evento para contar caracteres durante a digitação
+  $textarea.on('input', function() {
+    $charCount.text(`${$(this).val().length}/500`);
+  });
+  
+  // Foca no textarea para edição imediata
+  $textarea.focus();
+  
+  // Manipuladores de eventos para os botões
+  $editForm.find('.cancel-edit').on('click', function() {
+    $editForm.remove();
+    $messageContent.show();
+  });
+  
+  // Manipulador para o evento de envio do formulário
+  $editForm.on('submit', async function(e) {
+    e.preventDefault();
+    
+    const newText = $textarea.val().trim();
+    if (!newText || newText === currentText) {
+      $editForm.remove();
+      $messageContent.show();
+      return;
+    }
+    
+    try {
+      // Mostra indicador de carregamento
+      const $submitButton = $(this).find('button[type="submit"]');
+      const originalText = $submitButton.text();
+      $submitButton.prop('disabled', true).text('Salvando...');
+      
+      // Chama o método do ProfileChatManager para editar a mensagem
+      const success = await chatManager.editMessage(senderId, receiverId, messageId, newText);
+      
+      if (success) {
+        // Atualiza a interface
+        $messageContent.text(newText);
+        $editForm.remove();
+        $messageContent.show();
+        
+        // Recarrega as mensagens para atualizar a interface
+        await loadChatMessages(senderId, receiverId);
+      } else {
+        alert('Não foi possível editar a mensagem. Tente novamente.');
+        $submitButton.prop('disabled', false).text(originalText);
+      }
+    } catch (error) {
+      console.error('Erro ao editar mensagem:', error);
+      alert('Ocorreu um erro ao editar a mensagem.');
+      $editForm.remove();
+      $messageContent.show();
+    }
+  });
+}
+
+/**
+ * Exclui uma mensagem do chat
+ * @param {string} senderId - ID do usuário que enviou a mensagem
+ * @param {string} receiverId - ID do usuário que recebeu a mensagem
+ * @param {string} messageId - ID da mensagem a ser excluída
+ */
+async function deleteMessage(senderId, receiverId, messageId) {
+  // Confirma a exclusão
+  if (!confirm('Tem certeza que deseja excluir esta mensagem?')) return;
+  
+  try {
+    // Chama o método do ProfileChatManager para excluir a mensagem
+    const success = await chatManager.deleteMessage(senderId, receiverId, messageId);
+    
+    if (success) {
+      // Recarrega as mensagens para atualizar a interface
+      await loadChatMessages(senderId, receiverId);
+    } else {
+      alert('Não foi possível excluir a mensagem. Verifique se você é o autor dela.');
+    }
+  } catch (error) {
+    console.error('Erro ao excluir mensagem:', error);
+    alert('Ocorreu um erro ao excluir a mensagem.');
+  }
 }
 
 // Gera linha do tempo com atividades recentes do usuário

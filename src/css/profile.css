@@ -229,6 +229,8 @@
 .friends-container {
   display: grid;
   gap: 1rem;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .friend-card {
@@ -237,12 +239,41 @@
   border-radius: 1rem;
   padding: 0.75rem;
   transition: all 0.3s ease;
+  width: 100%; /* Garante que ocupe apenas a largura disponível */
+  max-width: 100%; /* Impede que ultrapasse o contêiner pai */
+  overflow: hidden; /* Previne que o conteúdo interno transborde */
 }
 
 .friend-card:hover {
   border-color: rgba(139, 92, 246, 0.5);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(139, 92, 246, 0.1);
+}
+
+/* Garante que o conteúdo interno do card não transborde */
+.friend-card .flex.items-center.gap-3 {
+  flex-wrap: nowrap; /* Evita quebra de linha dos elementos */
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Garante que o nome do amigo não transborde e use elipse quando necessário */
+.friend-card h4 {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Ajuste responsivo para telas menores */
+@media (max-width: 480px) {
+  .friend-card {
+    padding: 0.5rem;
+  }
+  
+  .friend-card .action-btn {
+    padding: 0.25rem;
+  }
 }
 
 .status-indicator {
