@@ -213,7 +213,7 @@ $(document).ready(async function () {
         const result = await auth.signInWithPopup(googleProvider);
         const user = result.user;
         
-        // Obtem os dados do usuário Google
+        // Obtém os dados do usuário Google
         const googleUser = {
           email: user.email,
           username: user.displayName || user.email.split('@')[0],
@@ -439,6 +439,44 @@ $(document).ready(async function () {
 
   // Atualiza o painel de usuário quando o documento estiver pronto
   authManager.updateUserPanel();
+  
+  // Configuração para o botão "Continuar com Google" (usado em ambas as páginas de login e cadastro)
+  $('#google-login-button').on('click', async function () {
+    try {
+      const success = await authManager.loginWithGoogle();
+      if (success) {
+        authManager.updateUserPanel();
+
+        // Mostra mensagem de sucesso
+        const $message = $('<div></div>')
+          .addClass('success-message')
+          .text('Login realizado com sucesso! Redirecionando...')
+          .css({
+            'background-color': '#4CAF50',
+            'color': 'white',
+            'padding': '12px 20px',
+            'border-radius': '8px',
+            'position': 'fixed',
+            'top': '20px',
+            'left': '50%',
+            'transform': 'translateX(-50%)',
+            'z-index': '1000',
+            'box-shadow': '0 4px 6px rgba(0, 0, 0, 0.1)',
+            'animation': 'slideDown 0.3s ease-out'
+          })
+          .appendTo('body');
+
+        // Redireciona para a página anterior ou index.html
+        setTimeout(() => {
+          const previousPage = sessionStorage.getItem('previousPage');
+          sessionStorage.removeItem('previousPage'); // Limpar depois de usar
+          window.location.href = previousPage || 'index.html';
+        }, 1500);
+      }
+    } catch (error) {
+      authManager.showError(error.message);
+    }
+  });
 
   // Registro de usuário
   if ($('#register-form').length) {
