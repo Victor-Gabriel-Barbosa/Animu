@@ -351,9 +351,8 @@
   width: 100%;
   padding: 12px 16px;
   margin-bottom: 16px;
-  background-color: #ffffff;
-  color: #757575;
-  border: 1px solid #ddd;
+  background: var(--card-shadow);
+  color: var(--text-color);
   border-radius: 8px;
   font-weight: 500;
   font-size: 14px;
@@ -364,7 +363,7 @@
 }
 
 .google-login-btn:hover {
-  background-color: #f5f5f5;
+  background: var(--primary-color);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
 }
 
