@@ -15,10 +15,11 @@ class CategoryManager {
     if (this.isInitialized) return true;
     
     try {
-      // Verifica se o Firebase está disponível
-      if (!firebase || !firebase.firestore) {
-        console.error('Firebase não está inicializado corretamente');
-        return false;
+      // Verifica se o Firebase está disponível usando a função centralizada
+      const isConnected = await window.testFirebaseConnection();
+      
+      if (!isConnected) {
+        console.warn('Firebase não está disponível, usando dados em cache');
       }
       
       this.isInitialized = true;

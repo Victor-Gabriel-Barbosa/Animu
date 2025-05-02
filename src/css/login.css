@@ -18,8 +18,7 @@
 
 .signup-container:hover {
   box-shadow: 0 15px 30px var(--primary-color);
-  transform: scale(1.02);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.5s ease, box-shadow 0.5s ease;
 }
 
 .signup-title {
@@ -363,7 +362,8 @@
 }
 
 .google-login-btn:hover {
-  background: var(--primary-color);
+  color: white;
+  background: var(--primary-gradient);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
 }
 

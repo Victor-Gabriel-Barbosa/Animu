@@ -377,9 +377,7 @@ async function renderAllAnimes() {
                 <div class="quick-info">
                   <span class="info-pill">⭐ ${Number(anime.score).toFixed(1)}</span>
                   <span class="info-pill">
-                    <svg class="meta-icon" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59 8-8 8zm-1-4h2v2h-2v-2zm0-2h2V7h-2v7z"/>
-                    </svg>
+                    <i class="fi fi-rr-exclamation"></i>
                     ${anime.episodes > 0 ? anime.episodes : '?'} eps
                   </span>
                 </div>
@@ -528,9 +526,7 @@ function renderSearchResults(query) {
                 <div class="quick-info">
                   <span class="info-pill">⭐ ${Number(anime.score).toFixed(1)}</span>
                   <span class="info-pill">
-                    <svg class="meta-icon" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59-8-8-8zm-1-4h2v2h-2v-2zm0-2h2V7h-2v7z"/>
-                    </svg>
+                    <i class="fi fi-rr-exclamation"></i>
                     ${anime.episodes > 0 ? anime.episodes : '?'} eps
                   </span>
                 </div>
@@ -940,9 +936,7 @@ async function renderRelatedAnimes(currentAnime) {
             <div class="quick-info">
               <span class="info-pill">⭐ ${Number(anime.score).toFixed(1)}</span>
               <span class="info-pill">
-                <svg class="meta-icon" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59 8-8 8zm-1-4h2v2h-2v-2zm0-2h2V7h-2v7z"/>
-                </svg>
+                <i class="fi fi-rr-exclamation"></i>
                 ${anime.episodes > 0 ? anime.episodes : '?'} eps
               </span>
             </div>
@@ -1074,17 +1068,26 @@ window.addEventListener('DOMContentLoaded', async () => {
           submitButton.innerHTML = '<span class="animate-spin mr-2">⏳</span> Enviando...';
 
           try {
-            const animeTitle = new URLSearchParams(window.location.search).get('anime');
-            const result = await animeChat.saveComment(decodeURIComponent(animeTitle), commentText, ratingValue);
+            // Usa getUrlParameter em vez de URLSearchParams para garantir
+            // que o título do anime seja decodificado corretamente 
+            // (substitui hífens por espaços)
+            const animeTitle = getUrlParameter('anime');
+            
+            if (!animeTitle) {
+              throw new Error('Título do anime não encontrado na URL');
+            }
+            
+            const result = await animeChat.saveComment(animeTitle, commentText, ratingValue);
             
             if (result) {
               document.getElementById('comment-text').value = '';
               document.getElementById('rating-slider').value = '0';
               animeChat.updateRatingEmoji(0); // Reseta o emoji
-              animeChat.updateCommentsList(decodeURIComponent(animeTitle));
+              animeChat.updateCommentsList(animeTitle);
             }
           } catch (error) {
             console.error('Erro ao enviar comentário:', error);
+            alert('Ocorreu um erro ao enviar seu comentário: ' + (error.message || 'Por favor, tente novamente mais tarde.'));
           } finally {
             // Reabilita o botão com o texto original
             submitButton.disabled = false;
@@ -1093,8 +1096,9 @@ window.addEventListener('DOMContentLoaded', async () => {
         });
       }
 
-      // Carrega comentários existentes
-      animeChat.updateCommentsList(decodeURIComponent(animeTitle));
+      // Carrega comentários existentes usando getUrlParameter para garantir
+      // que o título esteja no formato correto (com espaços, não hífens)
+      animeChat.updateCommentsList(getUrlParameter('anime'));
       
       // Adiciona eventos para os botões de favorito
       attachFavoriteButtonEvents();

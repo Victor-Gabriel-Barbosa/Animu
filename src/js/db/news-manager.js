@@ -5,16 +5,31 @@
 class NewsManager {
   constructor() {
     // Verifica se o Firebase está inicializado
-    if (!firebase || !firebase.firestore) {
-      console.error('Firebase não está disponível. Verifique a importação.');
-      return;
-    }
-
-    // Inicializa a referência à coleção de notícias
-    this.newsCollection = firebase.firestore().collection('news');
+    this.db = firebase.firestore();
+    this.newsCollection = this.db.collection('news');
     
     // Flag para indicar uso de armazenamento local (fallback)
     this.useLocalStorage = false;
+    
+    // Verifica conexão com Firebase no início
+    this.checkConnection();
+  }
+
+  /**
+   * Verifica a conexão com o Firebase usando a função centralizada
+   */
+  async checkConnection() {
+    try {
+      const isConnected = await window.testFirebaseConnection();
+      this.useLocalStorage = !isConnected;
+      
+      if (!isConnected) {
+        console.warn('Firebase indisponível para NewsManager, usando localStorage como fallback');
+      }
+    } catch (error) {
+      console.error('Erro ao verificar conexão do Firebase:', error);
+      this.useLocalStorage = true;
+    }
   }
 
   /**

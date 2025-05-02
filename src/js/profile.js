@@ -1259,48 +1259,60 @@ async function loadChatMessages(senderId, receiverId) {
 
       const avatar = user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.username || 'User')}`;
 
+      // Verifica se a mensagem tem formato JSON válido antes de tentar analisá-la
+      let isValidJson = false;
+      let parsedMessage = null;
+      
       try {
-        // Tenta passar mensagem como JSON para verificar se é compartilhamento de anime
-        const parsedMessage = JSON.parse(msg.message);
-        if (parsedMessage.type === 'anime_share') {
-          return `
-            <div class="flex ${isMine ? 'justify-end' : 'justify-start'} items-end gap-2 mb-4">
-              ${!isMine ? `<img src="${avatar}" alt="${user?.username}" class="w-6 h-6 rounded-full object-cover">` : ''}
-              <div class="max-w-[80%] ${messageClasses} bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg overflow-hidden">
-                <div class="flex items-center gap-3 p-3">
-                  <img src="${parsedMessage.coverImage}" 
-                       alt="${parsedMessage.animeTitle}" 
-                       class="w-12 h-16 object-cover rounded">
-                  <div class="flex-1 text-white">
-                    <p class="text-sm font-medium">${parsedMessage.message}</p>
-                    <a href="animes.html?anime=${encodeURIComponent(parsedMessage.animeTitle)}" 
-                       class="text-xs text-purple-100 hover:text-white mt-1 inline-block
-                              transition-colors duration-200">
-                      Ver anime →
-                    </a>
-                  </div>
-                </div>
-                <div class="px-3 py-1 bg-black/20 flex justify-between items-center">
-                  <span class="text-xs text-purple-100">
-                    ${new Date(msg.timestamp).toLocaleTimeString()}
-                  </span>
-                  ${isMine ? `
-                    <div class="flex gap-1">
-                      <button onclick="deleteMessage('${senderId}', '${receiverId}', '${msg.id}')" 
-                              class="text-xs text-purple-100 hover:text-white transition-colors" 
-                              title="Excluir mensagem">
-                        <i class="fi fi-rr-trash"></i>
-                      </button>
-                    </div>
-                  ` : ''}
-                </div>
-              </div>
-              ${isMine ? `<img src="${avatar}" alt="${user?.username}" class="w-6 h-6 rounded-full object-cover">` : ''}
-            </div>
-          `;
+        // Primeiro, verifica se a string parece ser um JSON (começa com { e termina com })
+        if (typeof msg.message === 'string' && 
+            msg.message.trim().startsWith('{') && 
+            msg.message.trim().endsWith('}')) {
+          parsedMessage = JSON.parse(msg.message);
+          isValidJson = true;
         }
       } catch (e) {
-        console.error("Erro ao analisar mensagem:", e);
+        // Se ocorrer erro na análise, trata como mensagem normal de texto
+        isValidJson = false;
+      }
+
+      // Se for um JSON válido e for compartilhamento de anime
+      if (isValidJson && parsedMessage && parsedMessage.type === 'anime_share') {
+        return `
+          <div class="flex ${isMine ? 'justify-end' : 'justify-start'} items-end gap-2 mb-4">
+            ${!isMine ? `<img src="${avatar}" alt="${user?.username}" class="w-6 h-6 rounded-full object-cover">` : ''}
+            <div class="max-w-[80%] ${messageClasses} bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg overflow-hidden">
+              <div class="flex items-center gap-3 p-3">
+                <img src="${parsedMessage.coverImage}" 
+                     alt="${parsedMessage.animeTitle}" 
+                     class="w-12 h-16 object-cover rounded">
+                <div class="flex-1 text-white">
+                  <p class="text-sm font-medium">${parsedMessage.message}</p>
+                  <a href="animes.html?anime=${encodeURIComponent(parsedMessage.animeTitle)}" 
+                     class="text-xs text-purple-100 hover:text-white mt-1 inline-block
+                            transition-colors duration-200">
+                    Ver anime →
+                  </a>
+                </div>
+              </div>
+              <div class="px-3 py-1 bg-black/20 flex justify-between items-center">
+                <span class="text-xs text-purple-100">
+                  ${new Date(msg.timestamp).toLocaleTimeString()}
+                </span>
+                ${isMine ? `
+                  <div class="flex gap-1">
+                    <button onclick="deleteMessage('${senderId}', '${receiverId}', '${msg.id}')" 
+                            class="text-xs text-purple-100 hover:text-white transition-colors" 
+                            title="Excluir mensagem">
+                      <i class="fi fi-rr-trash"></i>
+                    </button>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+            ${isMine ? `<img src="${avatar}" alt="${user?.username}" class="w-6 h-6 rounded-full object-cover">` : ''}
+          </div>
+        `;
       }
 
       // Mensagem normal de texto

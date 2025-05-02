@@ -97,11 +97,11 @@
     </section>
 
     <!-- Conteúdo Principal - Layout de grade com 2 colunas -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 px-3 sm:px-4 md:px-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-2 lg:gap-4 px-2 sm:px-2 md:px-4">
       <!-- Coluna da Esquerda: Informações do Perfil -->
       <div class="space-y-4 sm:space-y-6 md:space-y-8">
         <!-- Card de Informações Pessoais -->
-        <div class="rounded-2xl shadow-lg p-4 sm:p-6">
+        <div class="rounded-2xl shadow-lg p-4 sm:p-6 w-full">
           <h2 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Informações Pessoais</h2>
           <div>
             <!-- Nome de exibição -->
@@ -231,12 +231,12 @@
         </section>
       </div>
 
-      <!-- Coluna Central/Direita (ocupa 2/3 do espaço) -->
-      <div class="space-y-4 sm:space-y-6 md:space-y-8 md:col-span-2">
+      <!-- Coluna Direita -->
+      <div class="space-y-4 sm:space-y-6 md:space-y-8 md:col-span-1">
         <!-- Card de animes favoritos -->
         <div class="rounded-2xl shadow-lg p-4 sm:p-6">
           <h2 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Animes Favoritos</h2>
-          <div id="favorite-animes" class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          <div id="favorite-animes" class="grid grid-cols-1 xl:grid-cols-2 gap-3 sm:gap-4">
             <!-- Lista de animes favoritos inserida via JavaScript -->
           </div>
         </div>
@@ -339,7 +339,7 @@
     </div>
 
     <!-- Container para janelas de chat -->
-    <div id="chat-windows" class="chat-icon fixed bottom-1 right-0 sm:right-0 flex gap-2 sm:gap-4" style="z-index:2000">
+    <div id="chat-windows" class="chat-icon fixed bottom-1 right-0 sm:right-0 flex gap-2 sm:gap-4" style="z-index:1000">
       <!-- Janelas de chat dinâmicas inseridas via JavaScript -->
     </div>
   </div>

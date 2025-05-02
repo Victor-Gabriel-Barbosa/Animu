@@ -4,7 +4,32 @@
  */
 class UserManager {
   constructor() {
-    this.usersCollection = db.collection('users');
+    this.db = firebase.firestore();
+    this.usersCollection = this.db.collection('users');
+    
+    // Flag para controlar disponibilidade do Firestore
+    this.isFirestoreAvailable = true;
+    
+    // Verifica conexão no início
+    this.checkConnection();
+  }
+
+  // Verifica a conexão com o Firebase usando a função centralizada
+  async checkConnection() {
+    try {
+      const isConnected = await window.testFirebaseConnection();
+      this.isFirestoreAvailable = isConnected;
+      
+      if (!isConnected) {
+        console.warn('Firebase indisponível para UserManager, usando localStorage como fallback');
+      }
+      
+      return isConnected;
+    } catch (error) {
+      console.error('Erro ao verificar conexão do Firebase:', error);
+      this.isFirestoreAvailable = false;
+      return false;
+    }
   }
 
   // Carrega usuários do Firestore

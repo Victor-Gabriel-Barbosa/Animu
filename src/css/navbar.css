@@ -594,7 +594,7 @@ nav .ml-10 a.active {
   color: white;
   border: none;
   border-radius: 50%;
-  z-index: 1000;
+  z-index: 200;
   display: flex;
   align-items: center;
   justify-content: center;

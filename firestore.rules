@@ -1,0 +1,153 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Funções auxiliares para verificação
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isSignedIn() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    function isModerator() {
+      return isSignedIn() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'moderator' || 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    function validateUserData(data) {
+      return data.size() <= 20 && // limita quantidade de campos
+        'username' in data && data.username is string &&
+        'email' in data && data.email is string &&
+        (!('role' in data) || data.role in ['user', 'moderator', 'admin']);
+    }
+    
+    function validateAnimeData(data) {
+      return data.size() <= 30 && // limita quantidade de campos
+        'primaryTitle' in data && data.primaryTitle is string &&
+        'synopsis' in data && data.synopsis is string;
+    }
+    
+    // Regras para coleção de teste de conexão
+    match /test-connection/{document=**} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+    
+    // Regras para coleção users
+    match /users/{userId} {
+      // Qualquer usuário pode ler perfis
+      allow read: if true;
+      
+      // Apenas o próprio usuário pode editar seu perfil
+      // E administradores podem editar qualquer perfil
+      allow create: if isSignedIn() && request.auth.uid == userId && validateUserData(request.resource.data);
+      allow update: if (isOwner(userId) || isAdmin()) && validateUserData(request.resource.data);
+      allow delete: if isAdmin();
+      
+      // Sub-coleções do usuário (ex: histórico privado)
+      match /private/{document=**} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+    
+    // Regras para coleção animes
+    match /animes/{animeId} {
+      // Todos podem ler dados dos animes
+      allow read: if true;
+      
+      // Apenas admin pode criar, atualizar ou excluir animes
+      allow create, update: if isAdmin() && validateAnimeData(request.resource.data);
+      allow delete: if isAdmin();
+      
+      // Regras específicas para comentários
+      // Permite que usuários autenticados adicionem comentários
+      allow update: if isSignedIn() && 
+                      request.resource.data.diff(resource.data).affectedKeys().hasOnly(['comments', 'updatedAt']) &&
+                      request.resource.data.comments.size() >= resource.data.comments.size();
+      
+      // Permite que moderadores excluam comentários
+      allow update: if isModerator() && 
+                      request.resource.data.diff(resource.data).affectedKeys().hasOnly(['comments', 'updatedAt']) &&
+                      request.resource.data.comments.size() <= resource.data.comments.size();
+      
+      // Permite a atualização do contador de favoritos
+      allow update: if isSignedIn() && 
+                      request.resource.data.diff(resource.data).affectedKeys().hasOnly(['favoriteCount', 'updatedAt']);
+    }
+    
+    // Regras para coleção de notícias
+    match /news/{newsId} {
+      // Todos podem ler notícias
+      allow read: if true;
+      
+      // Apenas admin/mod pode gerenciar notícias
+      allow create, update, delete: if isModerator();
+    }
+    
+    // Regras para coleção de categorias
+    match /categories/{categoryId} {
+      // Todos podem ler categorias
+      allow read: if true;
+      
+      // Apenas admin pode alterar categorias
+      allow create, update, delete: if isAdmin();
+      
+      // Permitir leitura do documento específico de lista
+      match /categoriesList {
+        allow read: if true;
+      }
+    }
+    
+    // Regras para coleção de mensagens de chat entre usuários
+    match /profileChats/{chatId} {
+      // Permite leitura apenas para os participantes da conversa
+      allow read: if isSignedIn() && 
+                  chatId.split('-').hasAny([request.auth.uid]);
+      
+      // Permite criação do documento de chat
+      allow create: if isSignedIn() && 
+                    chatId.split('-').hasAny([request.auth.uid]);
+                    
+      // Regras para coleção de mensagens dentro do chat
+      match /messages/{messageId} {
+        // Permite leitura apenas para os participantes
+        allow read: if isSignedIn() && 
+                    chatId.split('-').hasAny([request.auth.uid]);
+        
+        // Permite criação de mensagens pelo usuário autenticado no próprio chat
+        allow create: if isSignedIn() && 
+                      chatId.split('-').hasAny([request.auth.uid]) &&
+                      request.resource.data.senderId == request.auth.uid;
+        
+        // Permite atualização apenas pelo autor da mensagem
+        allow update: if isSignedIn() && 
+                      request.resource.data.senderId == request.auth.uid &&
+                      resource.data.senderId == request.auth.uid;
+        
+        // Permite exclusão apenas pelo autor da mensagem
+        allow delete: if isSignedIn() && 
+                      resource.data.senderId == request.auth.uid;
+      }
+    }
+    
+    // Proteção contra excesso de requisições e regras padrão
+    match /{document=**} {
+      // Nega acesso por padrão a documentos não especificados acima
+      allow read: if false;
+      allow write: if false;
+      
+      // Limites de tamanho para evitar sobrecarga
+      allow create, update: if request.resource.data.size() < 1000 && 
+                               resource == null || resource.data.size() < 1000;
+    }
+  }
+}

@@ -75,20 +75,15 @@ class ProfileChatManager extends Chat {
   }
 
   /**
-   * Verifica se o Firestore está disponível
+   * Verifica se o Firestore está disponível usando a função centralizada
    * @returns {Promise<boolean>} true se estiver disponível, false caso contrário
    */
   async checkFirestoreConnection() {
     try {
-      // Tenta acessar o Firestore com um timeout
-      const connectionTestPromise = this.db.collection('connection_test').doc('test').get();
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Timeout')), 5000);
-      });
-      
-      await Promise.race([connectionTestPromise, timeoutPromise]);
-      this.isFirestoreAvailable = true;
-      return true;
+      // Usa a função centralizada de firebase-config.js
+      const isConnected = await window.testFirebaseConnection();
+      this.isFirestoreAvailable = isConnected;
+      return isConnected;
     } catch (error) {
       console.warn('Firestore indisponível, usando localStorage como fallback:', error);
       this.isFirestoreAvailable = false;

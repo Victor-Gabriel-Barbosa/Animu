@@ -242,6 +242,9 @@
   display: flex;
   align-items: center;
   gap: 0.25rem;
+  & i {
+    font-size: 15px;
+  }
 }
 
 .anime-card .overlay-content {
