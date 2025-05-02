@@ -486,7 +486,7 @@ async function confirmShare(animeTitle, coverImage) {
     closeShareModal();
 
     // Mostra notificação de sucesso
-    const notification = $('<div>').addClass('fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg').css("z-index", '300').text(`Anime compartilhado com ${selectedFriends.length} amigo(s)!`);
+    const notification = $('<div>').addClass('fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg').css("z-index", '1000').text(`Anime compartilhado com ${selectedFriends.length} amigo(s)!`);
     $('body').append(notification);
     setTimeout(() => notification.remove(), 3000);
   } catch (error) {
@@ -948,7 +948,7 @@ async function sendFriendRequest(event, targetUserId) {
     $button.prop('disabled', true).text('Solicitação enviada').removeClass('bg-purple-500 hover:bg-purple-600').addClass('bg-gray-400');
 
     // Mostra uma notificação
-    const notification = $('<div>').addClass('fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg').css("z-index", '300').text('Solicitação de amizade enviada!');
+    const notification = $('<div>').addClass('fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg').css("z-index", '1000').text('Solicitação de amizade enviada!');
     $('body').append(notification);
 
     // Remove a notificação após 3 segundos
