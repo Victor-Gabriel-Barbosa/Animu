@@ -6,6 +6,9 @@ Bem-vindo ao **Animu**, uma plataforma completa para a comunidade otaku comparti
 
 O **Animu** é uma plataforma web onde fãs de animes podem se reunir para compartilhar opiniões, avaliar títulos e participar de discussões sobre seus animes favoritos. Nossa missão é criar um espaço interativo, dinâmico e acolhedor para a comunidade otaku.
 
+## 🌐 Demo
+Acesse o projeto: https://victor-gabriel-barbosa.github.io/Animu/
+
 ## ✨ Funcionalidades Principais
 
 - 📝 **Sistema de autenticação completo**
